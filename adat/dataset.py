@@ -1,10 +1,15 @@
-from typing import Iterator
+from typing import Iterator, List
 
 from allennlp.data import Instance
 from allennlp.data.fields import TextField, LabelField
-from allennlp.data.dataset_readers import DatasetReader, LanguageModelingReader, SimpleLanguageModelingDatasetReader
+from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.token_indexers import SingleIdTokenIndexer
-from allennlp.data.tokenizers import Token
+from allennlp.data.tokenizers import Token, Tokenizer
+
+
+class WhitespaceTokenizer(Tokenizer):
+    def tokenize(self, text: str) -> List[Token]:
+        return [Token(t) for t in text.split()]
 
 
 class TexarInsuranceReader(DatasetReader):

@@ -1,13 +1,8 @@
-
-
 import torch.nn as nn
 from allennlp.models.language_model import LanguageModel
-from allennlp.models.masked_language_model import MaskedLanguageModel
-
-from allennlp.modules.text_field_embedders import TextFieldEmbedder, BasicTextFieldEmbedder
-from allennlp.modules.seq2seq_encoders import Seq2SeqEncoder, PytorchSeq2SeqWrapper
+from allennlp.modules.seq2seq_encoders import PytorchSeq2SeqWrapper
 from allennlp.data.vocabulary import Vocabulary
-from allennlp.modules.text_field_embedders import TextFieldEmbedder, BasicTextFieldEmbedder
+from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
 from allennlp.modules.token_embedders import Embedding
 
 
