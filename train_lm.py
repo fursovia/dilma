@@ -12,14 +12,13 @@ from adat.lm import get_basic_lm
 from adat.dataset import WhitespaceTokenizer
 
 
-TRAIN_PATH = '/Users/fursovia/Documents/texar/examples/text_style_transfer/data/insurance_cropped/insurance.train.text'
-TEST_PATH = '/Users/fursovia/Documents/texar/examples/text_style_transfer/data/insurance_cropped/insurance.test.text'
-BATCH_SIZE = 256
-NUM_EPOCHS = 20
-PATIENCE = 3
+BATCH_SIZE = 512
+NUM_EPOCHS = 10
+PATIENCE = 2
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--cuda', type=int, default=-1)
 parser.add_argument('-md', '--model_dir', type=str, default='experiments')
 parser.add_argument('-dd', '--data_dir', type=str, default='data')
 
@@ -31,8 +30,9 @@ if __name__ == '__main__':
         tokenizer=WhitespaceTokenizer(),
         max_sequence_length=None
     )
-    train_dataset = reader.read(TRAIN_PATH)
-    test_dataset = reader.read(TEST_PATH)
+    data_path = Path(args.data_dir)
+    train_dataset = reader.read(data_path / 'train.txt')
+    test_dataset = reader.read(data_path / 'test.txt')
 
     vocab = Vocabulary.from_instances(train_dataset)
 
@@ -40,6 +40,9 @@ if __name__ == '__main__':
     iterator.index_with(vocab)
 
     model = get_basic_lm(vocab)
+    if args.cuda >= 0 and torch.cuda.is_available():
+        model.cuda(args.cuda)
+
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     trainer = Trainer(
@@ -50,12 +53,16 @@ if __name__ == '__main__':
         validation_dataset=test_dataset,
         patience=PATIENCE,
         num_epochs=NUM_EPOCHS,
+        cuda_device=args.cuda
     )
 
     results = trainer.train()
     print(results)
 
     model_path = Path(args.model_dir)
+    if not model_path.exists():
+        model_path.mkdir()
+
     with open(model_path / "model.th", 'wb') as f:
         torch.save(model.state_dict(), f)
 
