@@ -8,7 +8,7 @@ from allennlp.data.dataset_readers import SimpleLanguageModelingDatasetReader
 from allennlp.training.trainer import Trainer
 from allennlp.data.iterators import BasicIterator
 
-from adat.lm import get_basic_lm
+from adat.models import get_basic_lm
 from adat.dataset import WhitespaceTokenizer
 
 
