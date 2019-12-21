@@ -1,4 +1,4 @@
-from typing import Iterator, List, Dict
+from typing import Iterator, List, Dict, Optional
 
 from allennlp.data import Instance
 from allennlp.data.fields import TextField, LabelField, Field
@@ -7,6 +7,8 @@ from allennlp.data.token_indexers import SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token, Tokenizer
 from allennlp.common.util import END_SYMBOL, START_SYMBOL
 from allennlp.common.file_utils import cached_path
+
+from adat.masker import Masker
 
 
 class WhitespaceTokenizer(Tokenizer):
@@ -39,7 +41,11 @@ class InsuranceReader(DatasetReader):
                 yield self.text_to_instance(sentence, label)
 
 
-class Seq2SeqReader(DatasetReader):
+class OneLangSeq2SeqReader(DatasetReader):
+
+    def __init__(self, masker: Optional[Masker] = None, lazy: bool = False):
+        super().__init__(lazy)
+        self.masker = masker
 
     def _read(self, file_path):
         with open(cached_path(file_path), "r") as file:
@@ -52,6 +58,15 @@ class Seq2SeqReader(DatasetReader):
     ) -> Instance:
         fields: Dict[str, Field] = {}
         tokenized = [START_SYMBOL] + text.split() + [END_SYMBOL]
-        fields["source_tokens"] = TextField([Token(word) for word in tokenized], {"tokens": SingleIdTokenIndexer()})
-        fields["target_tokens"] = fields["source_tokens"]
+        fields["original_tokens"] = TextField([Token(word) for word in tokenized], {"tokens": SingleIdTokenIndexer()})
+        fields["target_tokens"] = fields["original_tokens"]
+        if self.masker is not None:
+            text = self.masker.mask(text)
+            tokenized = [START_SYMBOL] + text.split() + [END_SYMBOL]
+            fields["source_tokens"] = TextField(
+                [Token(word) for word in tokenized],
+                {"tokens": SingleIdTokenIndexer()}
+            )
+        else:
+            fields["source_tokens"] = fields["original_tokens"]
         return Instance(fields)
