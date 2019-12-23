@@ -4,13 +4,15 @@ import torch
 import torch.nn as nn
 from allennlp.models.language_model import LanguageModel
 from allennlp.modules.seq2seq_encoders import PytorchSeq2SeqWrapper
-from allennlp.data.vocabulary import Vocabulary
 from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
-from allennlp.modules.token_embedders import Embedding
 from allennlp.models.basic_classifier import BasicClassifier
 from allennlp.modules.seq2vec_encoders import BagOfEmbeddingsEncoder
 from allennlp.models.encoder_decoders.simple_seq2seq import SimpleSeq2Seq
 from allennlp.modules.attention.additive_attention import AdditiveAttention
+from allennlp.data.vocabulary import Vocabulary
+from allennlp.modules import Attention, TextFieldEmbedder, Seq2SeqEncoder
+from allennlp.modules.similarity_functions import SimilarityFunction
+from allennlp.modules.token_embedders import Embedding
 
 
 def get_basic_lm(vocab: Vocabulary) -> LanguageModel:
@@ -56,6 +58,34 @@ def get_basic_classification_model(vocab: Vocabulary) -> BasicClassifier:
 
 class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
 
+    def __init__(self,
+                 vocab: Vocabulary,
+                 source_embedder: TextFieldEmbedder,
+                 encoder: Seq2SeqEncoder,
+                 max_decoding_steps: int,
+                 attention: Attention = None,
+                 attention_function: SimilarityFunction = None,
+                 beam_size: int = None,
+                 target_namespace: str = "tokens",
+                 target_embedding_dim: int = None,
+                 scheduled_sampling_ratio: float = 0.,
+                 use_bleu: bool = True) -> None:
+        super().__init__(
+            vocab,
+            source_embedder,
+            encoder,
+            max_decoding_steps,
+            attention,
+            attention_function,
+            beam_size,
+            target_namespace,
+            target_embedding_dim,
+            scheduled_sampling_ratio,
+            use_bleu
+        )
+
+        self.random_perturbations = False
+
     def _prepare_output_projections(self,
                                     last_predictions: torch.Tensor,
                                     state: Dict[str, torch.Tensor]) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
@@ -69,6 +99,10 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
             decoder_input = torch.cat((attended_input, embedded_input), -1)
         else:
             decoder_input = embedded_input
+
+        if self.random_perturbations:
+            decoder_input.add_(torch.rand_like(decoder_input, device=decoder_input.device), alpha=0.5)
+
         decoder_hidden, decoder_context = self._decoder_cell(
                 decoder_input,
                 (decoder_hidden, decoder_context))
@@ -81,8 +115,9 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
 
     def forward(self,  # type: ignore
                 source_tokens: Dict[str, torch.LongTensor],
-                target_tokens: Dict[str, torch.LongTensor] = None, **kwargs):
+                target_tokens: Dict[str, torch.LongTensor] = None, random_perturbations: bool = False, **kwargs):
         del kwargs
+        self.random_perturbations = random_perturbations
         return super().forward(source_tokens, target_tokens)
 
 
