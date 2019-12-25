@@ -1,4 +1,5 @@
-from typing import List
+import ast
+from typing import List, Dict, Any
 
 import torch
 from allennlp.models import Model
@@ -6,11 +7,21 @@ from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.data.iterators import BasicIterator
 from allennlp.training.metrics import Perplexity
+import Levenshtein as lvs
 
 
 def load_weights(model: Model, path: str, location: str = 'cpu') -> None:
     with open(path, 'rb') as f:
         model.load_state_dict(torch.load(f, map_location=location))
+
+
+def read_logs(results_path: str) -> List[Dict[str, Any]]:
+    results = list()
+    with open(results_path) as file:
+        for line in file:
+            res = ast.literal_eval(line.strip())
+            results.append(res)
+    return results
 
 
 def calculate_perplexity(texts: List[str], model: Model, reader: DatasetReader, vocab: Vocabulary) -> float:
@@ -27,3 +38,14 @@ def calculate_perplexity(texts: List[str], model: Model, reader: DatasetReader, 
             perplexity(average_loss)
 
     return perplexity.get_metric()
+
+
+def calculate_wer(sequence_a: str, sequence_b: str) -> float:
+    # taken from https://github.com/SeanNaren/deepspeech.pytorch/blob/master/decoder.py
+    b = set(sequence_a.split() + sequence_b.split())
+    word2char = dict(zip(b, range(len(b))))
+
+    w1 = [chr(word2char[w]) for w in sequence_a.split()]
+    w2 = [chr(word2char[w]) for w in sequence_b.split()]
+
+    return lvs.distance(''.join(w1), ''.join(w2))
