@@ -57,9 +57,10 @@ class MCMCSampler:
         self.generation_reader = generation_reader
         self.generation_vocab = self.generation_model.vocab
 
-        if device >= 0 and torch.cuda.is_available():
-            self.classification_model.cuda(device)
-            self.generation_model.cuda(device)
+        self.device = device
+        if self.device >= 0 and torch.cuda.is_available():
+            self.classification_model.cuda(self.device)
+            self.generation_model.cuda(self.device)
         else:
             self.classification_model.cpu()
             self.generation_model.cpu()
@@ -73,7 +74,6 @@ class MCMCSampler:
         self.bleu = bleu
         self.l2_norm = l2_norm
         self.sigma = sigma
-        self.device = device
 
         self.curr_prob = self.predict_prob(self.initial_sequence)
         self.curr_bleu = calculate_bleu2(self.initial_sequence, self.generate_from_state(self.current_state))
