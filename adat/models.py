@@ -2,9 +2,9 @@ from typing import Dict, Tuple
 
 import torch
 import torch.nn as nn
-from allennlp.models.language_model import LanguageModel
 from allennlp.modules.seq2seq_encoders import PytorchSeq2SeqWrapper
 from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
+from allennlp.models.language_model import LanguageModel
 from allennlp.models.basic_classifier import BasicClassifier
 from allennlp.modules.seq2vec_encoders import BagOfEmbeddingsEncoder
 from allennlp.models.encoder_decoders.simple_seq2seq import SimpleSeq2Seq
@@ -84,7 +84,19 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
             use_bleu
         )
 
-        self.random_perturbations = False
+    def get_state_for_beam_search(self,
+                                  source_tokens: Dict[str, torch.LongTensor]) -> Dict[str, torch.Tensor]:
+        assert not self.training
+        state = self._encode(source_tokens)
+        # decoder_hidden should be modified
+        state = self._init_decoder_state(state)
+        return state
+
+    def beam_search(self,
+                    state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+        assert not self.training
+        predictions = self._forward_beam_search(state)
+        return predictions
 
     def _prepare_output_projections(self,
                                     last_predictions: torch.Tensor,
@@ -100,9 +112,7 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
         else:
             decoder_input = embedded_input
 
-        if self.random_perturbations:
-            decoder_input.add_(torch.rand_like(decoder_input, device=decoder_input.device), alpha=0.5)
-
+        # hidden state and cell state
         decoder_hidden, decoder_context = self._decoder_cell(
                 decoder_input,
                 (decoder_hidden, decoder_context))
@@ -112,13 +122,6 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
 
         output_projections = self._output_projection_layer(decoder_hidden)
         return output_projections, state
-
-    def forward(self,  # type: ignore
-                source_tokens: Dict[str, torch.LongTensor],
-                target_tokens: Dict[str, torch.LongTensor] = None, random_perturbations: bool = False, **kwargs):
-        del kwargs
-        self.random_perturbations = random_perturbations
-        return super().forward(source_tokens, target_tokens)
 
 
 def get_basic_seq2seq_model(vocab: Vocabulary) -> SimpleSeq2Seq:

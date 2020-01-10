@@ -7,6 +7,7 @@ from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.data.iterators import BasicIterator
 from allennlp.training.metrics import Perplexity
+from nltk.translate.bleu_score import sentence_bleu
 import Levenshtein as lvs
 
 
@@ -49,3 +50,7 @@ def calculate_wer(sequence_a: str, sequence_b: str) -> float:
     w2 = [chr(word2char[w]) for w in sequence_b.split()]
 
     return lvs.distance(''.join(w1), ''.join(w2))
+
+
+def calculate_bleu2(reference: str, hypothesis: str) -> float:
+    return sentence_bleu([reference.split()], hypothesis.split(), weights=(0.5, 0.5))
