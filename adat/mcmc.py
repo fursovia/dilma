@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
-from copy import deepcopy
 
 import torch
 import numpy as np
@@ -67,16 +66,21 @@ class MCMCSampler:
 
         # initial hidden state
         self.initial_sequence = initial_sequence
-        self.current_state = self.generation_model.get_state_for_beam_search(
-            self._seq_to_input(self.initial_sequence, self.generation_reader, self.generation_vocab)
-        )
+        with torch.no_grad():
+            self.current_state = self.generation_model.get_state_for_beam_search(
+                self._seq_to_input(
+                    self.initial_sequence,
+                    self.generation_reader,
+                    self.generation_vocab
+                )['source_tokens']
+            )
 
         self.bleu = bleu
         self.l2_norm = l2_norm
         self.sigma = sigma
 
         self.curr_prob = self.predict_prob(self.initial_sequence)
-        self.curr_bleu = calculate_bleu2(self.initial_sequence, self.generate_from_state(self.current_state))
+        self.curr_bleu = calculate_bleu2(self.initial_sequence, self.generate_from_state(self.current_state.copy()))
         self.history = []
 
     def _seq_to_input(self, seq: str, reader: DatasetReader, vocab: Vocabulary):
@@ -86,40 +90,51 @@ class MCMCSampler:
         return move_to_device(batch.as_tensor_dict(), self.device)
 
     def generate_from_state(self, state: Dict[str, torch.Tensor]) -> str:
-        with torch.no_grad:
-            return ' '.join(self.generation_model.beam_search(state)['predicted_tokens'][0])
+        with torch.no_grad():
+            pred_output = self.generation_model.beam_search(state)
+            return ' '.join(self.generation_model.decode(pred_output)['predicted_tokens'][0])
 
     def predict_prob(self, sequence: str) -> float:
-        with torch.no_grad:
+        with torch.no_grad():
             return self.classification_model.forward_on_instance(
                 self.classification_reader.text_to_instance(sequence)
             )['probs'][1]
 
     def step(self):
-        new_state = deepcopy(self.current_state)
+        new_state = self.current_state.copy()
         new_state['decoder_hidden'] = self.proposal_distribution.sample(new_state['decoder_hidden'])
-        new_prob = self.predict_prob(new_state)
-        generated_sentence = self.generate_from_state(new_state)
-        new_bleu = calculate_bleu2(self.initial_sequence, generated_sentence)
+        generated_seq = self.generate_from_state(new_state.copy())
 
-        acceptance_probability = min(
-            [
-                1.,
-                np.exp(
-                    -(1 - (new_prob - self.curr_prob)) - (1 - (new_bleu - self.curr_bleu))
-                    - np.linalg.norm(
-                        self.current_state['decoder_hidden'].cpu().numpy() - new_state['decoder_hidden'].cpu().numpy()
-                    )
-                ) / (2 * self.sigma ** 2)
-            ]
-        )
+        if generated_seq:
+            new_prob = self.predict_prob(generated_seq)
+            new_bleu = calculate_bleu2(self.initial_sequence, generated_seq)
 
-        if np.random.rand() < acceptance_probability:
-            self.current_state = new_state
-            self.curr_prob = new_prob
-            self.curr_bleu = new_bleu
+            prob_diff = new_prob - self.curr_prob
+            bleu_diff = new_bleu - self.curr_bleu
+            l2_norm = np.linalg.norm(self.current_state['decoder_hidden'].cpu().numpy() -
+                                     new_state['decoder_hidden'].cpu().numpy())
+            acceptance_probability = min(
+                [
+                    1.,
+                    np.exp(-(1 - prob_diff) - (1 - bleu_diff) - l2_norm) / (2 * self.sigma ** 2)
+                ]
+            )
 
-            self.history.append(generated_sentence)
+            if acceptance_probability > np.random.rand():
+                self.current_state = new_state
+                self.curr_prob = new_prob
+                self.curr_bleu = new_bleu
+
+                self.history.append(
+                    {
+                        'generated_sequence': generated_seq,
+                        'prob': self.curr_prob,
+                        'bleu': self.curr_bleu,
+                        'prob_diff': prob_diff,
+                        'bleu_diff': bleu_diff,
+                        'l2_norm': l2_norm
+                    }
+                )
 
     def sample(self, num_steps: int = 100) -> List[torch.Tensor]:
         for _ in range(num_steps):
