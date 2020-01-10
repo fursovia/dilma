@@ -15,7 +15,6 @@ from adat.models import OneLanguageSeq2SeqModel
 
 
 class Proposal(ABC):
-
     @abstractmethod
     def sample(self, curr_state: torch.Tensor) -> torch.Tensor:
         pass
@@ -113,10 +112,16 @@ class MCMCSampler:
             bleu_diff = new_bleu - self.curr_bleu
             l2_norm = np.linalg.norm(self.current_state['decoder_hidden'].cpu().numpy() -
                                      new_state['decoder_hidden'].cpu().numpy())
+            exp_base = -(1 - prob_diff)
+            if self.bleu:
+                exp_base -= (1 - bleu_diff)
+            if self.l2_norm:
+                exp_base -= l2_norm
+
             acceptance_probability = min(
                 [
                     1.,
-                    np.exp(-(1 - prob_diff) - (1 - bleu_diff) - l2_norm) / (2 * self.sigma ** 2)
+                    np.exp(exp_base) / (2 * self.sigma ** 2)
                 ]
             )
 
