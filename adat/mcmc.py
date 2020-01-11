@@ -82,7 +82,7 @@ class MCMCSampler:
         self.curr_bleu = calculate_bleu2(self.initial_sequence, self.generate_from_state(self.current_state.copy()))
         self.history = []
 
-    def _seq_to_input(self, seq: str, reader: DatasetReader, vocab: Vocabulary):
+    def _seq_to_input(self, seq: str, reader: DatasetReader, vocab: Vocabulary) -> Dict[str, torch.Tensor]:
         instance = reader.text_to_instance(seq)
         batch = Batch([instance])
         batch.index_instances(vocab)
