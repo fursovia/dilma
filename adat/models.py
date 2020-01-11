@@ -123,14 +123,21 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
         output_projections = self._output_projection_layer(decoder_hidden)
         return output_projections, state
 
+    def forward(self,  # type: ignore
+                source_tokens: Dict[str, torch.LongTensor],
+                target_tokens: Dict[str, torch.LongTensor] = None, **kwargs) -> Dict[str, torch.Tensor]:
+        del kwargs
+        return super().forward(source_tokens, target_tokens)
 
-def get_basic_seq2seq_model(vocab: Vocabulary) -> SimpleSeq2Seq:
+
+def get_basic_seq2seq_model(vocab: Vocabulary, use_attention: bool = True) -> SimpleSeq2Seq:
     emb_dim = 64
     hidden_dim = 32
     token_embedding = Embedding(
         num_embeddings=vocab.get_vocab_size('tokens'),
         embedding_dim=emb_dim
     )
+    attention = AdditiveAttention(vector_dim=hidden_dim, matrix_dim=hidden_dim) if use_attention else None
 
     word_embeddings = BasicTextFieldEmbedder({"tokens": token_embedding})
     lstm = PytorchSeq2SeqWrapper(nn.LSTM(emb_dim, hidden_dim, batch_first=True))
@@ -140,7 +147,7 @@ def get_basic_seq2seq_model(vocab: Vocabulary) -> SimpleSeq2Seq:
         source_embedder=word_embeddings,
         encoder=lstm,
         max_decoding_steps=20,
-        attention=AdditiveAttention(vector_dim=hidden_dim, matrix_dim=hidden_dim)
+        attention=attention
     )
 
     return model
