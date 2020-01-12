@@ -2,58 +2,12 @@ from typing import Dict, Tuple
 
 import torch
 import torch.nn as nn
+from allennlp.data import Vocabulary
+from allennlp.models import SimpleSeq2Seq
+from allennlp.modules import TextFieldEmbedder, Seq2SeqEncoder, Attention, SimilarityFunction, Embedding
+from allennlp.modules.attention import AdditiveAttention
 from allennlp.modules.seq2seq_encoders import PytorchSeq2SeqWrapper
 from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
-from allennlp.models.language_model import LanguageModel
-from allennlp.models.basic_classifier import BasicClassifier
-from allennlp.modules.seq2vec_encoders import BagOfEmbeddingsEncoder
-from allennlp.models.encoder_decoders.simple_seq2seq import SimpleSeq2Seq
-from allennlp.modules.attention.additive_attention import AdditiveAttention
-from allennlp.data.vocabulary import Vocabulary
-from allennlp.modules import Attention, TextFieldEmbedder, Seq2SeqEncoder
-from allennlp.modules.similarity_functions import SimilarityFunction
-from allennlp.modules.token_embedders import Embedding
-
-
-def get_basic_lm(vocab: Vocabulary) -> LanguageModel:
-    emb_dim = 64
-    hidden_dim = 32
-    token_embedding = Embedding(
-        num_embeddings=vocab.get_vocab_size('tokens'),
-        embedding_dim=emb_dim
-    )
-
-    word_embeddings = BasicTextFieldEmbedder({"tokens": token_embedding})
-    lstm = PytorchSeq2SeqWrapper(nn.LSTM(emb_dim, hidden_dim, batch_first=True))
-    model = LanguageModel(
-        vocab=vocab,
-        text_field_embedder=word_embeddings,
-        contextualizer=lstm
-    )
-
-    return model
-
-
-def get_basic_classification_model(vocab: Vocabulary) -> BasicClassifier:
-    embedding_dim = 32
-    hidden_dim = 16
-
-    token_embedding = Embedding(
-        num_embeddings=vocab.get_vocab_size('tokens'),
-        embedding_dim=embedding_dim
-    )
-
-    word_embeddings = BasicTextFieldEmbedder({"tokens": token_embedding})
-    lstm = PytorchSeq2SeqWrapper(torch.nn.LSTM(embedding_dim, hidden_dim, batch_first=True))
-    body = BagOfEmbeddingsEncoder(embedding_dim=hidden_dim)
-    model = BasicClassifier(
-        vocab=vocab,
-        text_field_embedder=word_embeddings,
-        seq2seq_encoder=lstm,
-        seq2vec_encoder=body,
-        num_labels=2
-    )
-    return model
 
 
 class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
