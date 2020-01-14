@@ -61,8 +61,8 @@ class Sampler(ABC):
 
         self.initial_sequence = None
         self.current_state = None
-        self.curr_prob = None
-        self.curr_bleu = None
+        self.initial_prob = None
+        self.initial_bleu = None
         self.history = []
 
     def set_input(self, initial_sequence: str) -> None:
@@ -76,8 +76,8 @@ class Sampler(ABC):
                 )['source_tokens']
             )
 
-        self.curr_prob = self.predict_prob(self.initial_sequence)
-        self.curr_bleu = calculate_bleu2(self.initial_sequence, self.generate_from_state(self.current_state.copy()))
+        self.initial_prob = self.predict_prob(self.initial_sequence)
+        self.initial_bleu = calculate_bleu2(self.initial_sequence, self.generate_from_state(self.current_state.copy()))
 
     def empty_history(self) -> None:
         self.history = []
@@ -140,7 +140,7 @@ class MCMCSampler(Sampler):
             generation_reader: DatasetReader,
             bleu: bool = True,
             sigma_prob: float = 1,
-            sigma_bleu: float = 1,
+            sigma_bleu: float = 2,
             device: int = -1
     ) -> None:
         super().__init__(proposal_distribution, classification_model, classification_reader,
@@ -158,10 +158,14 @@ class MCMCSampler(Sampler):
         if generated_seq:
             new_prob = self.predict_prob(generated_seq)
             new_bleu = calculate_bleu2(self.initial_sequence, generated_seq)
+            prob_diff = new_prob - self.initial_prob
+            bleu_diff = new_bleu - self.initial_bleu
+            prob_drop = self.initial_prob / (new_prob + 1e-16)
+            bleu_drop = self.initial_bleu / (new_bleu + 1e-16)
 
-            exp_base = -new_prob / self.sigma_prob
+            exp_base = (-1 / prob_drop) / self.sigma_prob
             if self.bleu:
-                exp_base -= (1 - new_bleu) / self.sigma_bleu
+                exp_base -= bleu_drop / self.sigma_bleu
 
             acceptance_probability = min(
                 [
@@ -171,19 +175,29 @@ class MCMCSampler(Sampler):
             )
 
             if acceptance_probability > np.random.rand():
-                prob_diff = new_prob - self.curr_prob
-                bleu_diff = new_bleu - self.curr_bleu
                 self.current_state = new_state
-                self.curr_prob = new_prob
-                self.curr_bleu = new_bleu
-
                 self.history.append(
                     {
                         'generated_sequence': generated_seq,
-                        'prob': self.curr_prob,
-                        'bleu': self.curr_bleu,
-                        'previous_prob_diff': prob_diff,
-                        'previous_bleu_diff': bleu_diff,
+                        'prob': new_prob,
+                        'bleu': new_bleu,
+                        'prob_diff': prob_diff,
+                        'prob_drop': prob_drop,
+                        'bleu_diff': bleu_diff,
+                        'bleu_drop': bleu_drop,
                         'acceptance_probability': acceptance_probability
                     }
                 )
+
+    def sample_until_satisfied(self, max_steps: int = 200, bleu_diff: float = -0.2, prob_drop: float = 1.5) -> str:
+        """
+        Sample until the bleu decreases by `bleu_diff` maximum and the probability drops by `prob_drop` times minimum
+        """
+
+        for _ in range(max_steps):
+            self.step()
+            if self.history and self.history[-1]['bleu_diff'] >= bleu_diff and \
+                    self.history[-1]['prob_drop'] >= prob_drop:
+                break
+        generated_sequence = None if not self.history else self.history[-1]['generated_sequence']
+        return generated_sequence
