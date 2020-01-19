@@ -18,15 +18,16 @@ BEAM_SIZE = 1
 MAX_DECODING_STEPS = 20
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--cuda', type=int, default=-1)
-parser.add_argument('--task', type=Task, default=Task.CLASSIFICATION)
-parser.add_argument('-md', '--model_dir', type=str, default='experiments')
-parser.add_argument('-dd', '--data_dir', type=str, default='data')
+parser.add_argument('--cuda', type=int, default=-1, help='cuda device number')
+parser.add_argument('--task', type=Task, default=Task.CLASSIFICATION, help='task name')
+parser.add_argument('-md', '--model_dir', type=str, default='experiments', help='where to save checkpoints')
+parser.add_argument('-dd', '--data_dir', type=str, default='data', help='where train.csv and test.csv are')
 parser.add_argument('-ne', '--num_epochs', type=int, default=10)
 parser.add_argument('-bs', '--batch_size', type=int, default=1024)
-parser.add_argument('-p', '--patience', type=int, default=3)
+parser.add_argument('-p', '--patience', type=int, default=2,
+                    help='Number of epochs to be patient before early stopping')
 parser.add_argument('-nc', '--num_classes', type=int, default=2)
-parser.add_argument('-um', '--use_mask', action='store_true')
+parser.add_argument('-um', '--use_mask', action='store_true', help='Whether to apply masking to the input')
 
 
 if __name__ == '__main__':
@@ -80,4 +81,3 @@ if __name__ == '__main__':
 
     results = trainer.train()
     pprint(results)
-

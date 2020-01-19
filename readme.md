@@ -12,48 +12,53 @@
 
 Predict a gender of a client based on his/her transactions.
 
-## [Ai Academy Competition](https://onti.ai-academy.ru/competition)
+Check [this](https://github.com/fursovia/adversarial_attacks/blob/master/notebooks/kaggle_dataset_preparation.ipynb)
+notebook to see how the dataset was collected.
+
+### [Ai Academy Competition](https://onti.ai-academy.ru/competition)
 
 Predict an age of a client based on his/her transactions.
 
-## Insurance dataset by Martin
+### Insurance dataset by Martin
 
 TODO
 
 
 ## Basic usage
 
-### Sequence likelihood
+### Training
+We need two models to use MCMC sampler: classification model and seq2seq model (encoder-decoder like).
 
-You can train a language model on original sequences and then calculate perplexity on adversarial examples.
-
-
-To train a language model run
+To train these models run the following commands
 
 ```bash
-CUDA_VISIBLE_DEVICES="0" python train_lm.py --data_dir data --model_dir experiments --cuda 0
+python train.py \
+    --task seq2seq \
+    --model_dir experiments/seq2seq_exp \
+    --data_dir data/kaggle_transactions_data \
+    --use_mask \
+    --cuda 0
 ```
 
-It assumes that there are `train.txt` and `test.txt` files in `data` folder.
-This command will save a trained model and a vocabulary to `experiments` folder.
+and
 
-You can later use these files to calculate perplexity
+```bash
+python train.py \
+    --task classification \
+    --model_dir experiments/classification_exp \
+    --data_dir data/kaggle_transactions_data \
+    --cuda 0
+```
 
-```python
-from allennlp.data.dataset_readers import SimpleLanguageModelingDatasetReader
-from allennlp.data.vocabulary import Vocabulary
+Run `python train.py --help` to see all available arguments
 
-from adat.dataset import WhitespaceTokenizer
-from adat.lm import get_basic_lm
-from adat.utils import load_weights
-from adat.utils import calculate_perplexity
+### Adversarial examples
 
-reader = SimpleLanguageModelingDatasetReader(tokenizer=WhitespaceTokenizer())
-vocab = Vocabulary.from_files('experiments/vocab')
-
-model = get_basic_lm(vocab)
-load_weights(model, 'experiments/model.th')
-
-sequences = ['...', '...', ..., '...']
-perplexity = calculate_perplexity(sequences, model, reader, vocab)
+```bash
+python run_mcmc.py \
+    --csv_path data/kaggle_transactions_data/test.csv \
+    --results_path results \
+    --class_dir experiments/classification_exp \
+    --seq2seq_dir experiments/seq2seq_exp \
+    --cuda 3
 ```

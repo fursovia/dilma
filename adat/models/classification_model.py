@@ -85,8 +85,8 @@ class BasicClassifierWithMetric(BasicClassifier):
 
 
 def get_basic_classification_model(vocab: Vocabulary, num_classes: int = 2) -> BasicClassifier:
-    embedding_dim = 128
-    hidden_dim = 64
+    embedding_dim = 64
+    hidden_dim = 32
 
     token_embedding = Embedding(
         num_embeddings=vocab.get_vocab_size('tokens'),

@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import List, Dict, Any
 
 import torch
 import numpy as np
+from dataclasses import dataclass
 from torch.distributions import Normal
 from allennlp.models.basic_classifier import BasicClassifier
 from allennlp.data.dataset_readers import DatasetReader
@@ -12,6 +13,18 @@ from allennlp.data.dataset import Batch
 
 from adat.utils import calculate_bleu2
 from adat.models import OneLanguageSeq2SeqModel
+
+
+@dataclass
+class SamplerOutput:
+    generated_sequence: str
+    prob: float = 1.0
+    bleu: float = 0.0
+    prob_diff: float = 0.0
+    prob_drop: float = 1.0
+    bleu_diff: float = -1.0
+    bleu_drop: float = np.inf
+    acceptance_probability: float = 0.0
 
 
 class Proposal(ABC):
@@ -64,7 +77,7 @@ class Sampler(ABC):
         self.current_state = None
         self.initial_prob = None
         self.initial_bleu = None
-        self.history = []
+        self.history: List[SamplerOutput] = []
 
     def set_label_to_drop(self, label: int = 1) -> None:
         self.label_prob_to_drop = label
@@ -109,10 +122,24 @@ class Sampler(ABC):
     def step(self):
         pass
 
-    def sample(self, num_steps: int = 100) -> List[Dict[str, float]]:
+    def sample(self, num_steps: int = 100) -> List[SamplerOutput]:
         for _ in range(num_steps):
             self.step()
         return self.history
+
+    def sample_until_satisfied(self, max_steps: int = 200,
+                               bleu_diff: float = -0.2, prob_drop: float = 1.5) -> SamplerOutput:
+        """
+        Sample until the bleu decreases by `bleu_diff` maximum and the probability drops by `prob_drop` times minimum
+        """
+
+        for _ in range(max_steps):
+            self.step()
+            if self.history and self.history[-1].bleu_diff >= bleu_diff and \
+                    self.history[-1].prob_drop >= prob_drop:
+                return self.history[-1]
+        return SamplerOutput(generated_sequence=self.initial_sequence) if not self.history \
+            else max(self.history, key=lambda x: x.prob_drop)
 
 
 class RandomSampler(Sampler):
@@ -125,13 +152,21 @@ class RandomSampler(Sampler):
         if generated_seq:
             new_prob = self.predict_prob(generated_seq)
             new_bleu = calculate_bleu2(self.initial_sequence, generated_seq)
+            prob_diff = new_prob - self.initial_prob
+            bleu_diff = new_bleu - self.initial_bleu
+            prob_drop = self.initial_prob / (new_prob + 1e-16)
+            bleu_drop = self.initial_bleu / (new_bleu + 1e-16)
 
             self.history.append(
-                {
-                    'generated_sequence': generated_seq,
-                    'prob': new_prob,
-                    'bleu': new_bleu,
-                }
+                SamplerOutput(
+                    generated_sequence=generated_seq,
+                    prob=new_prob,
+                    bleu=new_bleu,
+                    prob_diff=prob_diff,
+                    bleu_diff=bleu_diff,
+                    prob_drop=prob_drop,
+                    bleu_drop=bleu_drop
+                )
             )
 
 
@@ -181,28 +216,16 @@ class MCMCSampler(Sampler):
 
             if acceptance_probability > np.random.rand():
                 self.current_state = new_state
+
                 self.history.append(
-                    {
-                        'generated_sequence': generated_seq,
-                        'prob': new_prob,
-                        'bleu': new_bleu,
-                        'prob_diff': prob_diff,
-                        'prob_drop': prob_drop,
-                        'bleu_diff': bleu_diff,
-                        'bleu_drop': bleu_drop,
-                        'acceptance_probability': acceptance_probability
-                    }
+                    SamplerOutput(
+                        generated_sequence=generated_seq,
+                        prob=new_prob,
+                        bleu=new_bleu,
+                        prob_diff=prob_diff,
+                        bleu_diff=bleu_diff,
+                        prob_drop=prob_drop,
+                        bleu_drop=bleu_drop,
+                        acceptance_probability=acceptance_probability
+                    )
                 )
-
-    def sample_until_satisfied(self, max_steps: int = 200, bleu_diff: float = -0.2, prob_drop: float = 1.5) -> str:
-        """
-        Sample until the bleu decreases by `bleu_diff` maximum and the probability drops by `prob_drop` times minimum
-        """
-
-        for _ in range(max_steps):
-            self.step()
-            if self.history and self.history[-1]['bleu_diff'] >= bleu_diff and \
-                    self.history[-1]['prob_drop'] >= prob_drop:
-                break
-        generated_sequence = None if not self.history else self.history[-1]['generated_sequence']
-        return generated_sequence
