@@ -1,5 +1,26 @@
 # Adversarial Attacks (ADAT)
 
+## Datasets
+
+**How every dataset should look like:**
+1. .csv format (train.csv and test.csv)
+2. Two columns `[sequence, label]` (order is important!)
+3. `sequence` is a `string`, where each event is separated by a space.
+4. `label` is an `int`.
+
+### [Prediction of client gender on card transactions](https://www.kaggle.com/c/python-and-analyze-data-final-project/data)
+
+Predict a gender of a client based on his/her transactions.
+
+## [Ai Academy Competition](https://onti.ai-academy.ru/competition)
+
+Predict an age of a client based on his/her transactions.
+
+## Insurance dataset by Martin
+
+TODO
+
+
 ## Basic usage
 
 ### Sequence likelihood

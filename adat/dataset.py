@@ -1,4 +1,5 @@
 from typing import Iterator, List, Dict, Optional
+from enum import Enum
 import csv
 
 from allennlp.data import Instance
@@ -10,6 +11,11 @@ from allennlp.common.util import END_SYMBOL, START_SYMBOL
 from allennlp.common.file_utils import cached_path
 
 from adat.masker import Masker
+
+
+class Task(str, Enum):
+    CLASSIFICATION = 'classification'
+    SEQ2SEQ = 'seq2seq'
 
 
 class WhitespaceTokenizer(Tokenizer):
@@ -68,9 +74,11 @@ class OneLangSeq2SeqReader(DatasetReader):
         self.masker = masker
 
     def _read(self, file_path):
-        with open(cached_path(file_path), "r") as file:
-            for line in file:
-                yield self.text_to_instance(line.strip())
+        with open(cached_path(file_path), "r") as data_file:
+            tsv_in = csv.reader(data_file, delimiter=',')
+            next(tsv_in, None)
+            for row in tsv_in:
+                yield self.text_to_instance(text=row[0])
 
     def text_to_instance(
         self,
@@ -78,8 +86,8 @@ class OneLangSeq2SeqReader(DatasetReader):
     ) -> Instance:
         fields: Dict[str, Field] = {}
         tokenized = [START_SYMBOL] + text.split() + [END_SYMBOL]
-        fields["original_tokens"] = TextField([Token(word) for word in tokenized], {"tokens": SingleIdTokenIndexer()})
-        fields["target_tokens"] = fields["original_tokens"]
+        fields["tokens"] = TextField([Token(word) for word in tokenized], {"tokens": SingleIdTokenIndexer()})
+        fields["target_tokens"] = fields["tokens"]
         if self.masker is not None:
             text = self.masker.mask(text)
             tokenized = [START_SYMBOL] + text.split() + [END_SYMBOL]
@@ -88,5 +96,5 @@ class OneLangSeq2SeqReader(DatasetReader):
                 {"tokens": SingleIdTokenIndexer()}
             )
         else:
-            fields["source_tokens"] = fields["original_tokens"]
+            fields["source_tokens"] = fields["tokens"]
         return Instance(fields)

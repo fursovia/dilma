@@ -25,17 +25,17 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
                  scheduled_sampling_ratio: float = 0.,
                  use_bleu: bool = True) -> None:
         super().__init__(
-            vocab,
-            source_embedder,
-            encoder,
-            max_decoding_steps,
-            attention,
-            attention_function,
-            beam_size,
-            target_namespace,
-            target_embedding_dim,
-            scheduled_sampling_ratio,
-            use_bleu
+            vocab=vocab,
+            source_embedder=source_embedder,
+            encoder=encoder,
+            max_decoding_steps=max_decoding_steps,
+            attention=attention,
+            attention_function=attention_function,
+            beam_size=beam_size,
+            target_namespace=target_namespace,
+            target_embedding_dim=target_embedding_dim,
+            scheduled_sampling_ratio=scheduled_sampling_ratio,
+            use_bleu=use_bleu
         )
 
     def get_state_for_beam_search(self,
@@ -84,7 +84,8 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
         return super().forward(source_tokens, target_tokens)
 
 
-def get_basic_seq2seq_model(vocab: Vocabulary, use_attention: bool = True) -> SimpleSeq2Seq:
+def get_basic_seq2seq_model(vocab: Vocabulary, use_attention: bool = True,
+                            max_decoding_steps: int = 20, beam_size: int = 1) -> OneLanguageSeq2SeqModel:
     emb_dim = 64
     hidden_dim = 32
     token_embedding = Embedding(
@@ -100,8 +101,9 @@ def get_basic_seq2seq_model(vocab: Vocabulary, use_attention: bool = True) -> Si
         vocab=vocab,
         source_embedder=word_embeddings,
         encoder=lstm,
-        max_decoding_steps=20,
-        attention=attention
+        max_decoding_steps=max_decoding_steps,
+        attention=attention,
+        beam_size=beam_size
     )
 
     return model

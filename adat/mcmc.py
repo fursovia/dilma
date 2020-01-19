@@ -59,11 +59,15 @@ class Sampler(ABC):
             self.classification_model.cpu()
             self.generation_model.cpu()
 
+        self.label_prob_to_drop = None
         self.initial_sequence = None
         self.current_state = None
         self.initial_prob = None
         self.initial_bleu = None
         self.history = []
+
+    def set_label_to_drop(self, label: int = 1) -> None:
+        self.label_prob_to_drop = label
 
     def set_input(self, initial_sequence: str) -> None:
         self.initial_sequence = initial_sequence
@@ -95,10 +99,11 @@ class Sampler(ABC):
             return ' '.join(self.generation_model.decode(pred_output)['predicted_tokens'][0])
 
     def predict_prob(self, sequence: str) -> float:
+        assert self.label_prob_to_drop is not None, 'You must run `.set_label_to_drop()` first.'
         with torch.no_grad():
             return self.classification_model.forward_on_instance(
                 self.classification_reader.text_to_instance(sequence)
-            )['probs'][1]
+            )['probs'][self.label_prob_to_drop]
 
     @abstractmethod
     def step(self):

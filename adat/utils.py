@@ -57,5 +57,5 @@ def calculate_bleu2(reference: str, hypothesis: str) -> float:
         [reference.split()],
         hypothesis.split(),
         weights=(0.5, 0.5),
-        smoothing_function=SmoothingFunction().method0
+        smoothing_function=SmoothingFunction().method2
     )

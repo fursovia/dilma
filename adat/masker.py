@@ -118,3 +118,16 @@ class TwoSwapMasker(Masker):
             i, j = sorted(np.random.choice(seq_size, size=2, replace=False))
             splitted_sequence[i], splitted_sequence[j] = splitted_sequence[j], splitted_sequence[i]
         return ' '.join(splitted_sequence)
+
+
+def get_default_masker() -> Masker:
+    mask = Multiple(
+        [
+            TwoSwapMasker(),
+            MaskMasker(),
+            RemoveMasker(),
+            AddMasker(),
+            DoubleMasker()
+        ]
+    )
+    return mask
