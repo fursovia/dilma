@@ -45,7 +45,7 @@ and
 ```bash
 python train.py \
     --task classification \
-    --model_dir experiments/classification_exp \
+    --model_dir experiments/classification_exp_43 \
     --data_dir data/kaggle_transactions_data \
     --cuda 0
 ```
@@ -57,8 +57,8 @@ Run `python train.py --help` to see all available arguments
 ```bash
 python run_mcmc.py \
     --csv_path data/kaggle_transactions_data/test.csv \
-    --results_path results \
-    --class_dir experiments/classification_exp \
-    --seq2seq_dir experiments/seq2seq_exp \
-    --cuda 3
+    --results_path results_last \
+    --class_dir experiments/classification_exp_43 \
+    --seq2seq_dir experiments/seq2seq_exp_new_mask \
+    --cuda 0
 ```

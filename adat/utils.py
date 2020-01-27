@@ -1,4 +1,5 @@
 import ast
+import functools
 from typing import List, Dict, Any
 
 import torch
@@ -41,6 +42,7 @@ def calculate_perplexity(texts: List[str], model: Model, reader: DatasetReader, 
     return perplexity.get_metric()
 
 
+@functools.lru_cache(maxsize=500)
 def calculate_wer(sequence_a: str, sequence_b: str) -> float:
     # taken from https://github.com/SeanNaren/deepspeech.pytorch/blob/master/decoder.py
     b = set(sequence_a.split() + sequence_b.split())
@@ -52,6 +54,7 @@ def calculate_wer(sequence_a: str, sequence_b: str) -> float:
     return lvs.distance(''.join(w1), ''.join(w2))
 
 
+@functools.lru_cache(maxsize=500)
 def calculate_bleu2(reference: str, hypothesis: str) -> float:
     return sentence_bleu(
         [reference.split()],

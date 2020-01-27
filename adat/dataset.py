@@ -54,14 +54,14 @@ class CsvReader(DatasetReader):
             tsv_in = csv.reader(data_file, delimiter=',')
             next(tsv_in, None)
             for row in tsv_in:
-                yield self.text_to_instance(sequence=row[0], label=row[1])
+                # TODO: add self._tokenizer (TextClassifierPredictor bug)
+                yield self.text_to_instance(sequence=row[0].split(), label=row[1])
 
     def text_to_instance(self,
-                         sequence: str,
+                         sequence: List[str],
                          label: str = None) -> Instance:
-        fields: Dict[str, Field] = {}
-        tokenized = sequence.split()
-        fields["tokens"] = TextField([Token(word) for word in tokenized], {"tokens": SingleIdTokenIndexer()})
+        fields: Dict[str, Field] = dict()
+        fields["tokens"] = TextField([Token(word) for word in sequence], {"tokens": SingleIdTokenIndexer()})
         if label is not None:
             fields['label'] = LabelField(int(label), skip_indexing=True)
         return Instance(fields)

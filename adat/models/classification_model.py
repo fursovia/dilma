@@ -10,6 +10,7 @@ from allennlp.modules.seq2vec_encoders import BagOfEmbeddingsEncoder
 from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
 from allennlp.modules import Seq2SeqEncoder, Seq2VecEncoder, TextFieldEmbedder
 from allennlp.training.metrics import Auc, F1Measure
+from allennlp.nn.util import get_text_field_mask
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
@@ -71,12 +72,34 @@ class BasicClassifierWithMetric(BasicClassifier):
     def forward(self,
                 tokens: Dict[str, torch.LongTensor],
                 label: torch.IntTensor = None) -> Dict[str, torch.Tensor]:
-        output = super().forward(tokens, label)
-        if label is not None and self._num_labels == 2:
-            self._auc(output['probs'][:, 1], label.long().view(-1))
-            self._f1(output['probs'], label.long().view(-1))
+        embedded_text = self._text_field_embedder(tokens)
+        # mask = get_text_field_mask(tokens).float()
+        # TODO: hotflip bug
+        mask = None
 
-        return output
+        if self._seq2seq_encoder:
+            embedded_text = self._seq2seq_encoder(embedded_text, mask=mask)
+
+        embedded_text = self._seq2vec_encoder(embedded_text, mask=mask)
+
+        if self._dropout:
+            embedded_text = self._dropout(embedded_text)
+
+        logits = self._classification_layer(embedded_text)
+        probs = torch.nn.functional.softmax(logits, dim=-1)
+
+        output_dict = {"logits": logits, "probs": probs}
+
+        if label is not None:
+            loss = self._loss(logits, label.long().view(-1))
+            output_dict["loss"] = loss
+            self._accuracy(logits, label)
+
+        if label is not None and self._num_labels == 2:
+            self._auc(output_dict['probs'][:, 1], label.long().view(-1))
+            self._f1(output_dict['probs'], label.long().view(-1))
+
+        return output_dict
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
         metrics = super().get_metrics(reset)

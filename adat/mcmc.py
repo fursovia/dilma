@@ -41,6 +41,8 @@ class NormalProposal(Proposal):
         return Normal(curr_state, torch.ones_like(curr_state) * (self.variance ** 0.5)).sample()
 
 
+# TODO: num_steps passed
+# TODO: take last if self.history is None (self.full_history)
 class Sampler(ABC):
     def __init__(
             self,
