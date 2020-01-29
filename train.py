@@ -9,7 +9,8 @@ from allennlp.training.trainer import Trainer
 from allennlp.data.iterators import BucketIterator
 from allennlp.common.util import dump_metrics
 
-from adat.models import get_basic_classification_model, get_basic_seq2seq_model, get_mask_seq2seq_model
+from adat.models import get_basic_classification_model, \
+    get_basic_seq2seq_model, get_mask_seq2seq_model, get_att_mask_seq2seq_model
 from adat.dataset import CsvReader, OneLangSeq2SeqReader, Task, END_SYMBOL, START_SYMBOL
 from adat.masker import get_default_masker
 
@@ -35,7 +36,7 @@ if __name__ == '__main__':
 
     if args.task == Task.CLASSIFICATION:
         reader = CsvReader(lazy=False)
-    elif args.task == Task.SEQ2SEQ:
+    elif args.task == Task.SEQ2SEQ or args.task == Task.MASKEDSEQ2SEQ or args.task == Task.ATTMASKEDSEQ2SEQ:
         mask = get_default_masker() if args.use_mask else None
         reader = OneLangSeq2SeqReader(mask)
     else:
@@ -59,6 +60,8 @@ if __name__ == '__main__':
         model = get_basic_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
     elif args.task == Task.MASKEDSEQ2SEQ:
         model = get_mask_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
+    elif args.task == Task.ATTMASKEDSEQ2SEQ:
+        model = get_att_mask_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
     else:
         raise NotImplementedError(f'{args.task} -- no such task')
 

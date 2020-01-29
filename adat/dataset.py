@@ -20,6 +20,7 @@ class Task(str, Enum):
     CLASSIFICATION = 'classification'
     SEQ2SEQ = 'seq2seq'
     MASKEDSEQ2SEQ = 'mask_seq2seq'
+    ATTMASKEDSEQ2SEQ = 'att_mask_seq2seq'
 
 
 class WhitespaceTokenizer(Tokenizer):
@@ -87,7 +88,8 @@ class OneLangSeq2SeqReader(DatasetReader):
 
     def text_to_instance(
         self,
-        text: str
+        text: str,
+        maskers_applied: Optional[List[str]] = None
     ) -> Instance:
         fields: Dict[str, Field] = dict()
         fields["tokens"] = TextField(
@@ -108,7 +110,7 @@ class OneLangSeq2SeqReader(DatasetReader):
             )
         else:
             fields["source_tokens"] = fields["tokens"]
-            maskers_applied = ['Identity']
+            maskers_applied = maskers_applied or ['Identity']
 
         fields['masker_tokens'] = TextField(
             [Token(masker) for masker in maskers_applied],

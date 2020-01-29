@@ -33,8 +33,8 @@ To train these models run the following commands
 
 ```bash
 python train.py \
-    --task seq2seq \
-    --model_dir experiments/seq2seq_exp_maskers \
+    --task att_mask_seq2seq \
+    --model_dir experiments/seq2seq_exp_maskers_49 \
     --data_dir data/kaggle_transactions_data \
     --use_mask \
     -ne 20 \
