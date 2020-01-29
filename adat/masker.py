@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from enum import Enum
 
 import numpy as np
@@ -16,7 +16,7 @@ class Masker(ABC):
         pass
 
     @abstractmethod
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
         pass
 
 
@@ -28,10 +28,12 @@ class Sequential(Masker):
     def name(self):
         return self.__class__.__name__
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
+        maskers_applied = []
         for masker in self.maskers:
-            sequence = masker.mask(sequence)
-        return sequence
+            sequence, maskers_applied_curr = masker.mask(sequence)
+            maskers_applied.extend(maskers_applied_curr)
+        return sequence, maskers_applied
 
 
 class Multiple(Masker):
@@ -43,12 +45,14 @@ class Multiple(Masker):
     def name(self):
         return self.__class__.__name__
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
+        maskers_applied = []
         num_muskers = self.num_maskers or np.random.binomial(n=len(self.maskers), p=0.3)
         masks_to_apply = sorted(np.random.randint(0, len(self.maskers), size=num_muskers))
         for i in masks_to_apply:
-            sequence = self.maskers[i].mask(sequence)
-        return sequence
+            sequence, maskers_applied_curr = self.maskers[i].mask(sequence)
+            maskers_applied.extend(maskers_applied_curr)
+        return sequence, maskers_applied
 
 
 class MultipleWithProbs(Masker):
@@ -62,12 +66,14 @@ class MultipleWithProbs(Masker):
     def name(self):
         return self.__class__.__name__
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
+        maskers_applied = []
         num_muskers = self.num_maskers or np.random.binomial(n=len(self.maskers), p=0.3)
         maskers = np.random.choice(self.maskers, size=num_muskers, replace=True, p=self.probs)
         for masker in maskers:
-            sequence = masker.mask(sequence)
-        return sequence
+            sequence, maskers_applied_curr = masker.mask(sequence)
+            maskers_applied.extend(maskers_applied_curr)
+        return sequence, maskers_applied
 
 
 class MaskMasker(Masker):
@@ -81,12 +87,13 @@ class MaskMasker(Masker):
     def name(self):
         return self.__class__.__name__
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
         splitted_sequence = sequence.split()
         seq_size = len(splitted_sequence)
         samples = np.random.binomial(n=1, p=self.prob, size=seq_size)
         masked_sequence = [MASK_TOKEN if samples[i] else token for i, token in enumerate(splitted_sequence)]
-        return ' '.join(masked_sequence)
+        maskers_applied = [self.name for sample in samples if sample]
+        return ' '.join(masked_sequence), maskers_applied
 
 
 class RemoveMasker(Masker):
@@ -100,12 +107,13 @@ class RemoveMasker(Masker):
     def name(self):
         return self.__class__.__name__
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
         splitted_sequence = sequence.split()
         seq_size = len(splitted_sequence)
         samples = np.random.binomial(n=1, p=self.prob, size=seq_size)
         masked_sequence = [token for i, token in enumerate(splitted_sequence) if not samples[i]]
-        return ' '.join(masked_sequence)
+        maskers_applied = [self.name for sample in samples if sample]
+        return ' '.join(masked_sequence), maskers_applied
 
 
 class AddMaskMasker(Masker):
@@ -119,7 +127,8 @@ class AddMaskMasker(Masker):
     def name(self):
         return self.__class__.__name__
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
+        maskers_applied = []
         splitted_sequence = sequence.split()
         seq_size = len(splitted_sequence)
         samples = np.random.binomial(n=1, p=self.prob, size=seq_size)
@@ -129,7 +138,8 @@ class AddMaskMasker(Masker):
             masked_sequence.append(token)
             if samples[i]:
                 masked_sequence.append(MASK_TOKEN)
-        return ' '.join(masked_sequence)
+                maskers_applied.append(self.name)
+        return ' '.join(masked_sequence), maskers_applied
 
 
 class DoubleMasker(Masker):
@@ -143,7 +153,8 @@ class DoubleMasker(Masker):
     def name(self):
         return self.__class__.__name__
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
+        maskers_applied = []
         splitted_sequence = sequence.split()
         seq_size = len(splitted_sequence)
         samples = np.random.binomial(n=1, p=self.prob, size=seq_size)
@@ -153,7 +164,8 @@ class DoubleMasker(Masker):
             masked_sequence.append(token)
             if samples[i]:
                 masked_sequence.append(token)
-        return ' '.join(masked_sequence)
+                maskers_applied.append(self.name)
+        return ' '.join(masked_sequence), maskers_applied
 
 
 class TwoSwapMasker(Masker):
@@ -164,14 +176,16 @@ class TwoSwapMasker(Masker):
     def name(self):
         return self.__class__.__name__
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
+        maskers_applied = []
         splitted_sequence = sequence.split()
         seq_size = len(splitted_sequence)
 
         if seq_size >= 2 and self.prob > np.random.rand():
             i, j = sorted(np.random.choice(seq_size, size=2, replace=False))
             splitted_sequence[i], splitted_sequence[j] = splitted_sequence[j], splitted_sequence[i]
-        return ' '.join(splitted_sequence)
+            maskers_applied.append(self.name)
+        return ' '.join(splitted_sequence), maskers_applied
 
 
 class ReplaceMasker(Masker):
@@ -183,7 +197,8 @@ class ReplaceMasker(Masker):
     def name(self):
         return self.__class__.__name__
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
+        maskers_applied = []
         splitted_sequence = sequence.split()
         self.vocab.update(set(splitted_sequence))
         seq_size = len(splitted_sequence)
@@ -193,10 +208,11 @@ class ReplaceMasker(Masker):
             if samples[i]:
                 random_token = np.random.choice(list(self.vocab))
                 new_sequence.append(random_token)
+                maskers_applied.append(self.name)
             else:
                 new_sequence.append(token)
 
-        return ' '.join(new_sequence)
+        return ' '.join(new_sequence), maskers_applied
 
 
 class AddStrategy(str, Enum):
@@ -217,7 +233,8 @@ class AddMasker(Masker):
     def name(self):
         return self.__class__.__name__ + self.strategy.value
 
-    def mask(self, sequence: str) -> str:
+    def mask(self, sequence: str) -> Tuple[str, List[str]]:
+        maskers_applied = []
         splitted_sequence = sequence.split()
         self.vocab.update(set(splitted_sequence))
         seq_size = len(splitted_sequence)
@@ -230,22 +247,25 @@ class AddMasker(Masker):
                 if samples[i]:
                     random_token = np.random.choice(list(self.vocab))
                     new_sequence.append(random_token)
+                    maskers_applied.append(self.name)
         elif self.strategy == AddStrategy.END:
             new_sequence.extend(splitted_sequence)
             num_tokens_to_add = np.random.binomial(n=self._max_num_to_add, p=self.prob)
             for _ in range(num_tokens_to_add):
                 random_token = np.random.choice(list(self.vocab))
                 new_sequence.append(random_token)
+                maskers_applied.append(self.name)
         elif self.strategy == AddStrategy.START:
             num_tokens_to_add = np.random.binomial(n=self._max_num_to_add, p=self.prob)
             for _ in range(num_tokens_to_add):
                 random_token = np.random.choice(list(self.vocab))
                 new_sequence.append(random_token)
+                maskers_applied.append(self.name)
             new_sequence.extend(splitted_sequence)
         else:
             raise NotImplementedError
 
-        return ' '.join(new_sequence)
+        return ' '.join(new_sequence), maskers_applied
 
 
 def get_default_masker() -> Masker:

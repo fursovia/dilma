@@ -73,9 +73,9 @@ class BasicClassifierWithMetric(BasicClassifier):
                 tokens: Dict[str, torch.LongTensor],
                 label: torch.IntTensor = None) -> Dict[str, torch.Tensor]:
         embedded_text = self._text_field_embedder(tokens)
-        # mask = get_text_field_mask(tokens).float()
+        mask = get_text_field_mask(tokens).float()
         # TODO: hotflip bug
-        mask = None
+        # mask = None
 
         if self._seq2seq_encoder:
             embedded_text = self._seq2seq_encoder(embedded_text, mask=mask)

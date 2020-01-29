@@ -34,10 +34,11 @@ To train these models run the following commands
 ```bash
 python train.py \
     --task seq2seq \
-    --model_dir experiments/seq2seq_exp \
+    --model_dir experiments/seq2seq_exp_maskers \
     --data_dir data/kaggle_transactions_data \
     --use_mask \
-    --cuda 0
+    -ne 20 \
+    --cuda 3
 ```
 
 and

@@ -9,8 +9,8 @@ from allennlp.training.trainer import Trainer
 from allennlp.data.iterators import BucketIterator
 from allennlp.common.util import dump_metrics
 
-from adat.models import get_basic_classification_model, get_basic_seq2seq_model
-from adat.dataset import CsvReader, OneLangSeq2SeqReader, Task
+from adat.models import get_basic_classification_model, get_basic_seq2seq_model, get_mask_seq2seq_model
+from adat.dataset import CsvReader, OneLangSeq2SeqReader, Task, END_SYMBOL, START_SYMBOL
 from adat.masker import get_default_masker
 
 LEARNING_RATE = 0.003
@@ -45,15 +45,20 @@ if __name__ == '__main__':
     train_dataset = reader.read(data_path / 'train.csv')
     test_dataset = reader.read(data_path / 'test.csv')
 
-    vocab = Vocabulary.from_instances(train_dataset + test_dataset)
+    vocab = Vocabulary.from_instances(
+        train_dataset + test_dataset,
+        tokens_to_add={'tokens': [START_SYMBOL, END_SYMBOL]}
+    )
 
-    iterator = BucketIterator(batch_size=args.batch_size, sorting_keys=[('tokens', 'num_tokens')])
+    iterator = BucketIterator(batch_size=args.batch_size, sorting_keys=[('source_tokens', 'num_tokens')])
     iterator.index_with(vocab)
 
     if args.task == Task.CLASSIFICATION:
         model = get_basic_classification_model(vocab, args.num_classes)
     elif args.task == Task.SEQ2SEQ:
         model = get_basic_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
+    elif args.task == Task.MASKEDSEQ2SEQ:
+        model = get_mask_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
     else:
         raise NotImplementedError(f'{args.task} -- no such task')
 

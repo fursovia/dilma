@@ -7,15 +7,19 @@ from allennlp.data.fields import TextField, LabelField, Field
 from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.token_indexers import SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token, Tokenizer
-from allennlp.common.util import END_SYMBOL, START_SYMBOL
 from allennlp.common.file_utils import cached_path
 
 from adat.masker import Masker
 
 
+START_SYMBOL = '@start@'
+END_SYMBOL = '@end@'
+
+
 class Task(str, Enum):
     CLASSIFICATION = 'classification'
     SEQ2SEQ = 'seq2seq'
+    MASKEDSEQ2SEQ = 'mask_seq2seq'
 
 
 class WhitespaceTokenizer(Tokenizer):
@@ -72,6 +76,7 @@ class OneLangSeq2SeqReader(DatasetReader):
     def __init__(self, masker: Optional[Masker] = None, lazy: bool = False):
         super().__init__(lazy)
         self.masker = masker
+        self._tokenizer = WhitespaceTokenizer()
 
     def _read(self, file_path):
         with open(cached_path(file_path), "r") as data_file:
@@ -84,17 +89,32 @@ class OneLangSeq2SeqReader(DatasetReader):
         self,
         text: str
     ) -> Instance:
-        fields: Dict[str, Field] = {}
-        tokenized = [START_SYMBOL] + text.split() + [END_SYMBOL]
-        fields["tokens"] = TextField([Token(word) for word in tokenized], {"tokens": SingleIdTokenIndexer()})
+        fields: Dict[str, Field] = dict()
+        fields["tokens"] = TextField(
+            self._tokenizer.tokenize(text),
+            {
+                "tokens": SingleIdTokenIndexer(start_tokens=[START_SYMBOL], end_tokens=[END_SYMBOL])
+            }
+        )
         fields["target_tokens"] = fields["tokens"]
         if self.masker is not None:
-            text = self.masker.mask(text)
-            tokenized = [START_SYMBOL] + text.split() + [END_SYMBOL]
+            text, maskers_applied = self.masker.mask(text)
+            maskers_applied = list(set(maskers_applied)) or ['Identity']
             fields["source_tokens"] = TextField(
-                [Token(word) for word in tokenized],
-                {"tokens": SingleIdTokenIndexer()}
+                self._tokenizer.tokenize(text),
+                {
+                    "tokens": SingleIdTokenIndexer(start_tokens=[START_SYMBOL], end_tokens=[END_SYMBOL])
+                 }
             )
         else:
             fields["source_tokens"] = fields["tokens"]
+            maskers_applied = ['Identity']
+
+        fields['masker_tokens'] = TextField(
+            [Token(masker) for masker in maskers_applied],
+            {
+                "tokens": SingleIdTokenIndexer(namespace='mask_tokens')
+            }
+        )
+
         return Instance(fields)
