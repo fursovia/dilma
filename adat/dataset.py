@@ -2,8 +2,9 @@ from typing import Iterator, List, Dict, Optional
 from enum import Enum
 import csv
 
+import numpy as np
 from allennlp.data import Instance
-from allennlp.data.fields import TextField, LabelField, Field
+from allennlp.data.fields import TextField, LabelField, Field, ArrayField
 from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.token_indexers import SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token, Tokenizer
@@ -21,6 +22,7 @@ class Task(str, Enum):
     SEQ2SEQ = 'seq2seq'
     MASKEDSEQ2SEQ = 'mask_seq2seq'
     ATTMASKEDSEQ2SEQ = 'att_mask_seq2seq'
+    DEEPLEVENSHTEIN = 'deep_levenshtein'
 
 
 class WhitespaceTokenizer(Tokenizer):
@@ -118,5 +120,50 @@ class OneLangSeq2SeqReader(DatasetReader):
                 "tokens": SingleIdTokenIndexer(namespace='mask_tokens')
             }
         )
+
+        return Instance(fields)
+
+
+class LevenshteinReader(DatasetReader):
+    def __init__(self, lazy: bool = False):
+        super().__init__(lazy)
+        self._tokenizer = WhitespaceTokenizer()
+
+    def _read(self, file_path):
+        with open(cached_path(file_path), "r") as data_file:
+            tsv_in = csv.reader(data_file, delimiter=',')
+            next(tsv_in, None)
+            for row in tsv_in:
+                if len(row) == 3:
+                    yield self.text_to_instance(sequence_a=row[0], sequence_b=row[1], similarity=row[2])
+                else:
+                    yield self.text_to_instance(sequence_a=row[0], sequence_b=row[1])
+
+    def text_to_instance(
+        self,
+        sequence_a: str,
+        sequence_b: str,
+        similarity: Optional[float] = None
+    ) -> Instance:
+        fields: Dict[str, Field] = dict()
+        fields["sequence_a"] = TextField(
+            self._tokenizer.tokenize(sequence_a),
+            {
+                "tokens": SingleIdTokenIndexer(start_tokens=[START_SYMBOL], end_tokens=[END_SYMBOL])
+            }
+        )
+
+        fields["sequence_b"] = TextField(
+            self._tokenizer.tokenize(sequence_b),
+            {
+                "tokens": SingleIdTokenIndexer(start_tokens=[START_SYMBOL], end_tokens=[END_SYMBOL])
+            }
+        )
+
+        if similarity is not None:
+            # TODO: fix this hack
+            fields["similarity"] = ArrayField(
+                array=np.array([similarity])
+            )
 
         return Instance(fields)

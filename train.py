@@ -10,8 +10,8 @@ from allennlp.data.iterators import BucketIterator
 from allennlp.common.util import dump_metrics
 
 from adat.models import get_basic_classification_model, \
-    get_basic_seq2seq_model, get_mask_seq2seq_model, get_att_mask_seq2seq_model
-from adat.dataset import CsvReader, OneLangSeq2SeqReader, Task, END_SYMBOL, START_SYMBOL
+    get_basic_seq2seq_model, get_mask_seq2seq_model, get_att_mask_seq2seq_model, get_basic_deep_levenshtein
+from adat.dataset import CsvReader, OneLangSeq2SeqReader, Task, END_SYMBOL, START_SYMBOL, LevenshteinReader
 from adat.masker import get_default_masker
 
 LEARNING_RATE = 0.003
@@ -36,9 +36,14 @@ if __name__ == '__main__':
 
     if args.task == Task.CLASSIFICATION:
         reader = CsvReader(lazy=False)
+        sorting_keys = [('tokens', 'num_tokens')]
     elif args.task == Task.SEQ2SEQ or args.task == Task.MASKEDSEQ2SEQ or args.task == Task.ATTMASKEDSEQ2SEQ:
         mask = get_default_masker() if args.use_mask else None
         reader = OneLangSeq2SeqReader(mask)
+        sorting_keys = [('source_tokens', 'num_tokens')]
+    elif args.task == Task.DEEPLEVENSHTEIN:
+        reader = LevenshteinReader()
+        sorting_keys = [('sequence_a', 'num_tokens'), ('sequence_b', 'num_tokens')]
     else:
         raise NotImplementedError(f'{args.task} -- no such task')
 
@@ -51,7 +56,7 @@ if __name__ == '__main__':
         tokens_to_add={'tokens': [START_SYMBOL, END_SYMBOL]}
     )
 
-    iterator = BucketIterator(batch_size=args.batch_size, sorting_keys=[('source_tokens', 'num_tokens')])
+    iterator = BucketIterator(batch_size=args.batch_size, sorting_keys=sorting_keys)
     iterator.index_with(vocab)
 
     if args.task == Task.CLASSIFICATION:
@@ -62,6 +67,9 @@ if __name__ == '__main__':
         model = get_mask_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
     elif args.task == Task.ATTMASKEDSEQ2SEQ:
         model = get_att_mask_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
+
+    elif args.task == Task.DEEPLEVENSHTEIN:
+        model = get_basic_deep_levenshtein(vocab)
     else:
         raise NotImplementedError(f'{args.task} -- no such task')
 

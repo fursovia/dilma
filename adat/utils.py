@@ -54,6 +54,10 @@ def calculate_wer(sequence_a: str, sequence_b: str) -> float:
     return lvs.distance(''.join(w1), ''.join(w2))
 
 
+def calculate_normalized_wer(sequence_a: str, sequence_b: str) -> float:
+    return calculate_wer(sequence_a, sequence_b) / max(len(sequence_a.split()), len(sequence_b.split()))
+
+
 @functools.lru_cache(maxsize=500)
 def calculate_bleu2(reference: str, hypothesis: str) -> float:
     return sentence_bleu(

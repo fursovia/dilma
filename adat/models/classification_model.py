@@ -107,6 +107,10 @@ class BasicClassifierWithMetric(BasicClassifier):
         return metrics
 
 
+class BasicClassifierFromSeq2Seq(BasicClassifierWithMetric):
+    pass
+
+
 def get_basic_classification_model(vocab: Vocabulary, num_classes: int = 2) -> BasicClassifier:
     embedding_dim = 64
     hidden_dim = 32
@@ -132,7 +136,7 @@ def get_basic_classification_model(vocab: Vocabulary, num_classes: int = 2) -> B
 
 class LogisticRegressionOnTfIdf:
     def __init__(self, ngram_range: Tuple[int, int] = (1, 2)) -> None:
-        self.model = LogisticRegression()
+        self.model = LogisticRegression(max_iter=10000, n_jobs=-1)
         self.ngram_range = ngram_range
         self.vectorizer = TfidfVectorizer(ngram_range=self.ngram_range)
 

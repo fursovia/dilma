@@ -53,6 +53,19 @@ python train.py \
 
 Run `python train.py --help` to see all available arguments
 
+
+### Deep Levenshtein
+
+```bash
+python train.py \
+    --task deep_levenshtein \
+    --model_dir experiments/deep_levenshtein \
+    --data_dir data/deep_lev_data \
+    -ne 30 \
+    --cuda 1
+```
+
+
 ### Adversarial examples
 
 ```bash

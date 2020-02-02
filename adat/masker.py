@@ -47,7 +47,7 @@ class Multiple(Masker):
 
     def mask(self, sequence: str) -> Tuple[str, List[str]]:
         maskers_applied = []
-        num_muskers = self.num_maskers or np.random.binomial(n=len(self.maskers), p=0.3)
+        num_muskers = self.num_maskers or np.random.binomial(n=len(self.maskers), p=0.25)
         masks_to_apply = sorted(np.random.randint(0, len(self.maskers), size=num_muskers))
         for i in masks_to_apply:
             sequence, maskers_applied_curr = self.maskers[i].mask(sequence)
@@ -68,7 +68,7 @@ class MultipleWithProbs(Masker):
 
     def mask(self, sequence: str) -> Tuple[str, List[str]]:
         maskers_applied = []
-        num_muskers = self.num_maskers or np.random.binomial(n=len(self.maskers), p=0.3)
+        num_muskers = self.num_maskers or np.random.binomial(n=len(self.maskers), p=0.25)
         maskers = np.random.choice(self.maskers, size=num_muskers, replace=True, p=self.probs)
         for masker in maskers:
             sequence, maskers_applied_curr = masker.mask(sequence)
@@ -283,6 +283,6 @@ def get_default_masker() -> Masker:
             AddMasker(strategy=AddStrategy.START),
         ],
         probs=np.array([0.3, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1]),
-        num_maskers=1
+        num_maskers=None  # 1.75 in average
     )
     return mask
