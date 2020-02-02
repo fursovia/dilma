@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 import torch
 import numpy as np
@@ -37,23 +37,30 @@ class BoWMaxEncoder(Seq2VecEncoder):
 
 class BoWMaxAndMeanEncoder(Seq2VecEncoder):
     def __init__(self,
-                 embedding_dim: int) -> None:
+                 embedding_dim: int, hidden_dim: Optional[int] = None) -> None:
         super(BoWMaxAndMeanEncoder, self).__init__()
         self._embedding_dim = embedding_dim
         self.maxer = BoWMaxEncoder(self._embedding_dim)
         self.meaner = BagOfEmbeddingsEncoder(self._embedding_dim, True)
+        self._hidden_dim = hidden_dim
+        if self._hidden_dim is not None:
+            self.linear = torch.nn.Linear(self._embedding_dim * 2, self._hidden_dim)
+        else:
+            self.linear = None
 
     def get_input_dim(self) -> int:
         return self._embedding_dim
 
     def get_output_dim(self) -> int:
-        return self._embedding_dim * 2
+        return self._embedding_dim * 2 if self.linear is None else self._hidden_dim
 
     def forward(self, tokens: torch.Tensor, mask: torch.Tensor = None):
         argmaxed = self.maxer(tokens, mask)
         summed = self.meaner(tokens, mask)
-        aggregated = torch.cat([argmaxed, summed], dim=1)
-        return aggregated
+        output = torch.cat([argmaxed, summed], dim=1)
+        if self.linear is not None:
+            output = self.linear(output)
+        return output
 
 
 class BasicClassifierWithMetric(BasicClassifier):

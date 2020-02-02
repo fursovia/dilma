@@ -23,6 +23,8 @@ class Task(str, Enum):
     MASKEDSEQ2SEQ = 'mask_seq2seq'
     ATTMASKEDSEQ2SEQ = 'att_mask_seq2seq'
     DEEPLEVENSHTEIN = 'deep_levenshtein'
+    DEEPLEVENSHTEINSEQ2SEQ = 'deep_levenshtein_seq2seq'
+    DEEPLEVENSHTEINATT = 'deep_levenshtein_att'
 
 
 class WhitespaceTokenizer(Tokenizer):

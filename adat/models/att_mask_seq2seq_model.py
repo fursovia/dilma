@@ -95,6 +95,7 @@ class OneLanguageSeq2SeqModelWithAttMasks(OneLanguageSeq2SeqModel):
                 target_tokens: Dict[str, torch.LongTensor] = None, **kwargs) -> Dict[str, torch.Tensor]:
         state = self._encode(source_tokens)
         # encode masks
+        # TODO: add default masker_tokens ([Identity])
         masker_tokens = kwargs.get('masker_tokens')  # Dict[str, torch.LongTensor]
         state.update(self._encode_masker(masker_tokens))
 

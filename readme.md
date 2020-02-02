@@ -58,9 +58,9 @@ Run `python train.py --help` to see all available arguments
 
 ```bash
 python train.py \
-    --task deep_levenshtein \
-    --model_dir experiments/deep_levenshtein \
-    --data_dir data/deep_lev_data \
+    --task deep_levenshtein_att \
+    --model_dir experiments/deep_levenshtein_att \
+    --data_dir data/deep_lev_data_large \
     -ne 30 \
     --cuda 1
 ```
