@@ -167,7 +167,7 @@ def get_basic_deep_levenshtein(vocab: Vocabulary) -> DeepLevenshtein:
 
 def get_basic_deep_levenshtein_seq2seq(seq2seq: OneLanguageSeq2SeqModel) -> DeepLevenshteinFromSeq2Seq:
     hidden_dim = seq2seq._encoder_output_dim
-    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=64)
+    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=[128, 64, 64])
 
     model = DeepLevenshteinFromSeq2Seq(
         one_lang_seq2seq=seq2seq,

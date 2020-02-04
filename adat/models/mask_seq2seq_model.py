@@ -11,6 +11,7 @@ from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
 from allennlp.nn import util
 
 from adat.models import OneLanguageSeq2SeqModel
+from adat.dataset import IDENTITY_TOKEN
 
 
 class OneLanguageSeq2SeqModelWithMasks(OneLanguageSeq2SeqModel):
@@ -47,9 +48,18 @@ class OneLanguageSeq2SeqModelWithMasks(OneLanguageSeq2SeqModel):
     def forward(self,  # type: ignore
                 source_tokens: Dict[str, torch.LongTensor],
                 target_tokens: Dict[str, torch.LongTensor] = None, **kwargs) -> Dict[str, torch.Tensor]:
+        batch_size = source_tokens['tokens'].shape[0]
         state = self._encode(source_tokens)
         # encode masks
-        masker_tokens = kwargs.get('masker_tokens')  # Dict[str, torch.LongTensor]
+        if 'masker_tokens' in kwargs:
+            masker_tokens = kwargs.get('masker_tokens')  # Dict[str, torch.LongTensor]
+        else:
+            masker_tokens = {
+                "tokens": torch.tensor(
+                    [self.vocab.get_token_index(IDENTITY_TOKEN, 'mask_tokens')] * batch_size,
+                    device=source_tokens['tokens'].device
+                ).reshape(-1, 1)
+            }
         masker_hidden = self._encode_masker(masker_tokens)
 
         if target_tokens:

@@ -1,4 +1,5 @@
 import argparse
+import json
 from pathlib import Path
 from pprint import pprint
 
@@ -10,7 +11,9 @@ from allennlp.data.iterators import BucketIterator
 from allennlp.common.util import dump_metrics
 
 from adat.models import (
+    OneLanguageSeq2SeqModel,
     get_basic_classification_model,
+    get_basic_classification_model_seq2seq,
     get_basic_seq2seq_model,
     get_mask_seq2seq_model,
     get_att_mask_seq2seq_model,
@@ -21,10 +24,6 @@ from adat.models import (
 from adat.dataset import CsvReader, OneLangSeq2SeqReader, Task, END_SYMBOL, START_SYMBOL, LevenshteinReader
 from adat.masker import get_default_masker
 from adat.utils import load_weights
-
-LEARNING_RATE = 0.003
-BEAM_SIZE = 1
-MAX_DECODING_STEPS = 20
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--cuda', type=int, default=-1, help='cuda device number')
@@ -41,10 +40,33 @@ parser.add_argument('-s2smd', '--seq2seq_model_dir', type=str, default=None)
 parser.add_argument('--resume', action='store_true')
 
 
+LEARNING_RATE = 0.003
+MAX_DECODING_STEPS = 20
+BEAM_SIZE = 1
+
+
+def get_seq2seq_model(task: Task, vocab: Vocabulary,
+                      max_decoding_steps: int = MAX_DECODING_STEPS,
+                      beam_size: int = BEAM_SIZE) -> OneLanguageSeq2SeqModel:
+    if task == Task.SEQ2SEQ:
+        return get_basic_seq2seq_model(vocab, max_decoding_steps, beam_size)
+    elif task == Task.MASKEDSEQ2SEQ:
+        return get_mask_seq2seq_model(vocab, max_decoding_steps, beam_size)
+    elif task == Task.ATTMASKEDSEQ2SEQ:
+        return get_att_mask_seq2seq_model(vocab, max_decoding_steps, beam_size)
+    else:
+        raise NotImplementedError
+
+
+def get_seq2seq_task_name(path: str) -> str:
+    with open(Path(path) / 'args.json') as file:
+        return json.load(file)['task']
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    if args.task == Task.CLASSIFICATION:
+    if args.task in [Task.CLASSIFICATION, Task.CLASSIFICATIONSEQ2SEQ]:
         reader = CsvReader(lazy=False)
         sorting_keys = [('tokens', 'num_tokens')]
     elif args.task in [Task.SEQ2SEQ, Task.MASKEDSEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
@@ -80,17 +102,23 @@ if __name__ == '__main__':
 
     if args.task == Task.CLASSIFICATION:
         model = get_basic_classification_model(vocab, args.num_classes)
-    elif args.task == Task.SEQ2SEQ:
-        model = get_basic_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
-    elif args.task == Task.MASKEDSEQ2SEQ:
-        model = get_mask_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
-    elif args.task == Task.ATTMASKEDSEQ2SEQ:
-        model = get_att_mask_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
+    elif args.task == Task.CLASSIFICATIONSEQ2SEQ:
+        seq2seq_model = get_seq2seq_model(
+            get_seq2seq_task_name(args.seq2seq_model_dir),
+            vocab
+        )
+        load_weights(seq2seq_model, Path(args.seq2seq_model_dir) / 'best.th')
+        model = get_basic_classification_model_seq2seq(seq2seq_model, args.num_classes)
+    elif args.task == [Task.SEQ2SEQ, Task.MASKEDSEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
+        model = get_seq2seq_model(args.task, vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
     elif args.task == Task.DEEPLEVENSHTEIN:
         model = get_basic_deep_levenshtein(vocab)
     elif args.task == Task.DEEPLEVENSHTEINSEQ2SEQ:
         # TODO: only basic seq2seq is available at the moment (others require maskers)
-        seq2seq_model = get_basic_seq2seq_model(vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
+        seq2seq_model = get_seq2seq_model(
+            get_seq2seq_task_name(args.seq2seq_model_dir),
+            vocab
+        )
         load_weights(seq2seq_model, Path(args.seq2seq_model_dir) / 'best.th')
         model = get_basic_deep_levenshtein_seq2seq(seq2seq_model)
     elif args.task == Task.DEEPLEVENSHTEINATT:

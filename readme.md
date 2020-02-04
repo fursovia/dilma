@@ -46,9 +46,21 @@ and
 ```bash
 python train.py \
     --task classification \
-    --model_dir experiments/classification_exp_43 \
+    --model_dir experiments/classification \
     --data_dir data/kaggle_transactions_data \
-    --cuda 0
+    -ne 30 \
+    --cuda 1
+```
+
+
+```bash
+python train.py \
+    --task classification_seq2seq \
+    --model_dir experiments/classification_att_mask_seq2seq \
+    --data_dir data/kaggle_transactions_data \
+    --seq2seq_model_dir experiments/att_mask_seq2seq \
+    -ne 30 \
+    --cuda 1
 ```
 
 Run `python train.py --help` to see all available arguments
@@ -62,6 +74,17 @@ python train.py \
     --model_dir experiments/deep_levenshtein_att \
     --data_dir data/deep_lev_data_large \
     -ne 30 \
+    --cuda 1
+```
+
+
+```bash
+python train.py \
+    --task deep_levenshtein_seq2seq \
+    --model_dir experiments/deep_levenshtein_seq2seq \
+    --data_dir data/deep_lev_data_large \
+    -ne 30 \
+    --seq2seq_model_dir experiments/seq2seq \
     --cuda 1
 ```
 

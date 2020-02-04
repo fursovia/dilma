@@ -14,6 +14,8 @@ from allennlp.nn.util import get_text_field_mask
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
+from adat.models.seq2seq_model import OneLanguageSeq2SeqModel
+
 
 class BoWMaxEncoder(Seq2VecEncoder):
     def __init__(self,
@@ -37,14 +39,23 @@ class BoWMaxEncoder(Seq2VecEncoder):
 
 class BoWMaxAndMeanEncoder(Seq2VecEncoder):
     def __init__(self,
-                 embedding_dim: int, hidden_dim: Optional[int] = None) -> None:
+                 embedding_dim: int, hidden_dim: Optional[List[int]] = None) -> None:
         super(BoWMaxAndMeanEncoder, self).__init__()
         self._embedding_dim = embedding_dim
         self.maxer = BoWMaxEncoder(self._embedding_dim)
         self.meaner = BagOfEmbeddingsEncoder(self._embedding_dim, True)
         self._hidden_dim = hidden_dim
         if self._hidden_dim is not None:
-            self.linear = torch.nn.Linear(self._embedding_dim * 2, self._hidden_dim)
+            layers = [
+                torch.nn.LeakyReLU(),
+                torch.nn.Linear(self._embedding_dim * 2, self._hidden_dim[0])
+            ]
+
+            for i, hid_dim in enumerate(self._hidden_dim[1:]):
+                layers.append(torch.nn.LeakyReLU())
+                layers.append(torch.nn.Linear(self._hidden_dim[i], hid_dim))
+
+            self.linear = torch.nn.Sequential(*layers)
         else:
             self.linear = None
 
@@ -52,7 +63,7 @@ class BoWMaxAndMeanEncoder(Seq2VecEncoder):
         return self._embedding_dim
 
     def get_output_dim(self) -> int:
-        return self._embedding_dim * 2 if self.linear is None else self._hidden_dim
+        return self._embedding_dim * 2 if self.linear is None else self._hidden_dim[-1]
 
     def forward(self, tokens: torch.Tensor, mask: torch.Tensor = None):
         argmaxed = self.maxer(tokens, mask)
@@ -135,6 +146,23 @@ def get_basic_classification_model(vocab: Vocabulary, num_classes: int = 2) -> B
         vocab=vocab,
         text_field_embedder=word_embeddings,
         seq2seq_encoder=lstm,
+        seq2vec_encoder=body,
+        num_labels=num_classes
+    )
+    return model
+
+
+def get_basic_classification_model_seq2seq(one_lang_seq2seq: OneLanguageSeq2SeqModel, num_classes: int = 2) -> BasicClassifier:
+    one_lang_seq2seq.eval()
+    for p in one_lang_seq2seq.parameters():
+        p.requires_grad = False
+
+    hidden_dim = one_lang_seq2seq._encoder_output_dim
+    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=[256, 128, 128])
+    model = BasicClassifierWithMetric(
+        vocab=one_lang_seq2seq.vocab,
+        text_field_embedder=one_lang_seq2seq._source_embedder,
+        seq2seq_encoder=one_lang_seq2seq._encoder,
         seq2vec_encoder=body,
         num_labels=num_classes
     )

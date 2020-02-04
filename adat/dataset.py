@@ -15,10 +15,12 @@ from adat.masker import Masker
 
 START_SYMBOL = '@start@'
 END_SYMBOL = '@end@'
+IDENTITY_TOKEN = 'Identity'
 
 
 class Task(str, Enum):
     CLASSIFICATION = 'classification'
+    CLASSIFICATIONSEQ2SEQ = 'classification_seq2seq'
     SEQ2SEQ = 'seq2seq'
     MASKEDSEQ2SEQ = 'mask_seq2seq'
     ATTMASKEDSEQ2SEQ = 'att_mask_seq2seq'
@@ -105,7 +107,7 @@ class OneLangSeq2SeqReader(DatasetReader):
         fields["target_tokens"] = fields["tokens"]
         if self.masker is not None:
             text, maskers_applied = self.masker.mask(text)
-            maskers_applied = list(set(maskers_applied)) or ['Identity']
+            maskers_applied = list(set(maskers_applied)) or [IDENTITY_TOKEN]
             fields["source_tokens"] = TextField(
                 self._tokenizer.tokenize(text),
                 {
@@ -114,7 +116,7 @@ class OneLangSeq2SeqReader(DatasetReader):
             )
         else:
             fields["source_tokens"] = fields["tokens"]
-            maskers_applied = maskers_applied or ['Identity']
+            maskers_applied = maskers_applied or [IDENTITY_TOKEN]
 
         fields['masker_tokens'] = TextField(
             [Token(masker) for masker in maskers_applied],
