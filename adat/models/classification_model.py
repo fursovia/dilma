@@ -152,13 +152,16 @@ def get_basic_classification_model(vocab: Vocabulary, num_classes: int = 2) -> B
     return model
 
 
-def get_basic_classification_model_seq2seq(one_lang_seq2seq: OneLanguageSeq2SeqModel, num_classes: int = 2) -> BasicClassifier:
+def get_basic_classification_model_seq2seq(
+        one_lang_seq2seq: OneLanguageSeq2SeqModel,
+        num_classes: int = 2
+) -> BasicClassifier:
     one_lang_seq2seq.eval()
     for p in one_lang_seq2seq.parameters():
         p.requires_grad = False
 
     hidden_dim = one_lang_seq2seq._encoder_output_dim
-    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=[256, 128, 128])
+    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=[128])
     model = BasicClassifierWithMetric(
         vocab=one_lang_seq2seq.vocab,
         text_field_embedder=one_lang_seq2seq._source_embedder,

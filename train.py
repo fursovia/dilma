@@ -109,7 +109,7 @@ if __name__ == '__main__':
         )
         load_weights(seq2seq_model, Path(args.seq2seq_model_dir) / 'best.th')
         model = get_basic_classification_model_seq2seq(seq2seq_model, args.num_classes)
-    elif args.task == [Task.SEQ2SEQ, Task.MASKEDSEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
+    elif args.task in [Task.SEQ2SEQ, Task.MASKEDSEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
         model = get_seq2seq_model(args.task, vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
     elif args.task == Task.DEEPLEVENSHTEIN:
         model = get_basic_deep_levenshtein(vocab)
