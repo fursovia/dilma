@@ -6,7 +6,7 @@ from allennlp.modules.seq2seq_encoders import PytorchSeq2SeqWrapper
 from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
 
 
-def get_basic_lm(vocab: Vocabulary) -> LanguageModel:
+def get_lm(vocab: Vocabulary) -> LanguageModel:
     emb_dim = 64
     hidden_dim = 32
     token_embedding = Embedding(

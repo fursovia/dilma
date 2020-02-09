@@ -54,13 +54,14 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
     def forward(self,  # type: ignore
                 source_tokens: Dict[str, torch.LongTensor],
                 target_tokens: Dict[str, torch.LongTensor] = None, **kwargs) -> Dict[str, torch.Tensor]:
+        # TODO: pass state
         del kwargs
         return super().forward(source_tokens, target_tokens)
 
 
-def get_basic_seq2seq_model(vocab: Vocabulary,
-                            max_decoding_steps: int = 20,
-                            beam_size: int = 1) -> OneLanguageSeq2SeqModel:
+def get_seq2seq_model(vocab: Vocabulary,
+                      max_decoding_steps: int = 20,
+                      beam_size: int = 1) -> OneLanguageSeq2SeqModel:
     emb_dim = 64
     hidden_dim = 32
     token_embedding = Embedding(

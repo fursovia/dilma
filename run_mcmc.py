@@ -6,8 +6,8 @@ from tqdm import tqdm
 from allennlp.data.vocabulary import Vocabulary
 from adat.dataset import CsvReader, OneLangSeq2SeqReader
 
-from adat.mcmc import MCMCSampler, RandomSampler, NormalProposal, SamplerOutput
-from adat.models import get_basic_classification_model, get_basic_seq2seq_model
+from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, SamplerOutput
+from adat.models import get_classification_model, get_seq2seq_model
 from adat.utils import load_weights, calculate_wer
 from train import MAX_DECODING_STEPS
 
@@ -30,13 +30,13 @@ if __name__ == '__main__':
 
     class_reader = CsvReader()
     class_vocab = Vocabulary.from_files(Path(args.class_dir) / 'vocab')
-    class_model = get_basic_classification_model(class_vocab)
+    class_model = get_classification_model(class_vocab)
     load_weights(class_model, Path(args.class_dir) / 'best.th')
 
     seq2seq_reader = OneLangSeq2SeqReader(masker=None)
     seq2seq_vocab = Vocabulary.from_files(Path(args.seq2seq_dir) / 'vocab')
-    seq2seq_model = get_basic_seq2seq_model(seq2seq_vocab, max_decoding_steps=MAX_DECODING_STEPS,
-                                            beam_size=args.beam_size)
+    seq2seq_model = get_seq2seq_model(seq2seq_vocab, max_decoding_steps=MAX_DECODING_STEPS,
+                                      beam_size=args.beam_size)
     load_weights(seq2seq_model, Path(args.seq2seq_dir) / 'best.th')
 
     if args.random:

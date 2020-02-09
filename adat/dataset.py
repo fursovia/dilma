@@ -1,4 +1,4 @@
-from typing import Iterator, List, Dict, Optional
+from typing import List, Dict, Optional
 from enum import Enum
 import csv
 
@@ -29,50 +29,34 @@ class Task(str, Enum):
     DEEPLEVENSHTEINATT = 'deep_levenshtein_att'
 
 
+def _get_default_indexer() -> SingleIdTokenIndexer:
+    return SingleIdTokenIndexer(namespace='tokens', start_tokens=[START_SYMBOL], end_tokens=[END_SYMBOL])
+
+
 class WhitespaceTokenizer(Tokenizer):
     def tokenize(self, text: str) -> List[Token]:
         return [Token(t) for t in text.split()]
 
 
-class InsuranceReader(DatasetReader):
-    def text_to_instance(self, sentence: str, label: int = None) -> Instance:
-        if not isinstance(sentence, list):
-            sentence = sentence.split()
-
-        sentence_field = TextField([Token(word) for word in sentence], {"tokens": SingleIdTokenIndexer()})
-        fields = {"tokens": sentence_field}
-
-        if label is not None:
-            label_field = LabelField(label=label, skip_indexing=True)
-            fields["label"] = label_field
-
-        return Instance(fields)
-
-    def _read(self, file_path: str) -> Iterator[Instance]:
-        text_path = file_path + '.text'
-        labels_path = file_path + '.labels'
-
-        with open(text_path) as text_f, open(labels_path) as labels_f:
-            for line_t, line_l in zip(text_f, labels_f):
-                sentence = line_t.strip()
-                label = int(line_l.strip())
-                yield self.text_to_instance(sentence, label)
-
-
 class CsvReader(DatasetReader):
+    def __init__(self, lazy: bool = False):
+        super().__init__(lazy)
+        self._tokenizer = WhitespaceTokenizer()
+
     def _read(self, file_path):
         with open(cached_path(file_path), "r") as data_file:
             tsv_in = csv.reader(data_file, delimiter=',')
             next(tsv_in, None)
             for row in tsv_in:
-                # TODO: add self._tokenizer (TextClassifierPredictor bug)
-                yield self.text_to_instance(sequence=row[0].split(), label=row[1])
+                yield self.text_to_instance(sequence=row[0], label=row[1])
 
     def text_to_instance(self,
-                         sequence: List[str],
+                         sequence: str,
                          label: str = None) -> Instance:
         fields: Dict[str, Field] = dict()
-        fields["tokens"] = TextField([Token(word) for word in sequence], {"tokens": SingleIdTokenIndexer()})
+        fields["tokens"] = TextField(
+            self._tokenizer.tokenize(sequence),
+            {"tokens": _get_default_indexer()})
         if label is not None:
             fields['label'] = LabelField(int(label), skip_indexing=True)
         return Instance(fields)
@@ -101,7 +85,7 @@ class OneLangSeq2SeqReader(DatasetReader):
         fields["tokens"] = TextField(
             self._tokenizer.tokenize(text),
             {
-                "tokens": SingleIdTokenIndexer(start_tokens=[START_SYMBOL], end_tokens=[END_SYMBOL])
+                "tokens": _get_default_indexer()
             }
         )
         fields["target_tokens"] = fields["tokens"]
@@ -111,7 +95,7 @@ class OneLangSeq2SeqReader(DatasetReader):
             fields["source_tokens"] = TextField(
                 self._tokenizer.tokenize(text),
                 {
-                    "tokens": SingleIdTokenIndexer(start_tokens=[START_SYMBOL], end_tokens=[END_SYMBOL])
+                    "tokens": _get_default_indexer()
                  }
             )
         else:
@@ -153,14 +137,14 @@ class LevenshteinReader(DatasetReader):
         fields["sequence_a"] = TextField(
             self._tokenizer.tokenize(sequence_a),
             {
-                "tokens": SingleIdTokenIndexer(start_tokens=[START_SYMBOL], end_tokens=[END_SYMBOL])
+                "tokens": _get_default_indexer()
             }
         )
 
         fields["sequence_b"] = TextField(
             self._tokenizer.tokenize(sequence_b),
             {
-                "tokens": SingleIdTokenIndexer(start_tokens=[START_SYMBOL], end_tokens=[END_SYMBOL])
+                "tokens": _get_default_indexer()
             }
         )
 

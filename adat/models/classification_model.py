@@ -129,7 +129,7 @@ class BasicClassifierFromSeq2Seq(BasicClassifierWithMetric):
     pass
 
 
-def get_basic_classification_model(vocab: Vocabulary, num_classes: int = 2) -> BasicClassifier:
+def get_classification_model(vocab: Vocabulary, num_classes: int = 2) -> BasicClassifier:
     embedding_dim = 64
     hidden_dim = 32
 
@@ -152,7 +152,7 @@ def get_basic_classification_model(vocab: Vocabulary, num_classes: int = 2) -> B
     return model
 
 
-def get_basic_classification_model_seq2seq(
+def get_classification_model_seq2seq(
         one_lang_seq2seq: OneLanguageSeq2SeqModel,
         num_classes: int = 2
 ) -> BasicClassifier:

@@ -144,7 +144,7 @@ class DeepLevenshteinWithAttention(Model):
         return output_dict
 
 
-def get_basic_deep_levenshtein(vocab: Vocabulary) -> DeepLevenshtein:
+def get_deep_levenshtein(vocab: Vocabulary) -> DeepLevenshtein:
     embedding_dim = 64
     hidden_dim = 32
 
@@ -165,7 +165,7 @@ def get_basic_deep_levenshtein(vocab: Vocabulary) -> DeepLevenshtein:
     return model
 
 
-def get_basic_deep_levenshtein_seq2seq(seq2seq: OneLanguageSeq2SeqModel) -> DeepLevenshteinFromSeq2Seq:
+def get_deep_levenshtein_seq2seq(seq2seq: OneLanguageSeq2SeqModel) -> DeepLevenshteinFromSeq2Seq:
     hidden_dim = seq2seq._encoder_output_dim
     body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=[128, 64, 64])
 
@@ -176,7 +176,7 @@ def get_basic_deep_levenshtein_seq2seq(seq2seq: OneLanguageSeq2SeqModel) -> Deep
     return model
 
 
-def get_basic_deep_levenshtein_att(vocab: Vocabulary) -> DeepLevenshteinWithAttention:
+def get_deep_levenshtein_att(vocab: Vocabulary) -> DeepLevenshteinWithAttention:
     embedding_dim = 64
     hidden_dim = 32
 

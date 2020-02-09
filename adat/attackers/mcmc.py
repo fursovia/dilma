@@ -3,7 +3,6 @@ from typing import List, Dict
 
 import torch
 import numpy as np
-from dataclasses import dataclass
 from torch.distributions import Normal
 from allennlp.models.basic_classifier import BasicClassifier
 from allennlp.data.dataset_readers import DatasetReader
@@ -11,20 +10,9 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.nn.util import move_to_device
 from allennlp.data.dataset import Batch
 
+from adat.attackers.attacker import SamplerOutput
 from adat.utils import calculate_bleu2
 from adat.models import OneLanguageSeq2SeqModel
-
-
-@dataclass
-class SamplerOutput:
-    generated_sequence: str
-    prob: float = 1.0
-    bleu: float = 0.0
-    prob_diff: float = 0.0
-    prob_drop: float = 1.0
-    bleu_diff: float = -1.0
-    bleu_drop: float = np.inf
-    acceptance_probability: float = 0.0
 
 
 class Proposal(ABC):

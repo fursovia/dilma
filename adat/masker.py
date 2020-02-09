@@ -268,7 +268,7 @@ class AddMasker(Masker):
         return ' '.join(new_sequence), maskers_applied
 
 
-def get_default_masker() -> Masker:
+def get_default_masker() -> MultipleWithProbs:
     """
     Random swaps, replacements, additions and deletions
     """
@@ -286,3 +286,11 @@ def get_default_masker() -> Masker:
         num_maskers=None  # 1.75 in average
     )
     return mask
+
+
+def get_default_masker_names() -> List[str]:
+    names = []
+    masker = get_default_masker()
+    for m in masker.maskers:
+        names.append(m.name)
+    return names

@@ -12,14 +12,13 @@ from allennlp.common.util import dump_metrics
 
 from adat.models import (
     OneLanguageSeq2SeqModel,
-    get_basic_classification_model,
-    get_basic_classification_model_seq2seq,
-    get_basic_seq2seq_model,
-    get_mask_seq2seq_model,
+    get_classification_model,
+    get_classification_model_seq2seq,
+    get_seq2seq_model,
     get_att_mask_seq2seq_model,
-    get_basic_deep_levenshtein,
-    get_basic_deep_levenshtein_seq2seq,
-    get_basic_deep_levenshtein_att
+    get_deep_levenshtein,
+    get_deep_levenshtein_seq2seq,
+    get_deep_levenshtein_att
 )
 from adat.dataset import CsvReader, OneLangSeq2SeqReader, Task, END_SYMBOL, START_SYMBOL, LevenshteinReader
 from adat.masker import get_default_masker
@@ -49,7 +48,7 @@ def get_seq2seq_model(task: Task, vocab: Vocabulary,
                       max_decoding_steps: int = MAX_DECODING_STEPS,
                       beam_size: int = BEAM_SIZE) -> OneLanguageSeq2SeqModel:
     if task == Task.SEQ2SEQ:
-        return get_basic_seq2seq_model(vocab, max_decoding_steps, beam_size)
+        return get_seq2seq_model(vocab, max_decoding_steps, beam_size)
     elif task == Task.MASKEDSEQ2SEQ:
         return get_mask_seq2seq_model(vocab, max_decoding_steps, beam_size)
     elif task == Task.ATTMASKEDSEQ2SEQ:
@@ -66,6 +65,7 @@ def get_seq2seq_task_name(path: str) -> str:
 if __name__ == '__main__':
     args = parser.parse_args()
 
+    # DATASETS
     if args.task in [Task.CLASSIFICATION, Task.CLASSIFICATIONSEQ2SEQ]:
         reader = CsvReader(lazy=False)
         sorting_keys = [('tokens', 'num_tokens')]
@@ -85,7 +85,9 @@ if __name__ == '__main__':
 
     model_dir = Path(args.model_dir)
     model_dir.mkdir(exist_ok=True)
+    dump_metrics(model_dir / "args.json", args.__dict__)
 
+    # VOCABULARY, ITERATOR
     if args.resume:
         vocab = Vocabulary.from_files(model_dir / "vocab")
     elif args.seq2seq_model_dir is not None:
@@ -100,19 +102,20 @@ if __name__ == '__main__':
     iterator = BucketIterator(batch_size=args.batch_size, sorting_keys=sorting_keys)
     iterator.index_with(vocab)
 
+    # MODELS
     if args.task == Task.CLASSIFICATION:
-        model = get_basic_classification_model(vocab, args.num_classes)
+        model = get_classification_model(vocab, args.num_classes)
     elif args.task == Task.CLASSIFICATIONSEQ2SEQ:
         seq2seq_model = get_seq2seq_model(
             get_seq2seq_task_name(args.seq2seq_model_dir),
             vocab
         )
         load_weights(seq2seq_model, Path(args.seq2seq_model_dir) / 'best.th')
-        model = get_basic_classification_model_seq2seq(seq2seq_model, args.num_classes)
+        model = get_classification_model_seq2seq(seq2seq_model, args.num_classes)
     elif args.task in [Task.SEQ2SEQ, Task.MASKEDSEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
         model = get_seq2seq_model(args.task, vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
     elif args.task == Task.DEEPLEVENSHTEIN:
-        model = get_basic_deep_levenshtein(vocab)
+        model = get_deep_levenshtein(vocab)
     elif args.task == Task.DEEPLEVENSHTEINSEQ2SEQ:
         # TODO: only basic seq2seq is available at the moment (others require maskers)
         seq2seq_model = get_seq2seq_model(
@@ -120,9 +123,9 @@ if __name__ == '__main__':
             vocab
         )
         load_weights(seq2seq_model, Path(args.seq2seq_model_dir) / 'best.th')
-        model = get_basic_deep_levenshtein_seq2seq(seq2seq_model)
+        model = get_deep_levenshtein_seq2seq(seq2seq_model)
     elif args.task == Task.DEEPLEVENSHTEINATT:
-        model = get_basic_deep_levenshtein_att(vocab)
+        model = get_deep_levenshtein_att(vocab)
     else:
         raise NotImplementedError(f'{args.task} -- no such task')
 
@@ -132,10 +135,8 @@ if __name__ == '__main__':
     if args.cuda >= 0 and torch.cuda.is_available():
         model.cuda(args.cuda)
 
+    # TRAINING
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-
-    dump_metrics(model_dir / "args.json", args.__dict__)
-
     trainer = Trainer(
         model=model,
         optimizer=optimizer,
