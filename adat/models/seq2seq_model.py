@@ -61,7 +61,7 @@ class OneLanguageSeq2SeqModel(SimpleSeq2Seq):
 
 def get_seq2seq_model(vocab: Vocabulary,
                       max_decoding_steps: int = 20,
-                      beam_size: int = 1) -> OneLanguageSeq2SeqModel:
+                      beam_size: int = 1, use_attention: bool = True) -> OneLanguageSeq2SeqModel:
     emb_dim = 64
     hidden_dim = 32
     token_embedding = Embedding(
@@ -69,7 +69,10 @@ def get_seq2seq_model(vocab: Vocabulary,
         embedding_dim=emb_dim
     )
     word_embeddings = BasicTextFieldEmbedder({"tokens": token_embedding})
-    attention = AdditiveAttention(vector_dim=hidden_dim, matrix_dim=hidden_dim)
+    if use_attention:
+        attention = AdditiveAttention(vector_dim=hidden_dim, matrix_dim=hidden_dim)
+    else:
+        attention = None
     lstm = PytorchSeq2SeqWrapper(nn.LSTM(emb_dim, hidden_dim, batch_first=True))
 
     model = OneLanguageSeq2SeqModel(

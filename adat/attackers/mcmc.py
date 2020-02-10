@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
+from functools import lru_cache
+import random
 
 import torch
 import numpy as np
@@ -11,8 +13,11 @@ from allennlp.nn.util import move_to_device
 from allennlp.data.dataset import Batch
 
 from adat.attackers.attacker import SamplerOutput
-from adat.utils import calculate_bleu2
+from adat.utils import calculate_normalized_wer
 from adat.models import OneLanguageSeq2SeqModel
+
+
+PROB_DIFF = -100
 
 
 class Proposal(ABC):
@@ -66,10 +71,9 @@ class Sampler(ABC):
         self.initial_sequence = None
         self.current_state = None
         self.initial_prob = None
-        self.initial_bleu = None
         self.history: List[SamplerOutput] = []
 
-    def set_label_to_drop(self, label: int = 1) -> None:
+    def set_label_to_attack(self, label: int = 1) -> None:
         self.label_prob_to_drop = label
 
     def set_input(self, initial_sequence: str) -> None:
@@ -84,7 +88,7 @@ class Sampler(ABC):
             )
 
         self.initial_prob = self.predict_prob(self.initial_sequence)
-        self.initial_bleu = calculate_bleu2(self.initial_sequence, self.generate_from_state(self.current_state.copy()))
+        # print(self.generate_from_state(self.current_state.copy()))
 
     def empty_history(self) -> None:
         self.history = []
@@ -101,12 +105,20 @@ class Sampler(ABC):
             pred_output = self.generation_model.beam_search(state)
             return ' '.join(self.generation_model.decode(pred_output)['predicted_tokens'][0])
 
+    @lru_cache(maxsize=1000)
     def predict_prob(self, sequence: str) -> float:
         assert self.label_prob_to_drop is not None, 'You must run `.set_label_to_drop()` first.'
         with torch.no_grad():
             return self.classification_model.forward_on_instance(
                 self.classification_reader.text_to_instance(sequence)
             )['probs'][self.label_prob_to_drop]
+
+    @lru_cache(maxsize=1000)
+    def get_output(self, generated_sequence: str) -> SamplerOutput:
+        new_prob = self.predict_prob(generated_sequence)
+        new_wer = calculate_normalized_wer(self.initial_sequence, generated_sequence)
+        prob_diff = self.initial_prob - new_prob
+        return SamplerOutput(generated_sequence=generated_sequence, wer=new_wer, prob_diff=prob_diff)
 
     @abstractmethod
     def step(self):
@@ -117,19 +129,22 @@ class Sampler(ABC):
             self.step()
         return self.history
 
-    def sample_until_satisfied(self, max_steps: int = 200,
-                               bleu_diff: float = -0.2, prob_drop: float = 1.5) -> SamplerOutput:
+    def sample_until_satisfied(self, max_steps: int = 200, wer: float = 0.2, prob_drop: float = 1.5) -> SamplerOutput:
         """
-        Sample until the bleu decreases by `bleu_diff` maximum and the probability drops by `prob_drop` times minimum
+        Sample until the wer <= X and the probability drops by `prob_drop` times minimum
         """
 
         for _ in range(max_steps):
             self.step()
-            if self.history and self.history[-1].bleu_diff >= bleu_diff and \
-                    self.history[-1].prob_drop >= prob_drop:
+            # if self.history:
+            #     print(self.initial_prob / (self.initial_prob - self.history[-1].prob_diff),
+            #           self.history[-1].wer, self.history[-1].generated_sequence)
+            if self.history and self.history[-1].wer <= wer and \
+                    (self.initial_prob / (self.initial_prob - self.history[-1].prob_diff) >= prob_drop):
                 return self.history[-1]
+        # print('did not found', len(self.history))
         return SamplerOutput(generated_sequence=self.initial_sequence) if not self.history \
-            else max(self.history, key=lambda x: x.prob_drop)
+            else max(self.history, key=lambda x: x.prob_diff)
 
 
 class RandomSampler(Sampler):
@@ -140,24 +155,8 @@ class RandomSampler(Sampler):
         generated_seq = self.generate_from_state(new_state.copy())
 
         if generated_seq:
-            new_prob = self.predict_prob(generated_seq)
-            new_bleu = calculate_bleu2(self.initial_sequence, generated_seq)
-            prob_diff = new_prob - self.initial_prob
-            bleu_diff = new_bleu - self.initial_bleu
-            prob_drop = self.initial_prob / (new_prob + 1e-16)
-            bleu_drop = self.initial_bleu / (new_bleu + 1e-16)
-
-            self.history.append(
-                SamplerOutput(
-                    generated_sequence=generated_seq,
-                    prob=new_prob,
-                    bleu=new_bleu,
-                    prob_diff=prob_diff,
-                    bleu_diff=bleu_diff,
-                    prob_drop=prob_drop,
-                    bleu_drop=bleu_drop
-                )
-            )
+            output = self.get_output(generated_seq)
+            self.history.append(output)
 
 
 class MCMCSampler(Sampler):
@@ -168,16 +167,14 @@ class MCMCSampler(Sampler):
             classification_reader: DatasetReader,
             generation_model: OneLanguageSeq2SeqModel,
             generation_reader: DatasetReader,
-            bleu: bool = True,
-            sigma_prob: float = 1,
-            sigma_bleu: float = 2,
+            sigma_class: float = 1.0,
+            sigma_wer: float = 0.5,
             device: int = -1
     ) -> None:
         super().__init__(proposal_distribution, classification_model, classification_reader,
                          generation_model, generation_reader, device)
-        self.bleu = bleu
-        self.sigma_prob = sigma_prob
-        self.sigma_bleu = sigma_bleu
+        self.sigma_class = sigma_class
+        self.sigma_wer = sigma_wer
 
     def step(self) -> None:
         assert self.current_state is not None, 'Run `set_input()` first'
@@ -186,16 +183,10 @@ class MCMCSampler(Sampler):
         generated_seq = self.generate_from_state(new_state.copy())
 
         if generated_seq:
-            new_prob = self.predict_prob(generated_seq)
-            new_bleu = calculate_bleu2(self.initial_sequence, generated_seq)
-            prob_diff = new_prob - self.initial_prob
-            bleu_diff = new_bleu - self.initial_bleu
-            prob_drop = self.initial_prob / (new_prob + 1e-16)
-            bleu_drop = self.initial_bleu / (new_bleu + 1e-16)
+            output = self.get_output(generated_seq)
 
-            exp_base = (-1 / prob_drop) / self.sigma_prob
-            if self.bleu:
-                exp_base -= bleu_drop / self.sigma_bleu
+            prob_diff = output.prob_diff if output.prob_diff > 0 else PROB_DIFF
+            exp_base = (-output.wer / self.sigma_wer) + (-1 + prob_diff) / self.sigma_class
 
             acceptance_probability = min(
                 [
@@ -204,18 +195,6 @@ class MCMCSampler(Sampler):
                 ]
             )
 
-            if acceptance_probability > np.random.rand():
+            if acceptance_probability > random.random():
                 self.current_state = new_state
-
-                self.history.append(
-                    SamplerOutput(
-                        generated_sequence=generated_seq,
-                        prob=new_prob,
-                        bleu=new_bleu,
-                        prob_diff=prob_diff,
-                        bleu_diff=bleu_diff,
-                        prob_drop=prob_drop,
-                        bleu_drop=bleu_drop,
-                        acceptance_probability=acceptance_probability
-                    )
-                )
+                self.history.append(output)

@@ -130,7 +130,7 @@ class OneLanguageSeq2SeqModelWithAttMasks(OneLanguageSeq2SeqModel):
 
 def get_att_mask_seq2seq_model(vocab: Vocabulary,
                                max_decoding_steps: int = 20,
-                               beam_size: int = 1) -> OneLanguageSeq2SeqModel:
+                               beam_size: int = 1, use_attention: bool = True) -> OneLanguageSeq2SeqModel:
     emb_dim = 64
     hidden_dim = 32
     word_embeddings = Embedding(
@@ -146,7 +146,10 @@ def get_att_mask_seq2seq_model(vocab: Vocabulary,
     )
     masker_embeddings = BasicTextFieldEmbedder({"tokens": masker_embeddings})
 
-    attention = AdditiveAttention(vector_dim=hidden_dim, matrix_dim=hidden_dim)
+    if use_attention:
+        attention = AdditiveAttention(vector_dim=hidden_dim, matrix_dim=hidden_dim)
+    else:
+        attention = None
     masker_attention = AdditiveAttention(vector_dim=hidden_dim, matrix_dim=masker_emb_dim)
     lstm = PytorchSeq2SeqWrapper(nn.LSTM(emb_dim, hidden_dim, batch_first=True))
 

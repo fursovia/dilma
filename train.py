@@ -37,6 +37,7 @@ parser.add_argument('-nc', '--num_classes', type=int, default=2)
 parser.add_argument('-um', '--use_mask', action='store_true', help='Whether to apply masking to the input')
 parser.add_argument('-s2smd', '--seq2seq_model_dir', type=str, default=None)
 parser.add_argument('--resume', action='store_true')
+parser.add_argument('--no_attention', action='store_false')
 
 
 LEARNING_RATE = 0.003
@@ -44,15 +45,13 @@ MAX_DECODING_STEPS = 20
 BEAM_SIZE = 1
 
 
-def get_seq2seq_model(task: Task, vocab: Vocabulary,
-                      max_decoding_steps: int = MAX_DECODING_STEPS,
-                      beam_size: int = BEAM_SIZE) -> OneLanguageSeq2SeqModel:
+def get_specific_seq2seq(task: Task, vocab: Vocabulary,
+                         max_decoding_steps: int = MAX_DECODING_STEPS,
+                         beam_size: int = BEAM_SIZE, use_attention: bool = True) -> OneLanguageSeq2SeqModel:
     if task == Task.SEQ2SEQ:
-        return get_seq2seq_model(vocab, max_decoding_steps, beam_size)
-    elif task == Task.MASKEDSEQ2SEQ:
-        return get_mask_seq2seq_model(vocab, max_decoding_steps, beam_size)
+        return get_seq2seq_model(vocab, max_decoding_steps, beam_size, use_attention)
     elif task == Task.ATTMASKEDSEQ2SEQ:
-        return get_att_mask_seq2seq_model(vocab, max_decoding_steps, beam_size)
+        return get_att_mask_seq2seq_model(vocab, max_decoding_steps, beam_size, use_attention)
     else:
         raise NotImplementedError
 
@@ -68,20 +67,23 @@ if __name__ == '__main__':
     # DATASETS
     if args.task in [Task.CLASSIFICATION, Task.CLASSIFICATIONSEQ2SEQ]:
         reader = CsvReader(lazy=False)
+        test_reader = reader
         sorting_keys = [('tokens', 'num_tokens')]
-    elif args.task in [Task.SEQ2SEQ, Task.MASKEDSEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
+    elif args.task in [Task.SEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
         mask = get_default_masker() if args.use_mask else None
         reader = OneLangSeq2SeqReader(mask)
+        test_reader = OneLangSeq2SeqReader(masker=None)
         sorting_keys = [('source_tokens', 'num_tokens')]
     elif args.task in [Task.DEEPLEVENSHTEIN, Task.DEEPLEVENSHTEINSEQ2SEQ, Task.DEEPLEVENSHTEINATT]:
         reader = LevenshteinReader()
+        test_reader = reader
         sorting_keys = [('sequence_a', 'num_tokens'), ('sequence_b', 'num_tokens')]
     else:
         raise NotImplementedError(f'{args.task} -- no such task')
 
     data_path = Path(args.data_dir)
     train_dataset = reader.read(data_path / 'train.csv')
-    test_dataset = reader.read(data_path / 'test.csv')
+    test_dataset = test_reader.read(data_path / 'test.csv')
 
     model_dir = Path(args.model_dir)
     model_dir.mkdir(exist_ok=True)
@@ -106,22 +108,18 @@ if __name__ == '__main__':
     if args.task == Task.CLASSIFICATION:
         model = get_classification_model(vocab, args.num_classes)
     elif args.task == Task.CLASSIFICATIONSEQ2SEQ:
-        seq2seq_model = get_seq2seq_model(
-            get_seq2seq_task_name(args.seq2seq_model_dir),
-            vocab
-        )
+        seq2seq_model = get_specific_seq2seq(get_seq2seq_task_name(args.seq2seq_model_dir), vocab,
+                                             use_attention=args.no_attention)
         load_weights(seq2seq_model, Path(args.seq2seq_model_dir) / 'best.th')
         model = get_classification_model_seq2seq(seq2seq_model, args.num_classes)
-    elif args.task in [Task.SEQ2SEQ, Task.MASKEDSEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
-        model = get_seq2seq_model(args.task, vocab, max_decoding_steps=MAX_DECODING_STEPS, beam_size=BEAM_SIZE)
+    elif args.task in [Task.SEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
+        model = get_specific_seq2seq(args.task, vocab,
+                                     use_attention=args.no_attention)
     elif args.task == Task.DEEPLEVENSHTEIN:
         model = get_deep_levenshtein(vocab)
     elif args.task == Task.DEEPLEVENSHTEINSEQ2SEQ:
-        # TODO: only basic seq2seq is available at the moment (others require maskers)
-        seq2seq_model = get_seq2seq_model(
-            get_seq2seq_task_name(args.seq2seq_model_dir),
-            vocab
-        )
+        seq2seq_model = get_specific_seq2seq(get_seq2seq_task_name(args.seq2seq_model_dir), vocab,
+                                             use_attention=args.no_attention)
         load_weights(seq2seq_model, Path(args.seq2seq_model_dir) / 'best.th')
         model = get_deep_levenshtein_seq2seq(seq2seq_model)
     elif args.task == Task.DEEPLEVENSHTEINATT:

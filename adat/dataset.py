@@ -22,7 +22,6 @@ class Task(str, Enum):
     CLASSIFICATION = 'classification'
     CLASSIFICATIONSEQ2SEQ = 'classification_seq2seq'
     SEQ2SEQ = 'seq2seq'
-    MASKEDSEQ2SEQ = 'mask_seq2seq'
     ATTMASKEDSEQ2SEQ = 'att_mask_seq2seq'
     DEEPLEVENSHTEIN = 'deep_levenshtein'
     DEEPLEVENSHTEINSEQ2SEQ = 'deep_levenshtein_seq2seq'

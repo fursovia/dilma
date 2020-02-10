@@ -33,12 +33,23 @@ To train these models run the following commands
 
 ```bash
 python train.py \
-    --task att_mask_seq2seq \
-    --model_dir experiments/tinkoff/att_mask_seq2seq \
+    --task seq2seq \
+    --model_dir experiments/tinkoff/seq2seq_basic \
     --data_dir data/tinkoff \
     --use_mask \
-    -ne 20 \
+    -ne 30 \
     --cuda 1
+```
+
+```bash
+python train.py \
+    --task seq2seq \
+    --model_dir experiments/tinkoff/seq2seq_basic_no_attention \
+    --data_dir data/tinkoff \
+    -ne 100 \
+    -p 3 \
+    --no_attention \
+    --cuda 2
 ```
 
 and
@@ -46,7 +57,7 @@ and
 ```bash
 python train.py \
     --task classification \
-    --model_dir experiments/tinkoff/classification \
+    --model_dir experiments/tinkoff/classification_fixed \
     --data_dir data/tinkoff \
     -ne 30 \
     --cuda 1
@@ -103,11 +114,11 @@ python train.py \
 
 ```bash
 python run_mcmc.py \
-    --csv_path data/kaggle_transactions_data/test.csv \
-    --results_path results_last \
-    --class_dir experiments/classification_exp_43 \
-    --seq2seq_dir experiments/seq2seq_exp_new_mask \
-    --cuda 0
+    --csv_path data/tinkoff/random.csv \
+    --results_path results/mcmc_results \
+    --classification_path experiments/tinkoff/classification_fixed \
+    --seq2seq_path experiments/tinkoff/seq2seq_basic \
+    --cuda 1
 ```
 
 
