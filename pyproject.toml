@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "adat"
+version = "0.1.0"
+description = "Adversarial Attacks on Symbolic Sequence Classifiers"
+authors = ["Ivan Fursov <fursovia@gmail.com>"]
+repository = "https://github.com/fursovia/adversarial_attacks"
+readme = 'readme.md'
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+torch = "1.2.0"
+allennlp = "^0.9.0"
+tensorboard = "^2.0.0"
+python-Levenshtein = "0.12.0"
+nltk = "3.4.5"
