@@ -147,6 +147,7 @@ class Sampler(ABC):
             else max(self.history, key=lambda x: x.prob_diff)
 
 
+# TODO: should I update state?
 class RandomSampler(Sampler):
     def step(self) -> None:
         assert self.current_state is not None, 'Run `set_input()` first'
@@ -155,6 +156,7 @@ class RandomSampler(Sampler):
         generated_seq = self.generate_from_state(new_state.copy())
 
         if generated_seq:
+            self.current_state = new_state
             output = self.get_output(generated_seq)
             self.history.append(output)
 
