@@ -75,7 +75,8 @@ if __name__ == '__main__':
         seq2seq_model=seq2seq_model,
         deep_levenshtein_model=levenshtein_model,
         levenshtein_weight=args.levenshtein_weight,
-        device=args.cuda
+        device=args.cuda,
+        num_labels=args.num_classes
     )
 
     data = pd.read_csv(args.csv_path)
