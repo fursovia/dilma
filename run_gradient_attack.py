@@ -11,6 +11,7 @@ from adat.dataset import OneLangSeq2SeqReader, IDENTITY_TOKEN
 from adat.utils import load_weights
 from adat.attackers import AttackerOutput, GradientAttacker
 from adat.models import (
+    get_seq2seq_model,
     get_classification_model_seq2seq,
     get_deep_levenshtein_seq2seq,
     get_att_mask_seq2seq_model
@@ -38,7 +39,8 @@ if __name__ == '__main__':
     vocab_path = Path(args.seq2seq_path) / 'vocab'
     vocab = Vocabulary.from_files(vocab_path)
 
-    seq2seq_model = get_att_mask_seq2seq_model(vocab, beam_size=args.beam_size)
+    # seq2seq_model = get_att_mask_seq2seq_model(vocab, beam_size=args.beam_size)
+    seq2seq_model = get_seq2seq_model(vocab, beam_size=args.beam_size)
     classification_model = get_classification_model_seq2seq(seq2seq_model, args.num_classes)
     levenshtein_model = get_deep_levenshtein_seq2seq(seq2seq_model)
 
@@ -53,7 +55,8 @@ if __name__ == '__main__':
         seq2seq_model=seq2seq_model,
         deep_levenshtein_model=levenshtein_model,
         levenshtein_weight=args.levenshtein_weight,
-        device=args.cuda
+        device=args.cuda,
+        num_labels=args.num_classes
     )
 
     data = pd.read_csv(args.csv_path)

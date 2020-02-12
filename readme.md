@@ -185,10 +185,11 @@ python run_mcmc.py \
 
 ```bash
 python run_gradient_attack.py \
-    --csv_path data/test.csv \
-    --results_path results \
-    --seq2seq_path experiments/att_mask_seq2seq \
-    --classification_path experiments/classification_att_mask_seq2seq_fixed \
-    --levenshtein_path experiments/deep_levenshtein_seq2seq \
-    --cuda 0
+    --csv_path data/ag_news/test.csv \
+    --results_path results/ag_news/gradient \
+    --seq2seq_path experiments/ag_news/seq2seq_masked_training \
+    --classification_path experiments/ag_news/classification_seq2seq \
+    --levenshtein_path experiments/ag_news/deep_levenshtein_seq2seq \
+    --num_classes 4 \
+    --cuda 1
 ```

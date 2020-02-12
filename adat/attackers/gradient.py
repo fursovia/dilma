@@ -24,6 +24,7 @@ class GradientAttacker(Attacker):
                  seq2seq_model: OneLanguageSeq2SeqModel,
                  deep_levenshtein_model: DeepLevenshteinFromSeq2Seq,
                  levenshtein_weight: float = 0.1,
+                 num_labels: int = 2,
                  device: int = -1) -> None:
         self.vocab = vocab
         self.reader = reader
@@ -40,6 +41,7 @@ class GradientAttacker(Attacker):
             self.seq2seq_model.cpu()
             self.deep_levenshtein_model.cpu()
 
+        self.num_labels = num_labels
         self.levenshtein_weight = levenshtein_weight
 
     @staticmethod
@@ -59,10 +61,9 @@ class GradientAttacker(Attacker):
 
     def _get_slicing_index(self, labels_to_attack: List[int], device) -> torch.Tensor:
         # device = None if self.device < 0 else self.device
-        num_labels = max(labels_to_attack) + 1
         indexes = torch.nn.functional.one_hot(
             torch.tensor(labels_to_attack, dtype=torch.int64, device=device),
-            num_classes=num_labels
+            num_classes=self.num_labels
         ).type(torch.bool)
 
         return indexes
@@ -131,7 +132,6 @@ class GradientAttacker(Attacker):
 
         # CLASSIFICATION
         indexes = self._get_slicing_index(labels, similarity.device)
-        # indexes = self._get_slicing_index(labels, None)
         probs = self.predict_probs_from_state(state).masked_select(indexes)
         probs_adversarial = self.predict_probs_from_state(state_adversarial).masked_select(indexes)
 
