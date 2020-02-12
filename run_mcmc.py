@@ -1,15 +1,16 @@
 import argparse
 from pathlib import Path
 import csv
+import json
 from tqdm import tqdm
 
 import pandas as pd
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
-from adat.dataset import CsvReader, OneLangSeq2SeqReader
+from adat.dataset import CsvReader, OneLangSeq2SeqReader, Task
 from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, SamplerOutput
-from adat.models import get_classification_model, get_seq2seq_model
+from adat.models import get_classification_model, get_seq2seq_model, get_att_mask_seq2seq_model
 from adat.utils import load_weights
 
 parser = argparse.ArgumentParser()
@@ -28,18 +29,42 @@ parser.add_argument('--minimum_prob_drop', type=float, default=2.0)
 parser.add_argument('--random', action='store_true', help='Whether to use RandomSampler instead of MCMC')
 
 
+def _get_classifier_from_args(vocab: Vocabulary, path: str):
+    with open(path) as file:
+        args = json.load(file)
+    num_classes = args['num_classes']
+    return get_classification_model(vocab, int(num_classes))
+
+
+def _get_seq2seq_from_args(vocab: Vocabulary, path: str, beam_size: int):
+    with open(path) as file:
+        args = json.load(file)
+    task = args['task']
+    use_attention = args['no_attention']
+    if task == Task.SEQ2SEQ:
+        return get_seq2seq_model(vocab, beam_size=beam_size, use_attention=use_attention)
+    elif task == Task.ATTMASKEDSEQ2SEQ:
+        # TODO: unstable
+        return get_att_mask_seq2seq_model(vocab, beam_size=beam_size, use_attention=use_attention)
+    else:
+        raise NotImplementedError
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
 
     class_reader = CsvReader()
     class_vocab = Vocabulary.from_files(Path(args.classification_path) / 'vocab')
-    class_model = get_classification_model(class_vocab)
+    class_model = _get_classifier_from_args(class_vocab, Path(args.classification_path) / 'args.json')
     load_weights(class_model, Path(args.classification_path) / 'best.th')
 
     seq2seq_reader = OneLangSeq2SeqReader(masker=None)
     seq2seq_vocab = Vocabulary.from_files(Path(args.seq2seq_path) / 'vocab')
-    # TODO: add att_mask_seq2seq
-    seq2seq_model = get_seq2seq_model(seq2seq_vocab, beam_size=args.beam_size)
+    seq2seq_model = _get_seq2seq_from_args(
+        seq2seq_vocab,
+        Path(args.seq2seq_path) / 'args.json',
+        beam_size=args.beam_size
+    )
     load_weights(seq2seq_model, Path(args.seq2seq_path) / 'best.th')
 
     if args.random:
