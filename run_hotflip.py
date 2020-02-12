@@ -19,6 +19,7 @@ parser.add_argument('--cuda', type=int, default=-1)
 parser.add_argument('--csv_path', type=str, default='data/test.csv')
 parser.add_argument('--results_path', type=str, default='results')
 parser.add_argument('-cp', '--classification_path', type=str, default='experiments/classification')
+parser.add_argument('--sample', type=int, default=None)
 
 
 def _get_classifier_from_args(vocab: Vocabulary, path: str):
@@ -41,8 +42,8 @@ if __name__ == '__main__':
     attacker.initialize()
 
     data = pd.read_csv(args.csv_path)
-    sequences = data['sequences'].tolist()
-    labels = data['labels'].tolist()
+    sequences = data['sequences'].tolist()[:args.sample]
+    labels = data['labels'].tolist()[:args.sample]
 
     results_path = Path(args.results_path)
     results_path.mkdir(exist_ok=True, parents=True)

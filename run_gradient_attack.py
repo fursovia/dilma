@@ -1,13 +1,14 @@
 import argparse
 from pathlib import Path
 import csv
+import json
 from tqdm import tqdm
 
 import pandas as pd
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
-from adat.dataset import OneLangSeq2SeqReader, IDENTITY_TOKEN
+from adat.dataset import OneLangSeq2SeqReader, IDENTITY_TOKEN, Task
 from adat.utils import load_weights
 from adat.attackers import AttackerOutput, GradientAttacker
 from adat.models import (
@@ -28,8 +29,29 @@ parser.add_argument('-lw', '--levenshtein_weight', type=float, default=0.1)
 parser.add_argument('-lr', '--learning_rate', type=float, default=0.5)
 parser.add_argument('-nu', '--num_updates', type=int, default=15)
 parser.add_argument('-bs', '--beam_size', type=int, default=1)
-parser.add_argument('-nc', '--num_classes', type=int, default=1)
 parser.add_argument('-m', '--maskers', type=str, default=IDENTITY_TOKEN)
+parser.add_argument('--sample', type=int, default=None)
+
+
+def _get_classifier_from_args(seq2seq, path: str):
+    with open(path) as file:
+        args = json.load(file)
+    num_classes = args['num_classes']
+    return get_classification_model_seq2seq(seq2seq, int(num_classes)), int(num_classes)
+
+
+def _get_seq2seq_from_args(vocab: Vocabulary, path: str, beam_size: int):
+    with open(path) as file:
+        args = json.load(file)
+    task = args['task']
+    use_attention = args['no_attention']
+    if task == Task.SEQ2SEQ:
+        return get_seq2seq_model(vocab, beam_size=beam_size, use_attention=use_attention)
+    elif task == Task.ATTMASKEDSEQ2SEQ:
+        # TODO: unstable
+        return get_att_mask_seq2seq_model(vocab, beam_size=beam_size, use_attention=use_attention)
+    else:
+        raise NotImplementedError
 
 
 if __name__ == '__main__':
@@ -39,9 +61,11 @@ if __name__ == '__main__':
     vocab_path = Path(args.seq2seq_path) / 'vocab'
     vocab = Vocabulary.from_files(vocab_path)
 
-    # seq2seq_model = get_att_mask_seq2seq_model(vocab, beam_size=args.beam_size)
-    seq2seq_model = get_seq2seq_model(vocab, beam_size=args.beam_size)
-    classification_model = get_classification_model_seq2seq(seq2seq_model, args.num_classes)
+    seq2seq_model = _get_seq2seq_from_args(vocab, Path(args.seq2seq_path) / 'args.json', args.beam_size)
+    classification_model, num_classes = _get_classifier_from_args(
+        seq2seq_model,
+        Path(args.classification_path) / 'args.json'
+    )
     levenshtein_model = get_deep_levenshtein_seq2seq(seq2seq_model)
 
     load_weights(seq2seq_model, Path(args.seq2seq_path) / 'best.th')
@@ -56,12 +80,12 @@ if __name__ == '__main__':
         deep_levenshtein_model=levenshtein_model,
         levenshtein_weight=args.levenshtein_weight,
         device=args.cuda,
-        num_labels=args.num_classes
+        num_labels=num_classes
     )
 
     data = pd.read_csv(args.csv_path)
-    sequences = data['sequences'].tolist()
-    labels = data['labels'].tolist()
+    sequences = data['sequences'].tolist()[:args.sample]
+    labels = data['labels'].tolist()[:args.sample]
     maskers = [args.maskers.split()] * len(sequences)
 
     results_path = Path(args.results_path)

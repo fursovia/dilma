@@ -27,6 +27,7 @@ parser.add_argument('--sigma_wer', type=float, default=0.5)
 parser.add_argument('--maximum_wer', type=float, default=0.2)
 parser.add_argument('--minimum_prob_drop', type=float, default=2.0)
 parser.add_argument('--random', action='store_true', help='Whether to use RandomSampler instead of MCMC')
+parser.add_argument('--sample', type=int, default=None)
 
 
 def _get_classifier_from_args(vocab: Vocabulary, path: str):
@@ -53,7 +54,7 @@ def _get_seq2seq_from_args(vocab: Vocabulary, path: str, beam_size: int):
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    class_reader = CsvReader()
+    class_reader = CsvReader(skip_start_end=True)
     class_vocab = Vocabulary.from_files(Path(args.classification_path) / 'vocab')
     class_model = _get_classifier_from_args(class_vocab, Path(args.classification_path) / 'args.json')
     load_weights(class_model, Path(args.classification_path) / 'best.th')
@@ -89,8 +90,8 @@ if __name__ == '__main__':
         )
 
     data = pd.read_csv(args.csv_path)
-    sequences = data['sequences'].tolist()
-    labels = data['labels'].tolist()
+    sequences = data['sequences'].tolist()[:args.sample]
+    labels = data['labels'].tolist()[:args.sample]
 
     results_path = Path(args.results_path)
     results_path.mkdir(exist_ok=True)
