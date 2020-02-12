@@ -23,28 +23,6 @@ python train.py \
 
 
 python train.py \
-    --task seq2seq \
-    --model_dir ${EXP_DIR}/${BASE_EXP_DIR}/seq2seq_masked_training_no_attention \
-    --data_dir ${DATA_DIR} \
-    --use_mask \
-    --no_attention \
-    -ne ${NUM_EPOCHS} \
-    -p ${PATIENCE} \
-    --num_classes ${NUM_CLASSES} \
-    --cuda ${GPU_ID}
-
-
-python train.py \
-    --task classification \
-    --model_dir ${EXP_DIR}/${BASE_EXP_DIR}/classification \
-    --data_dir ${DATA_DIR} \
-    -ne ${NUM_EPOCHS} \
-    -p ${PATIENCE} \
-    --num_classes ${NUM_CLASSES} \
-    --cuda ${GPU_ID}
-
-
-python train.py \
     --task classification_seq2seq \
     --model_dir ${EXP_DIR}/${BASE_EXP_DIR}/classification_seq2seq \
     --data_dir ${DATA_DIR} \
@@ -53,3 +31,38 @@ python train.py \
     -p ${PATIENCE} \
     --num_classes ${NUM_CLASSES} \
     --cuda ${GPU_ID}
+
+
+python create_levenshtein_dataset --csv_path ${DATA_DIR}/train.csv --output_dir ${DATA_DIR}/levenshtein
+
+
+python train.py \
+    --task deep_levenshtein_seq2seq \
+    --model_dir ${EXP_DIR}/${BASE_EXP_DIR}/deep_levenshtein_seq2seq \
+    --data_dir ${DATA_DIR}/levenshtein \
+    -ne ${NUM_EPOCHS}\
+    -p ${PATIENCE} \
+    --seq2seq_model_dir ${EXP_DIR}/${BASE_EXP_DIR}/seq2seq_masked_training \
+    --cuda ${GPU_ID}
+
+
+#python train.py \
+#    --task seq2seq \
+#    --model_dir ${EXP_DIR}/${BASE_EXP_DIR}/seq2seq_masked_training_no_attention \
+#    --data_dir ${DATA_DIR} \
+#    --use_mask \
+#    --no_attention \
+#    -ne ${NUM_EPOCHS} \
+#    -p ${PATIENCE} \
+#    --num_classes ${NUM_CLASSES} \
+#    --cuda ${GPU_ID}
+#
+#
+#python train.py \
+#    --task classification \
+#    --model_dir ${EXP_DIR}/${BASE_EXP_DIR}/classification \
+#    --data_dir ${DATA_DIR} \
+#    -ne ${NUM_EPOCHS} \
+#    -p ${PATIENCE} \
+#    --num_classes ${NUM_CLASSES} \
+#    --cuda ${GPU_ID}

@@ -20,6 +20,12 @@ parser.add_argument('--test_size', type=float, default=0.05)
 
 if __name__ == '__main__':
     args = parser.parse_args()
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(exist_ok=True, parents=True)
+    train_path = output_dir / 'train.csv'
+    test_path = output_dir / 'test.csv'
+    assert not train_path.exists() and not test_path.exists()
+
     data = pd.read_csv(args.csv_path)
     sequences = data['sequences'].values
 
@@ -51,7 +57,5 @@ if __name__ == '__main__':
     examples = examples.sample(frac=1).reset_index(drop=True)
 
     train, test = train_test_split(examples, test_size=args.test_size, random_state=24)
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(exist_ok=True, parents=True)
-    train.to_csv(output_dir / 'train.csv', index=False)
-    test.to_csv(output_dir / 'test.csv', index=False)
+    train.to_csv(train_path, index=False)
+    test.to_csv(test_path, index=False)
