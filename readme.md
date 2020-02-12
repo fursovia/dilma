@@ -59,30 +59,44 @@ Models needed for an attacker:
 
 #### Seq2seq
 
-Masked training with attention
+No masking, no attention
 
 ```bash
 python train.py \
     --task seq2seq \
     --model_dir experiments/seq2seq_basic \
     --data_dir data \
-    --use_mask \
-    -ne 30 \
-    --cuda 1
-```
-
-
-No masking, no attention
-
-```bash
-python train.py \
-    --task seq2seq \
-    --model_dir experiments/seq2seq_basic_no_attention \
-    --data_dir data \
     -ne 100 \
     -p 3 \
     --no_attention \
     --cuda 2
+```
+
+Masking, no attention
+```bash
+python train.py \
+    --task seq2seq \
+    --model_dir experiments/ag_news/seq2seq_masked_training_no_attention \
+    --data_dir data/ag_news \
+    --use_mask \
+    --no_attention \
+    -ne 100 \
+    -p 3 \
+    -bs 512 \
+    --cuda 3
+```
+
+
+Masked training with attention
+
+```bash
+python train.py \
+    --task seq2seq \
+    --model_dir experiments/ag_news/seq2seq_masked_training \
+    --data_dir data/ag_news \
+    --use_mask \
+    -ne 30 \
+    --cuda 3
 ```
 
 
@@ -91,10 +105,11 @@ python train.py \
 ```bash
 python train.py \
     --task classification \
-    --model_dir experiments/classification_fixed \
-    --data_dir data \
+    --model_dir experiments/ag_news/classification \
+    --data_dir data/ag_news \
     -ne 30 \
-    --cuda 1
+    --num_classes 4 \
+    --cuda 0
 ```
 
 Classification on pre-trained encoder
@@ -102,10 +117,11 @@ Classification on pre-trained encoder
 ```bash
 python train.py \
     --task classification_seq2seq \
-    --model_dir experiments/classification_att_mask_seq2seq_fixed \
-    --data_dir data \
-    --seq2seq_model_dir experiments/att_mask_seq2seq \
+    --model_dir experiments/ag_news/classification_seq2seq\
+    --data_dir data/ag_news \
+    --seq2seq_model_dir experiments/ag_news/seq2seq_masked_training \
     -ne 30 \
+    --num_classes 4 \
     --cuda 1
 ```
 
@@ -131,8 +147,8 @@ With attention
 ```bash
 python train.py \
     --task deep_levenshtein_att \
-    --model_dir experiments/deep_levenshtein_att \
-    --data_dir data \
+    --model_dir experiments/ag_news/deep_levenshtein_att \
+    --data_dir data/ag_news_lev \
     -ne 30 \
     --cuda 2
 ```
@@ -142,10 +158,10 @@ On pre-trained encoder
 ```bash
 python train.py \
     --task deep_levenshtein_seq2seq \
-    --model_dir experiments/deep_levenshtein_seq2seq \
-    --data_dir data \
+    --model_dir experiments/ag_news/deep_levenshtein_seq2seq \
+    --data_dir data/ag_news_lev \
     -ne 30 \
-    --seq2seq_model_dir experiments/att_mask_seq2seq \
+    --seq2seq_model_dir experiments/ag_news/seq2seq_masked_training \
     --cuda 1
 ```
 
@@ -157,11 +173,11 @@ python train.py \
 
 ```bash
 python run_mcmc.py \
-    --csv_path data/random.csv \
-    --results_path results/mcmc_results_no_att \
-    --classification_path experiments/classification_fixed \
-    --seq2seq_path experiments/seq2seq_basic_no_attention \
-    --cuda 2
+    --csv_path data/ag_news/test.csv \
+    --results_path results/ag_news/ \
+    --classification_path experiments/ag_news/classification \
+    --seq2seq_path experiments/ag_news/seq2seq_masked_training \
+    --cuda 1
 ```
 
 
