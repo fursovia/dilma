@@ -66,7 +66,8 @@ if __name__ == '__main__':
 
     # DATASETS
     if args.task in [Task.CLASSIFICATION, Task.CLASSIFICATIONSEQ2SEQ]:
-        reader = CsvReader(lazy=False)
+        skip_start_end = args.task == Task.CLASSIFICATION
+        reader = CsvReader(lazy=False, skip_start_end=skip_start_end)
         test_reader = reader
         sorting_keys = [('tokens', 'num_tokens')]
     elif args.task in [Task.SEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     test_dataset = test_reader.read(data_path / 'test.csv')
 
     model_dir = Path(args.model_dir)
-    model_dir.mkdir(exist_ok=True)
+    model_dir.mkdir(exist_ok=True, parents=True)
     dump_metrics(model_dir / "args.json", args.__dict__)
 
     # VOCABULARY, ITERATOR
