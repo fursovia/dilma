@@ -136,7 +136,8 @@ class GradientAttacker(Attacker):
         # CLASSIFICATION
         indexes = self._get_slicing_index(labels, similarity.device)
         # indexes = self._get_slicing_index(labels, None)
-        probs = self.predict_probs_from_state(state).masked_select(indexes)
+        probs = self.predict_probs_from_state(state).masked_select(indexes) # Throws RuntimeError: The size of tensor a (4) must match the size of tensor b (2) at non-singleton dimension 1
+
         probs_adversarial = self.predict_probs_from_state(state_adversarial).masked_select(indexes)
 
         loss = self._calculate_loss(probs_adversarial, probs, similarity)
