@@ -7,13 +7,17 @@ import pandas as pd
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
-from adat.dataset import OneLangSeq2SeqReader, IDENTITY_TOKEN
+from adat.dataset import OneLangSeq2SeqReader, IDENTITY_TOKEN, Task
 from adat.utils import load_weights
 from adat.attackers import AttackerOutput, GradientAttacker
 from adat.models import (
+    get_deep_levenshtein,
+    get_deep_levenshtein_att,
+    get_classification_model,
     get_classification_model_seq2seq,
     get_deep_levenshtein_seq2seq,
-    get_att_mask_seq2seq_model
+    get_att_mask_seq2seq_model,
+    get_seq2seq_model,
 )
 
 parser = argparse.ArgumentParser()
@@ -29,7 +33,9 @@ parser.add_argument('-nu', '--num_updates', type=int, default=15)
 parser.add_argument('-bs', '--beam_size', type=int, default=1)
 parser.add_argument('-m', '--maskers', type=str, default=IDENTITY_TOKEN)
 parser.add_argument('-nc', '--num_classes', type=int, default=2)
-
+parser.add_argument('--s2s_model', type=Task, default=Task.SEQ2SEQ, help='seq2seq model type')
+parser.add_argument('--ed_model', type=Task, default=Task.DEEPLEVENSHTEIN, help='edit distance model type')
+parser.add_argument('--clf_model', type=Task, default=Task.CLASSIFICATION, help='classification model type')
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -38,12 +44,28 @@ if __name__ == '__main__':
     vocab_path = Path(args.seq2seq_path) / 'vocab'
     vocab = Vocabulary.from_files(vocab_path)
 
-    seq2seq_model = get_att_mask_seq2seq_model(vocab, beam_size=args.beam_size)
-    classification_model = get_classification_model_seq2seq(seq2seq_model, args.num_classes)
-    levenshtein_model = get_deep_levenshtein_seq2seq(seq2seq_model)
-
+    if args.s2s_model == Task.ATTMASKEDSEQ2SEQ:
+        seq2seq_model = get_att_mask_seq2seq_model(vocab, beam_size=args.beam_size)
+    elif args.s2s_model == Task.SEQ2SEQ:
+        seq2seq_model = get_seq2seq_model(vocab, beam_size=args.beam_size)
+        
+    #classification_model = get_classification_model_seq2seq(seq2seq_model, args.num_classes)
+    if args.clf_model == Task.CLASSIFICATION:
+        classification_model = get_classification_model(vocab, args.num_classes)
+    elif args.clf_model == Task.CLASSIFICATIONSEQ2SEQ:
+        classification_model = get_classification_model_seq2seq(seq2seq_model, args.num_classes)
+    
     load_weights(seq2seq_model, Path(args.seq2seq_path) / 'best.th')
     load_weights(classification_model, Path(args.classification_path) / 'best.th')
+    
+    #levenshtein_model = get_deep_levenshtein_seq2seq(seq2seq_model)
+    if args.ed_model == Task.DEEPLEVENSHTEIN:
+        levenshtein_model = get_deep_levenshtein(vocab)
+    elif args.ed_model == Task.DEEPLEVENSHTEINSEQ2SEQ:
+        levenshtein_model = get_deep_levenshtein_seq2seq(seq2seq_model)
+    elif args.ed_model == Task.DEEPLEVENSHTEINATT:
+        levenshtein_model = get_deep_levenshtein_att(vocab)
+
     load_weights(levenshtein_model, Path(args.levenshtein_path) / 'best.th')
 
     attacker = GradientAttacker(

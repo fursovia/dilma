@@ -92,7 +92,8 @@ class GradientAttacker(Attacker):
             state['encoder_outputs'],
             mask=state['source_mask']
         )
-        logits = self.classification_model._classification_layer(encdoded_class)
+        logits = self.classification_model._classification_layer(encdoded_class) # todo: throws RuntimeError: size mismatch, m1: [1 x 64], m2: [128 x 4] at /opt/conda/conda-bld/pytorch_1565287148058/work/aten/src/THC/generic/THCTensorMathBlas.cu:273
+
         return torch.nn.functional.softmax(logits, dim=-1)
 
     def calculate_similarity(self,
@@ -122,8 +123,11 @@ class GradientAttacker(Attacker):
         state = self.seq2seq_model._encode(batch['tokens'])
         state_adversarial = {key: tensor.clone() for key, tensor in state.items()}
 
-        state['encoder_outputs'].requires_grad = True
-        state_adversarial['encoder_outputs'].requires_grad = True
+        #print("state['encoder_outputs'].requires_grad = ", state['encoder_outputs'].requires_grad)
+        if not state['encoder_outputs'].requires_grad: # ??? otherwise it gives RuntimeError: you can only change requires_grad flags of leaf variables.
+            state['encoder_outputs'].requires_grad = True
+        if not state_adversarial['encoder_outputs'].requires_grad: # ??? otherwise it gives RuntimeError: you can only change requires_grad flags of leaf variables.
+            state_adversarial['encoder_outputs'].requires_grad = True
 
         # DEEP LEVENSHTEIN
         # TODO: we can skip this part
