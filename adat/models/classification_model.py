@@ -9,7 +9,7 @@ from allennlp.modules.seq2seq_encoders import PytorchSeq2SeqWrapper
 from allennlp.modules.seq2vec_encoders import BagOfEmbeddingsEncoder
 from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
 from allennlp.modules import Seq2SeqEncoder, Seq2VecEncoder, TextFieldEmbedder
-from allennlp.training.metrics import Auc, F1Measure
+from allennlp.training.metrics import Auc, F1Measure, CategoricalAccuracy
 from allennlp.nn.util import get_text_field_mask
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -113,15 +113,17 @@ class BasicClassifierWithMetric(BasicClassifier):
             output_dict["loss"] = loss
             self._accuracy(logits, label)
 
-        if label is not None and self._num_labels == 2:
-            self._auc(output_dict['probs'][:, 1], label.long().view(-1))
-            self._f1(output_dict['probs'], label.long().view(-1))
-
+        if label is not None:
+            if self._num_labels == 2:
+                self._auc(output_dict['probs'][:, 1], label.long().view(-1))
+                self._f1(output_dict['probs'], label.long().view(-1))
+            
         return output_dict
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
         metrics = super().get_metrics(reset)
-        metrics.update({'auc': self._auc.get_metric(reset), 'f1': self._f1.get_metric(reset)[2]})
+        if self._num_labels == 2:
+            metrics.update({'auc': self._auc.get_metric(reset), 'f1': self._f1.get_metric(reset)[2]})
         return metrics
 
 

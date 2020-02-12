@@ -28,6 +28,7 @@ parser.add_argument('-lr', '--learning_rate', type=float, default=0.5)
 parser.add_argument('-nu', '--num_updates', type=int, default=15)
 parser.add_argument('-bs', '--beam_size', type=int, default=1)
 parser.add_argument('-m', '--maskers', type=str, default=IDENTITY_TOKEN)
+parser.add_argument('-nc', '--num_classes', type=int, default=2)
 
 
 if __name__ == '__main__':
@@ -38,7 +39,7 @@ if __name__ == '__main__':
     vocab = Vocabulary.from_files(vocab_path)
 
     seq2seq_model = get_att_mask_seq2seq_model(vocab, beam_size=args.beam_size)
-    classification_model = get_classification_model_seq2seq(seq2seq_model)
+    classification_model = get_classification_model_seq2seq(seq2seq_model, args.num_classes)
     levenshtein_model = get_deep_levenshtein_seq2seq(seq2seq_model)
 
     load_weights(seq2seq_model, Path(args.seq2seq_path) / 'best.th')

@@ -26,14 +26,14 @@ parser.add_argument('--sigma_wer', type=float, default=0.5)
 parser.add_argument('--maximum_wer', type=float, default=0.2)
 parser.add_argument('--minimum_prob_drop', type=float, default=2.0)
 parser.add_argument('--random', action='store_true', help='Whether to use RandomSampler instead of MCMC')
-
+parser.add_argument('-nc', '--num_classes', type=int, default=2)
 
 if __name__ == '__main__':
     args = parser.parse_args()
 
     class_reader = CsvReader()
     class_vocab = Vocabulary.from_files(Path(args.classification_path) / 'vocab')
-    class_model = get_classification_model(class_vocab)
+    class_model = get_classification_model(class_vocab, args.num_classes)
     load_weights(class_model, Path(args.classification_path) / 'best.th')
 
     seq2seq_reader = OneLangSeq2SeqReader(masker=None)

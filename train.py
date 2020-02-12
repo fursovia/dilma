@@ -63,8 +63,13 @@ def get_seq2seq_task_name(path: str) -> str:
 
 if __name__ == '__main__':
     args = parser.parse_args()
+    print('CUDA available: ', torch.cuda.is_available())
 
+    #assert False
+    
     # DATASETS
+    print('Read DATASETS')
+
     if args.task in [Task.CLASSIFICATION, Task.CLASSIFICATIONSEQ2SEQ]:
         reader = CsvReader(lazy=False)
         test_reader = reader
@@ -90,6 +95,7 @@ if __name__ == '__main__':
     dump_metrics(model_dir / "args.json", args.__dict__)
 
     # VOCABULARY, ITERATOR
+    print('Build VOCABULARY')
     if args.resume:
         vocab = Vocabulary.from_files(model_dir / "vocab")
     elif args.seq2seq_model_dir is not None:
@@ -103,6 +109,8 @@ if __name__ == '__main__':
 
     iterator = BucketIterator(batch_size=args.batch_size, sorting_keys=sorting_keys)
     iterator.index_with(vocab)
+
+    print('Init MODELS')
 
     # MODELS
     if args.task == Task.CLASSIFICATION:
@@ -134,6 +142,7 @@ if __name__ == '__main__':
         model.cuda(args.cuda)
 
     # TRAINING
+    print('Start TRAINING')
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     trainer = Trainer(
         model=model,
