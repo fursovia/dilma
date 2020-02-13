@@ -73,7 +73,7 @@ if __name__ == '__main__':
     elif args.task in [Task.SEQ2SEQ, Task.ATTMASKEDSEQ2SEQ]:
         mask = get_default_masker() if args.use_mask else None
         reader = OneLangSeq2SeqReader(mask)
-        test_reader = OneLangSeq2SeqReader(masker=None)
+        test_reader = OneLangSeq2SeqReader(mask)  # masker=None
         sorting_keys = [('source_tokens', 'num_tokens')]
     elif args.task in [Task.DEEPLEVENSHTEIN, Task.DEEPLEVENSHTEINSEQ2SEQ, Task.DEEPLEVENSHTEINATT]:
         reader = LevenshteinReader()
