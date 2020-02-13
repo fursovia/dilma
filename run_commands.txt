@@ -1,32 +1,5 @@
 
-python train.py --task seq2seq --model_dir experiments/seq2seq_basic --data_dir data/ai_academy_data -ne 15 --cuda 1 --num_classes 4
-
-
-
-
-python train.py --task classification --model_dir experiments/classification_fixed --data_dir data/ai_academy_data -ne 16 --cuda 1 --num_classes 4
-
-
-
-python train.py --task classification_seq2seq --model_dir experiments/classification_seq2seq_basic --data_dir data/ai_academy_data --seq2seq_model_dir experiments/seq2seq_basic -ne 6 --cuda 1 --num_classes 4
-
-
-python train.py --task deep_levenshtein --model_dir experiments/deep_levenshtein --data_dir data/ai_academy_data_deep_lev -ne 5 --cuda 1 --seq2seq_model_dir experiments/seq2seq_basic
-
-
-### python run_mcmc.py --csv_path data/ai_academy_data/random.csv --results_path results/mcmc_results_no_att --classification_path experiments/classification_fixed --seq2seq_path experiments/seq2seq_basic --cuda 1 --num_classes 4
-
-### python run_gradient_attack.py --csv_path data/ai_academy_data/random.csv --results_path results/gradient_results_no_att --seq2seq_path experiments/seq2seq_basic --classification_path experiments/classification_seq2seq_basic --levenshtein_path experiments/deep_levenshtein --cuda 1 --num_classes 4 --s2s_model seq2seq --ed_model deep_levenshtein --clf_model classification_seq2seq
-
-
-python train.py --task deep_levenshtein_seq2seq --model_dir experiments/deep_levenshtein_seq2seq --data_dir data/ai_academy_data_deep_lev -ne 5 --cuda 1 --seq2seq_model_dir experiments/seq2seq_basic
-
-
-
-python run_gradient_attack.py --csv_path data/ai_academy_data/random.csv --results_path results/gradient_results_no_att --seq2seq_path experiments/seq2seq_basic --classification_path experiments/classification_seq2seq_basic --levenshtein_path experiments/deep_levenshtein_seq2seq --cuda 1 --num_classes 4 --s2s_model seq2seq --ed_model deep_levenshtein_seq2seq --clf_model classification_seq2seq
-
 ---------------------------------------------------------------------
-
 #######################################################
 ai_academy_data dataset
 #######################################################
@@ -74,7 +47,7 @@ python train.py --task classification_seq2seq --model_dir experiments/ag_news/cl
 
 python train.py --task deep_levenshtein_seq2seq --model_dir experiments/ag_news/deep_levenshtein_seq2seq --data_dir data/ag_news/levenshtein -ne 50 --cuda 0 --seq2seq_model_dir experiments/ag_news/seq2seq_att_mask
 
-python run_gradient_attack.py --csv_path data/ag_news/random1000.csv --results_path results/ag_news/gradient_results --seq2seq_path experiments/ag_news/seq2seq_att_mask --classification_path experiments/ag_news/classification_seq2seq_basic --levenshtein_path experiments/ag_news/deep_levenshtein_seq2seq --cuda 0 --num_classes 4 --s2s_model att_mask_seq2seq --ed_model deep_levenshtein_seq2seq --clf_model classification_seq2seq --num_updates 10 --learning_rate 0.4
+python run_gradient_attack.py --csv_path data/ag_news/random1000.csv --results_path results/ag_news/gradient_results --seq2seq_path experiments/ag_news/seq2seq_att_mask --classification_path experiments/ag_news/classification_seq2seq_basic --levenshtein_path experiments/ag_news/deep_levenshtein_seq2seq --cuda 0 --num_classes 4 --s2s_model att_mask_seq2seq --ed_model deep_levenshtein_seq2seq --clf_model classification_seq2seq --num_updates 10 --learning_rate 0.38
 
 
 
@@ -91,3 +64,32 @@ python run_mcmc.py --csv_path data/ag_news/random100.csv --results_path results/
 
 python run_mcmc.py --csv_path data/ag_news/random100.csv --results_path results/ag_news/mcmc_results --classification_path experiments/ag_news/classification_fixed --seq2seq_path experiments/ag_news/seq2seq_basic --cuda 0 --num_classes 4 --var 1.0
 
+--------------------------------------------------------
+#######################################################
+kaggle_transactions dataset
+#######################################################
+
+python train.py --task seq2seq --model_dir experiments/kaggle_transactions/seq2seq_basic --data_dir data/kaggle_transactions -ne 50 --cuda 1 --num_classes 2
+
+python train.py --task att_mask_seq2seq --model_dir experiments/kaggle_transactions/seq2seq_att_mask --data_dir data/kaggle_transactions -ne 50 --use_mask --cuda 0 --num_classes 2 --batch_size 512
+
+python train.py --task classification_seq2seq --model_dir experiments/kaggle_transactions/classification_seq2seq_basic --data_dir data/kaggle_transactions --seq2seq_model_dir experiments/kaggle_transactions/seq2seq_att_mask -ne 50 --cuda 1 --num_classes 2
+
+python train.py --task deep_levenshtein_seq2seq --model_dir experiments/kaggle_transactions/deep_levenshtein_seq2seq --data_dir data/kaggle_transactions/levenshtein -ne 50 --cuda 0 --seq2seq_model_dir experiments/kaggle_transactions/seq2seq_att_mask
+
+python run_gradient_attack.py --csv_path data/kaggle_transactions/random1000.csv --results_path results/kaggle_transactions/gradient_results --seq2seq_path experiments/kaggle_transactions/seq2seq_att_mask --classification_path experiments/kaggle_transactions/classification_seq2seq_basic --levenshtein_path experiments/kaggle_transactions/deep_levenshtein_seq2seq --cuda 0 --num_classes 2 --s2s_model att_mask_seq2seq --ed_model deep_levenshtein_seq2seq --clf_model classification_seq2seq --num_updates 15 --learning_rate 0.5
+
+
+
+
+
+python train.py --task classification --model_dir experiments/kaggle_transactions/classification_fixed --data_dir data/kaggle_transactions -ne 50 --cuda 0 --num_classes 2
+
+python run_mcmc.py --csv_path data/kaggle_transactions/random1000.csv --results_path results/kaggle_transactions/random_results --classification_path experiments/kaggle_transactions/classification_fixed --seq2seq_path experiments/kaggle_transactions/seq2seq_basic --cuda 0 --num_classes 2 --random --var 3.0
+
+python run_mcmc.py --csv_path data/kaggle_transactions/random1000.csv --results_path results/kaggle_transactions/mcmc_results --classification_path experiments/kaggle_transactions/classification_fixed --seq2seq_path experiments/kaggle_transactions/seq2seq_basic --cuda 0 --num_classes 2 --var 1.05
+
+
+python run_mcmc.py --csv_path data/kaggle_transactions/random100.csv --results_path results/kaggle_transactions/random_results --classification_path experiments/kaggle_transactions/classification_fixed --seq2seq_path experiments/kaggle_transactions/seq2seq_basic --cuda 0 --num_classes 2 --random --var 3.0
+
+python run_mcmc.py --csv_path data/kaggle_transactions/random100.csv --results_path results/kaggle_transactions/mcmc_results --classification_path experiments/kaggle_transactions/classification_fixed --seq2seq_path experiments/kaggle_transactions/seq2seq_basic --cuda 0 --num_classes 2 --var 1.05
