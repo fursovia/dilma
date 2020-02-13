@@ -88,8 +88,8 @@ if __name__ == '__main__':
     results_path.mkdir(exist_ok=True)
     path_to_results_file = results_path / 'results.csv'
     dump_metrics(results_path / 'args.json', args.__dict__)
-    assert not path_to_results_file.exists(), \
-        f'You already have `{path_to_results_file}` file. Delete it or change --results_path.'
+    #assert not path_to_results_file.exists(), \
+    #    f'You already have `{path_to_results_file}` file. Delete it or change --results_path.'
     with open(path_to_results_file, 'w', newline='') as csv_write:
         fieldnames = list(AttackerOutput.__annotations__.keys())
         writer = csv.DictWriter(csv_write, fieldnames=fieldnames)

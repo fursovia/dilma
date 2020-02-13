@@ -27,28 +27,67 @@ python run_gradient_attack.py --csv_path data/ai_academy_data/random.csv --resul
 
 ---------------------------------------------------------------------
 
-python train.py --task att_mask_seq2seq --model_dir experiments/seq2seq_att_mask --data_dir data/ai_academy_data -ne 50 --use_mask --cuda 1 --num_classes 4
+#######################################################
+ai_academy_data dataset
+#######################################################
 
-python train.py --task classification_seq2seq --model_dir experiments/classification_seq2seq_basic --data_dir data/ai_academy_data --seq2seq_model_dir experiments/seq2seq_att_mask -ne 50 --cuda 1 --num_classes 4
+python train.py --task att_mask_seq2seq --model_dir experiments/ai_academy_data/seq2seq_att_mask --data_dir data/ai_academy_data -ne 50 --use_mask --cuda 1 --num_classes 4
 
-python train.py --task deep_levenshtein_seq2seq --model_dir experiments/deep_levenshtein_seq2seq --data_dir data/ai_academy_data_deep_lev -ne 5 --cuda 1 --seq2seq_model_dir experiments/seq2seq_att_mask
+python train.py --task classification_seq2seq --model_dir experiments/classification_seq2seq_basic --data_dir data/ai_academy_data/ai_academy_data --seq2seq_model_dir experiments/ai_academy_data/seq2seq_att_mask -ne 50 --cuda 1 --num_classes 4
 
-python run_gradient_attack.py --csv_path data/ai_academy_data/random_1000.csv --results_path results/gradient_results --seq2seq_path experiments/seq2seq_att_mask --classification_path experiments/classification_seq2seq_basic --levenshtein_path experiments/deep_levenshtein_seq2seq --cuda 0 --num_classes 4 --s2s_model att_mask_seq2seq --ed_model deep_levenshtein_seq2seq --clf_model classification_seq2seq
+python train.py --task deep_levenshtein_seq2seq --model_dir experiments/ai_academy_data/deep_levenshtein_seq2seq --data_dir data/ai_academy_data/levenshtein -ne 50 --cuda 1 --seq2seq_model_dir experiments/ai_academy_data/seq2seq_att_mask
 
-python train.py --task classification --model_dir experiments/classification_fixed --data_dir data/ai_academy_data -ne 50 --cuda 1 --num_classes 4
+python run_gradient_attack.py --csv_path data/ai_academy_data/random_1000.csv --results_path results/ai_academy_data/gradient_results --seq2seq_path experiments/ai_academy_data/seq2seq_att_mask --classification_path experiments/ai_academy_data/classification_seq2seq_basic --levenshtein_path experiments/ai_academy_data/deep_levenshtein_seq2seq --cuda 0 --num_classes 4 --s2s_model att_mask_seq2seq --ed_model deep_levenshtein_seq2seq --clf_model classification_seq2seq
 
-python train.py --task seq2seq --model_dir experiments/seq2seq_basic --data_dir data/ai_academy_data -ne 50 --cuda 1 --num_classes 4
+python train.py --task classification --model_dir experiments/ai_academy_data/classification_fixed --data_dir data/ai_academy_data -ne 50 --cuda 1 --num_classes 4
 
-python run_mcmc.py --csv_path data/ai_academy_data/random_1000.csv --results_path results/random_results --classification_path experiments/classification_fixed --seq2seq_path experiments/seq2seq_basic --cuda 1 --num_classes 4 --random
+python train.py --task seq2seq --model_dir experiments/ai_academy_data/seq2seq_basic --data_dir data/ai_academy_data -ne 50 --cuda 1 --num_classes 4
 
-
-python run_mcmc.py --csv_path data/ai_academy_data/random_1000.csv --results_path results/mcmc_results --classification_path experiments/classification_fixed --seq2seq_path experiments/seq2seq_basic --cuda 1 --num_classes 4
-
-
-
+python run_mcmc.py --csv_path data/ai_academy_data/random_1000.csv --results_path results/ai_academy_data/random_results --classification_path experiments/ai_academy_data/classification_fixed --seq2seq_path experiments/ai_academy_data/seq2seq_basic --cuda 1 --num_classes 4 --random --var 0.17
 
 
+python run_mcmc.py --csv_path data/ai_academy_data/random_1000.csv --results_path results/ai_academy_data/mcmc_results --classification_path experiments/ai_academy_data/classification_fixed --seq2seq_path experiments/ai_academy_data/seq2seq_basic --cuda 1 --num_classes 4 --var 0.3
 
 
 
+
+
+# small sample to tune variance
+
+python run_mcmc.py --csv_path data/ai_academy_data/random100.csv --results_path results/ai_academy_data/random_results --classification_path experiments/ai_academy_data/classification_fixed --seq2seq_path experiments/ai_academy_data/seq2seq_basic --cuda 1 --num_classes 4 --random --var 0.17
+
+python run_mcmc.py --csv_path data/ai_academy_data/random100.csv --results_path results/ai_academy_data/mcmc_results --classification_path experiments/ai_academy_data/classification_fixed --seq2seq_path experiments/ai_academy_data/seq2seq_basic --cuda 1 --num_classes 4 --var 0.3
+
+
+--------------------------------------------------------
+#######################################################
+ag_news dataset
+#######################################################
+
+python train.py --task seq2seq --model_dir experiments/ag_news/seq2seq_basic --data_dir data/ag_news -ne 50 --cuda 1 --num_classes 4
+
+
+python train.py --task att_mask_seq2seq --model_dir experiments/ag_news/seq2seq_att_mask --data_dir data/ag_news -ne 50 --use_mask --cuda 1 --num_classes 4 --batch_size 512
+
+
+python train.py --task classification_seq2seq --model_dir experiments/ag_news/classification_seq2seq_basic --data_dir data/ag_news --seq2seq_model_dir experiments/ag_news/seq2seq_att_mask -ne 50 --cuda 1 --num_classes 4
+
+python train.py --task deep_levenshtein_seq2seq --model_dir experiments/ag_news/deep_levenshtein_seq2seq --data_dir data/ag_news/levenshtein -ne 50 --cuda 0 --seq2seq_model_dir experiments/ag_news/seq2seq_att_mask
+
+python run_gradient_attack.py --csv_path data/ag_news/random1000.csv --results_path results/ag_news/gradient_results --seq2seq_path experiments/ag_news/seq2seq_att_mask --classification_path experiments/ag_news/classification_seq2seq_basic --levenshtein_path experiments/ag_news/deep_levenshtein_seq2seq --cuda 0 --num_classes 4 --s2s_model att_mask_seq2seq --ed_model deep_levenshtein_seq2seq --clf_model classification_seq2seq --num_updates 10 --learning_rate 0.4
+
+
+
+
+
+python train.py --task classification --model_dir experiments/ag_news/classification_fixed --data_dir data/ag_news -ne 50 --cuda 0 --num_classes 4
+
+python run_mcmc.py --csv_path data/ag_news/random1000.csv --results_path results/ag_news/random_results --classification_path experiments/ag_news/classification_fixed --seq2seq_path experiments/ag_news/seq2seq_basic --cuda 0 --num_classes 4 --random --var 2.5
+
+python run_mcmc.py --csv_path data/ag_news/random1000.csv --results_path results/ag_news/mcmc_results --classification_path experiments/ag_news/classification_fixed --seq2seq_path experiments/ag_news/seq2seq_basic --cuda 0 --num_classes 4 --var 1.0
+
+
+python run_mcmc.py --csv_path data/ag_news/random100.csv --results_path results/ag_news/random_results --classification_path experiments/ag_news/classification_fixed --seq2seq_path experiments/ag_news/seq2seq_basic --cuda 0 --num_classes 4 --random --var 2.5
+
+python run_mcmc.py --csv_path data/ag_news/random100.csv --results_path results/ag_news/mcmc_results --classification_path experiments/ag_news/classification_fixed --seq2seq_path experiments/ag_news/seq2seq_basic --cuda 0 --num_classes 4 --var 1.0
 
