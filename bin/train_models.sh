@@ -33,7 +33,11 @@ python train.py \
     --cuda ${GPU_ID}
 
 
-python create_levenshtein_dataset --csv_path ${DATA_DIR}/train.csv --output_dir ${DATA_DIR}/levenshtein
+if [ -d "$(${DATA_DIR}/levenshtein)" ]; then
+    echo "skipping levenshtein data preparation"
+else
+    python create_levenshtein_dataset --csv_path ${DATA_DIR}/train.csv --output_dir ${DATA_DIR}/levenshtein
+fi
 
 
 python train.py \
