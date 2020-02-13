@@ -76,6 +76,7 @@ class DeepLevenshteinFromSeq2Seq(DeepLevenshtein):
         self._one_lang_seq2seq = one_lang_seq2seq
 
 
+# TODO: adapt to attackers
 class DeepLevenshteinWithAttention(Model):
     def __init__(self,
                  vocab: Vocabulary,
