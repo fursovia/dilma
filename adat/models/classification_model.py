@@ -83,8 +83,7 @@ class BasicClassifierWithMetric(BasicClassifier):
                  num_labels: int = None) -> None:
 
         super().__init__(vocab, text_field_embedder, seq2vec_encoder, seq2seq_encoder, num_labels=num_labels)
-        self.num_labels = num_labels
-        if self.num_labels == 2:
+        if self._num_labels == 2:
             self._auc = Auc()
             self._f1 = F1Measure(1)
 
@@ -92,9 +91,9 @@ class BasicClassifierWithMetric(BasicClassifier):
                 tokens: Dict[str, torch.LongTensor],
                 label: torch.IntTensor = None) -> Dict[str, torch.Tensor]:
         embedded_text = self._text_field_embedder(tokens)
-        mask = get_text_field_mask(tokens).float()
+        # mask = get_text_field_mask(tokens).float()
         # TODO: hotflip bug
-        # mask = None
+        mask = None
 
         if self._seq2seq_encoder:
             embedded_text = self._seq2seq_encoder(embedded_text, mask=mask)
@@ -122,7 +121,7 @@ class BasicClassifierWithMetric(BasicClassifier):
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
         metrics = super().get_metrics(reset)
-        if self.num_labels == 2:
+        if self._num_labels == 2:
             metrics.update({'auc': self._auc.get_metric(reset), 'f1': self._f1.get_metric(reset)[2]})
         return metrics
 
