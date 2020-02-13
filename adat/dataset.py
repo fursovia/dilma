@@ -38,9 +38,10 @@ class WhitespaceTokenizer(Tokenizer):
 
 
 class CsvReader(DatasetReader):
-    def __init__(self, lazy: bool = False):
+    def __init__(self, lazy: bool = False, skip_start_end: bool = False):
         super().__init__(lazy)
         self._tokenizer = WhitespaceTokenizer()
+        self.skip_start_end = skip_start_end
 
     def _read(self, file_path):
         with open(cached_path(file_path), "r") as data_file:
@@ -53,9 +54,10 @@ class CsvReader(DatasetReader):
                          sequence: str,
                          label: str = None) -> Instance:
         fields: Dict[str, Field] = dict()
+        indexes = _get_default_indexer() if not self.skip_start_end else SingleIdTokenIndexer(namespace='tokens')
         fields["tokens"] = TextField(
             self._tokenizer.tokenize(sequence),
-            {"tokens": _get_default_indexer()})
+            {"tokens": indexes})
         if label is not None:
             fields['label'] = LabelField(int(label), skip_indexing=True)
         return Instance(fields)
@@ -90,7 +92,7 @@ class OneLangSeq2SeqReader(DatasetReader):
         fields["target_tokens"] = fields["tokens"]
         if self.masker is not None:
             text, maskers_applied = self.masker.mask(text)
-            maskers_applied = list(set(maskers_applied)) or [IDENTITY_TOKEN]
+            maskers_applied = maskers_applied or [IDENTITY_TOKEN]
             fields["source_tokens"] = TextField(
                 self._tokenizer.tokenize(text),
                 {
