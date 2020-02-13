@@ -15,7 +15,6 @@ from adat.models import get_classification_model
 from adat.utils import load_weights
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--cuda', type=int, default=-1)
 parser.add_argument('--csv_path', type=str, default='data/test.csv')
 parser.add_argument('--results_path', type=str, default='results')
 parser.add_argument('-cp', '--classification_path', type=str, default='experiments/classification')
