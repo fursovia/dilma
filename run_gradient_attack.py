@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 import csv
 import json
+from typing import List
 from tqdm import tqdm
 
 import pandas as pd
@@ -26,10 +27,10 @@ parser.add_argument('-sp', '--seq2seq_path', type=str, default='experiments/seq2
 parser.add_argument('-cp', '--classification_path', type=str, default='experiments/classification')
 parser.add_argument('-lp', '--levenshtein_path', type=str, default='experiments/deep_levenshtein')
 parser.add_argument('-lw', '--levenshtein_weight', type=float, default=0.1)
-parser.add_argument('-lr', '--learning_rate', type=float, default=0.5)
-parser.add_argument('-nu', '--num_updates', type=int, default=15)
+parser.add_argument('-lr', '--learning_rate', type=float, default=2.0)
+parser.add_argument('-nu', '--num_updates', type=int, default=50)
 parser.add_argument('-bs', '--beam_size', type=int, default=1)
-parser.add_argument('-m', '--maskers', type=str, default=IDENTITY_TOKEN)
+parser.add_argument('-m', '--maskers', type=str, default=IDENTITY_TOKEN, help='string with comma-separated values')
 parser.add_argument('--sample', type=int, default=None)
 
 
@@ -52,6 +53,20 @@ def _get_seq2seq_from_args(vocab: Vocabulary, path: str, beam_size: int):
         return get_att_mask_seq2seq_model(vocab, beam_size=beam_size, use_attention=use_attention)
     else:
         raise NotImplementedError
+
+
+def get_heuristics_maskers(seq: str) -> List[str]:
+    length = len(seq.split())
+    if length <= 2:
+        maskers = ['RemoveMasker']
+    elif length >= 3 and length <= 5:
+        maskers = ['RemoveMasker', 'ReplaceMasker']
+    elif length >= 6 and length <= 8:
+        maskers = ['ReplaceMasker', 'AddMaskerrandom']
+    else:
+        maskers = ['ReplaceMasker', 'ReplaceMasker', 'AddMaskerrandom', 'AddMaskerrandom']
+
+    return maskers
 
 
 if __name__ == '__main__':
@@ -86,7 +101,12 @@ if __name__ == '__main__':
     data = pd.read_csv(args.csv_path)
     sequences = data['sequences'].tolist()[:args.sample]
     labels = data['labels'].tolist()[:args.sample]
-    maskers = [args.maskers.split()] * len(sequences)
+    if args.maskers != 'auto':
+        maskers_to_use = args.maskers.split(',')
+        print(f'MASKERS = {maskers_to_use}')
+        maskers = [maskers_to_use] * len(sequences)
+    else:
+        maskers = [get_heuristics_maskers(seq) for seq in sequences]
 
     results_path = Path(args.results_path)
     results_path.mkdir(exist_ok=True)
@@ -107,3 +127,4 @@ if __name__ == '__main__':
                 num_updates=args.num_updates
             )[0]
             writer.writerow(output.__dict__)
+            csv_write.flush()
