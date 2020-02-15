@@ -9,7 +9,7 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 from allennlp.predictors import TextClassifierPredictor
 
-from adat.dataset import CsvReader
+from adat.dataset import ClassificationReader
 from adat.attackers.hotflip import HotFlipFixed
 from adat.models import get_classification_model
 from adat.utils import load_weights
@@ -31,7 +31,7 @@ def _get_classifier_from_args(vocab: Vocabulary, path: str):
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    class_reader = CsvReader(skip_start_end=True)
+    class_reader = ClassificationReader(skip_start_end=True)
     class_vocab = Vocabulary.from_files(Path(args.classification_path) / 'vocab')
     class_model = _get_classifier_from_args(class_vocab, Path(args.classification_path) / 'args.json')
     load_weights(class_model, Path(args.classification_path) / 'best.th')

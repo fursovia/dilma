@@ -8,20 +8,20 @@ import pandas as pd
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
-from adat.dataset import CsvReader, OneLangSeq2SeqReader, Task
+from adat.dataset import ClassificationReader, CopyNetReader
 from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, SamplerOutput
-from adat.models import get_classification_model, get_seq2seq_model, get_att_mask_seq2seq_model
+from adat.models import Task, get_model_by_name
 from adat.utils import load_weights
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--cuda', type=int, default=-1)
 parser.add_argument('--csv_path', type=str, default='data/test.csv')
 parser.add_argument('--results_path', type=str, default='results')
-parser.add_argument('-cp', '--classification_path', type=str, default='experiments/classification')
-parser.add_argument('-sp', '--seq2seq_path', type=str, default='experiments/seq2seq')
-parser.add_argument('-ns', '--num_steps', type=int, default=100)
-parser.add_argument('-bs', '--beam_size', type=int, default=1)
-parser.add_argument('--var', type=float, default=0.01)
+parser.add_argument('--classification_path', type=str, default='experiments/classification')
+parser.add_argument('--seq2seq_path', type=str, default='experiments/seq2seq')
+parser.add_argument('--num_steps', type=int, default=100)
+parser.add_argument('--beam_size', type=int, default=1)
+parser.add_argument('--std', type=float, default=0.01)
 parser.add_argument('--sigma_class', type=float, default=1.0)
 parser.add_argument('--sigma_wer', type=float, default=0.5)
 parser.add_argument('--maximum_wer', type=float, default=0.2)
@@ -54,12 +54,12 @@ def _get_seq2seq_from_args(vocab: Vocabulary, path: str, beam_size: int):
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    class_reader = CsvReader(skip_start_end=True)
+    class_reader = ClassificationReader(skip_start_end=True)
     class_vocab = Vocabulary.from_files(Path(args.classification_path) / 'vocab')
     class_model = _get_classifier_from_args(class_vocab, Path(args.classification_path) / 'args.json')
     load_weights(class_model, Path(args.classification_path) / 'best.th')
 
-    seq2seq_reader = OneLangSeq2SeqReader(masker=None)
+    seq2seq_reader = CopyNetReader(masker=None)
     seq2seq_vocab = Vocabulary.from_files(Path(args.seq2seq_path) / 'vocab')
     seq2seq_model = _get_seq2seq_from_args(
         seq2seq_vocab,
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     if args.random:
         sampler = RandomSampler(
-            proposal_distribution=NormalProposal(args.var),
+            proposal_distribution=NormalProposal(args.std),
             classification_model=class_model,
             classification_reader=class_reader,
             generation_model=seq2seq_model,
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         )
     else:
         sampler = MCMCSampler(
-            proposal_distribution=NormalProposal(args.var),
+            proposal_distribution=NormalProposal(args.std),
             classification_model=class_model,
             classification_reader=class_reader,
             generation_model=seq2seq_model,

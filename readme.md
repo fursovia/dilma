@@ -48,7 +48,39 @@ Predict an age of a client based on his/her transactions.
 TODO
 
 
-## Basic usage
+
+## Usage
+
+### CopyNet Training
+
+```bash
+python train.py \
+    --task nonmasked_copynet_with_attention \
+    --model_dir experiments/sample/nonmasked_copynet_with_attention \
+    --data_dir data/sample \
+    --use_mask \
+    --cuda 3
+```
+
+
+### Classifier Training
+
+```bash
+python train.py \
+    --task classification \
+    --model_dir experiments/sample/classification \
+    --data_dir data/sample \
+    --cuda 3
+```
+
+
+### MCMC/Random sampler
+
+
+
+
+
+## Basic usage (DEPRECATED)
 
 ### Training
 
@@ -99,6 +131,18 @@ python train.py \
     --cuda 3
 ```
 
+Additional input
+
+```bash
+python train.py \
+    --task att_mask_seq2seq \
+    --model_dir experiments/kaggle_transactions_data/seq2seq_masked_training_add \
+    --data_dir data/kaggle_transactions_data \
+    --use_mask \
+    -ne 30 \
+    --cuda 1
+```
+
 
 #### Classification
 
@@ -117,12 +161,35 @@ Classification on pre-trained encoder
 ```bash
 python train.py \
     --task classification_seq2seq \
-    --model_dir experiments/ag_news/classification_seq2seq\
+    --model_dir experiments/ag_news/classification_seq2seq_add\
     --data_dir data/ag_news \
-    --seq2seq_model_dir experiments/ag_news/seq2seq_masked_training \
+    --seq2seq_model_dir experiments/ag_news/seq2seq_masked_training_add \
     -ne 30 \
     --num_classes 4 \
     --cuda 1
+```
+
+
+```bash
+python train.py \
+    --task classification_seq2seq \
+    --model_dir experiments/insurance/classification_seq2seq_add\
+    --data_dir data/insurance \
+    --seq2seq_model_dir experiments/insurance/seq2seq_masked_training_add \
+    -ne 30 \
+    --num_classes 2 \
+    --cuda 2
+```
+
+```bash
+python train.py \
+    --task classification_seq2seq \
+    --model_dir experiments/kaggle_transactions_data/classification_seq2seq_add\
+    --data_dir data/kaggle_transactions_data \
+    --seq2seq_model_dir experiments/kaggle_transactions_data/seq2seq_masked_training_add \
+    -ne 30 \
+    --num_classes 2 \
+    --cuda 3
 ```
 
 
@@ -158,11 +225,11 @@ On pre-trained encoder
 ```bash
 python train.py \
     --task deep_levenshtein_seq2seq \
-    --model_dir experiments/ag_news/deep_levenshtein_seq2seq \
-    --data_dir data/ag_news_lev \
+    --model_dir experiments/kaggle_transactions_data/deep_levenshtein_seq2seq_add \
+    --data_dir data/kaggle_transactions_data/levenshtein \
     -ne 30 \
-    --seq2seq_model_dir experiments/ag_news/seq2seq_masked_training \
-    --cuda 1
+    --seq2seq_model_dir experiments/kaggle_transactions_data/seq2seq_masked_training_add \
+    --cuda 3
 ```
 
 
@@ -185,11 +252,22 @@ python run_mcmc.py \
 
 ```bash
 python run_gradient_attack.py \
+    --csv_path data/insurance/test.csv \
+    --results_path results/insurance/gradient \
+    --seq2seq_path experiments/insurance/seq2seq_masked_training \
+    --classification_path experiments/insurance/classification_seq2seq \
+    --levenshtein_path experiments/insurance/deep_levenshtein_seq2seq \
+    --cuda 1 
+```
+
+
+
+```bash
+python run_gradient_attack.py \
     --csv_path data/ag_news/test.csv \
     --results_path results/ag_news/gradient \
-    --seq2seq_path experiments/ag_news/seq2seq_masked_training \
-    --classification_path experiments/ag_news/classification_seq2seq \
-    --levenshtein_path experiments/ag_news/deep_levenshtein_seq2seq \
-    --num_classes 4 \
+    --seq2seq_path experiments/ag_news/seq2seq_masked_training_add \
+    --classification_path experiments/ag_news/classification_seq2seq_add \
+    --levenshtein_path experiments/ag_news/deep_levenshtein_seq2seq_add \
     --cuda 1
 ```

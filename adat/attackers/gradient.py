@@ -5,10 +5,10 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.data.dataset import Batch
 from allennlp.nn.util import move_to_device
 
-from adat.models.classification_model import BasicClassifierWithMetric
-from adat.models.seq2seq_model import OneLanguageSeq2SeqModel
+from adat.models.classification_model import Classifier
+from adat.models.masked_copynet import MaskedCopyNet
 from adat.models.deep_levenshtein import DeepLevenshteinFromSeq2Seq
-from adat.dataset import OneLangSeq2SeqReader, IDENTITY_TOKEN
+from adat.dataset import CopyNetReader, IDENTITY_TOKEN
 from adat.attackers.attacker import AttackerOutput, Attacker
 from adat.utils import calculate_wer
 
@@ -19,9 +19,9 @@ BASIC_MASKER = [IDENTITY_TOKEN]
 class GradientAttacker(Attacker):
     def __init__(self,
                  vocab: Vocabulary,
-                 reader: OneLangSeq2SeqReader,
-                 classification_model: BasicClassifierWithMetric,
-                 seq2seq_model: OneLanguageSeq2SeqModel,
+                 reader: CopyNetReader,
+                 classification_model: Classifier,
+                 masked_copynet: MaskedCopyNet,
                  deep_levenshtein_model: DeepLevenshteinFromSeq2Seq,
                  levenshtein_weight: float = 0.1,
                  num_labels: int = 2,
@@ -29,16 +29,16 @@ class GradientAttacker(Attacker):
         self.vocab = vocab
         self.reader = reader
         self.classification_model = classification_model
-        self.seq2seq_model = seq2seq_model
+        self.masked_copynet = masked_copynet
         self.deep_levenshtein_model = deep_levenshtein_model
         self.device = device
         if self.device >= 0 and torch.cuda.is_available():
             self.classification_model.cuda(self.device)
-            self.seq2seq_model.cuda(self.device)
+            self.masked_copynet.cuda(self.device)
             self.deep_levenshtein_model.cuda(self.device)
         else:
             self.classification_model.cpu()
-            self.seq2seq_model.cpu()
+            self.masked_copynet.cpu()
             self.deep_levenshtein_model.cpu()
 
         self.num_labels = num_labels
@@ -84,9 +84,9 @@ class GradientAttacker(Attacker):
 
     def decode(self, source_tokens: Dict[str, torch.Tensor],
                state: Dict[str, torch.Tensor],
-               masker_tokens: Dict[str, torch.Tensor]) -> List[List[str]]:
-        output = self.seq2seq_model.forward(source_tokens, state=state, masker_tokens=masker_tokens)
-        return self.seq2seq_model.decode(output)['predicted_tokens']
+               mask_tokens: Dict[str, torch.Tensor]) -> List[List[str]]:
+        output = self.masked_copynet.forward(source_tokens, state=state, mask_tokens=mask_tokens)
+        return self.masked_copynet.decode(output)['predicted_tokens']
 
     def predict_probs_from_state(self, state: Dict[str, torch.Tensor]) -> torch.Tensor:
         encdoded_class = self.classification_model._seq2vec_encoder(
@@ -120,7 +120,7 @@ class GradientAttacker(Attacker):
 
         # SEQ2SEQ
         # keys: source_mask, encoder_outputs
-        state = self.seq2seq_model._encode(batch['tokens'])
+        state = self.masked_copynet._encode(batch['tokens'])
         state_adversarial = {key: tensor.clone() for key, tensor in state.items()}
 
         state['encoder_outputs'].requires_grad = True
@@ -147,11 +147,9 @@ class GradientAttacker(Attacker):
         with torch.no_grad():
             new_probs = self.predict_probs_from_state(state_adversarial).masked_select(indexes).cpu().numpy()
 
-        decoded = self.decode(batch['tokens'], state=state_adversarial, masker_tokens=batch['masker_tokens'])
+        decoded = self.decode(batch['tokens'], state=state_adversarial, mask_tokens=batch['mask_tokens'])
         decoded = [' '.join(d) for d in decoded]
-        # word_error_rates = [calculate_wer(adv_seq, seq) for adv_seq, seq in zip(decoded, sequences)]
-        # just to speed up, we can calculate wer later
-        word_error_rates = [0.0] * len(decoded)
+        word_error_rates = [calculate_wer(adv_seq, seq) for adv_seq, seq in zip(decoded, sequences)]
         prob_diffs = [prob - aprob for prob, aprob in zip(probs.detach().cpu().numpy(), new_probs)]
 
         output = [

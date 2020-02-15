@@ -13,7 +13,11 @@ from allennlp.modules.attention import AdditiveAttention
 from allennlp.modules import Attention
 
 from adat.models.classification_model import BoWMaxAndMeanEncoder
-from adat.models.seq2seq_model import OneLanguageSeq2SeqModel
+from adat.models.masked_copynet import MaskedCopyNet
+
+
+EMB_DIM = 64
+HID_DIM = 32
 
 
 class DeepLevenshtein(Model):
@@ -30,7 +34,6 @@ class DeepLevenshtein(Model):
         self._seq2seq_encoder = seq2seq_encoder
         self._seq2vec_encoder = seq2vec_encoder
 
-        # self._loss = torch.nn.MSELoss()
         self._loss = torch.nn.L1Loss()
         self._cosine_sim = torch.nn.CosineSimilarity()
 
@@ -62,18 +65,17 @@ class DeepLevenshtein(Model):
 
 class DeepLevenshteinFromSeq2Seq(DeepLevenshtein):
     def __init__(self,
-                 one_lang_seq2seq: OneLanguageSeq2SeqModel, seq2vec_encoder: Seq2VecEncoder) -> None:
-        one_lang_seq2seq.eval()
-        for p in one_lang_seq2seq.parameters():
+                 masked_copynet: MaskedCopyNet, seq2vec_encoder: Seq2VecEncoder) -> None:
+        masked_copynet.eval()
+        for p in masked_copynet.parameters():
             p.requires_grad = False
 
         super().__init__(
-            vocab=one_lang_seq2seq.vocab,
-            text_field_embedder=one_lang_seq2seq._source_embedder,
-            seq2seq_encoder=one_lang_seq2seq._encoder,
+            vocab=masked_copynet.vocab,
+            text_field_embedder=masked_copynet._embedder,
+            seq2seq_encoder=masked_copynet._encoder,
             seq2vec_encoder=seq2vec_encoder
         )
-        self._one_lang_seq2seq = one_lang_seq2seq
 
 
 # TODO: adapt to attackers
@@ -146,16 +148,13 @@ class DeepLevenshteinWithAttention(Model):
 
 
 def get_deep_levenshtein(vocab: Vocabulary) -> DeepLevenshtein:
-    embedding_dim = 64
-    hidden_dim = 32
-
     token_embedding = Embedding(
         num_embeddings=vocab.get_vocab_size('tokens'),
-        embedding_dim=embedding_dim
+        embedding_dim=EMB_DIM
     )
     word_embeddings = BasicTextFieldEmbedder({"tokens": token_embedding})
-    lstm = PytorchSeq2SeqWrapper(torch.nn.LSTM(embedding_dim, hidden_dim, batch_first=True, bidirectional=True))
-    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim * 2)
+    lstm = PytorchSeq2SeqWrapper(torch.nn.LSTM(EMB_DIM, HID_DIM, batch_first=True, bidirectional=True))
+    body = BoWMaxAndMeanEncoder(embedding_dim=HID_DIM * 2)
 
     model = DeepLevenshtein(
         vocab=vocab,
@@ -166,29 +165,15 @@ def get_deep_levenshtein(vocab: Vocabulary) -> DeepLevenshtein:
     return model
 
 
-def get_deep_levenshtein_seq2seq(seq2seq: OneLanguageSeq2SeqModel) -> DeepLevenshteinFromSeq2Seq:
-    hidden_dim = seq2seq._encoder_output_dim
-    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=[128, 64, 64])
-
-    model = DeepLevenshteinFromSeq2Seq(
-        one_lang_seq2seq=seq2seq,
-        seq2vec_encoder=body
-    )
-    return model
-
-
-def get_deep_levenshtein_att(vocab: Vocabulary) -> DeepLevenshteinWithAttention:
-    embedding_dim = 64
-    hidden_dim = 32
-
+def get_deep_levenshtein_attention(vocab: Vocabulary) -> DeepLevenshteinWithAttention:
     token_embedding = Embedding(
         num_embeddings=vocab.get_vocab_size('tokens'),
-        embedding_dim=embedding_dim
+        embedding_dim=EMB_DIM
     )
     word_embeddings = BasicTextFieldEmbedder({"tokens": token_embedding})
-    lstm = PytorchSeq2SeqWrapper(torch.nn.LSTM(embedding_dim, hidden_dim, batch_first=True, bidirectional=True))
-    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim * 2)
-    attention = AdditiveAttention(vector_dim=body.get_output_dim(), matrix_dim=hidden_dim * 2)
+    lstm = PytorchSeq2SeqWrapper(torch.nn.LSTM(EMB_DIM, HID_DIM, batch_first=True, bidirectional=True))
+    body = BoWMaxAndMeanEncoder(embedding_dim=HID_DIM * 2)
+    attention = AdditiveAttention(vector_dim=body.get_output_dim(), matrix_dim=HID_DIM * 2)
 
     model = DeepLevenshteinWithAttention(
         vocab=vocab,
@@ -196,5 +181,16 @@ def get_deep_levenshtein_att(vocab: Vocabulary) -> DeepLevenshteinWithAttention:
         seq2seq_encoder=lstm,
         seq2vec_encoder=body,
         attention=attention
+    )
+    return model
+
+
+def get_deep_levenshtein_copynet(masked_copynet: MaskedCopyNet) -> DeepLevenshteinFromSeq2Seq:
+    hidden_dim = masked_copynet._encoder_output_dim
+    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=[64, 32])
+
+    model = DeepLevenshteinFromSeq2Seq(
+        masked_copynet=masked_copynet,
+        seq2vec_encoder=body
     )
     return model

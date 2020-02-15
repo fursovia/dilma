@@ -1,5 +1,4 @@
 from typing import List, Dict, Optional
-from enum import Enum
 import csv
 
 import numpy as np
@@ -9,23 +8,12 @@ from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.token_indexers import SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token, Tokenizer
 from allennlp.common.file_utils import cached_path
+from allennlp.common.util import START_SYMBOL, END_SYMBOL
 
 from adat.masker import Masker
 
 
-START_SYMBOL = '@start@'
-END_SYMBOL = '@end@'
 IDENTITY_TOKEN = 'Identity'
-
-
-class Task(str, Enum):
-    CLASSIFICATION = 'classification'
-    CLASSIFICATIONSEQ2SEQ = 'classification_seq2seq'
-    SEQ2SEQ = 'seq2seq'
-    ATTMASKEDSEQ2SEQ = 'att_mask_seq2seq'
-    DEEPLEVENSHTEIN = 'deep_levenshtein'
-    DEEPLEVENSHTEINSEQ2SEQ = 'deep_levenshtein_seq2seq'
-    DEEPLEVENSHTEINATT = 'deep_levenshtein_att'
 
 
 def _get_default_indexer() -> SingleIdTokenIndexer:
@@ -37,7 +25,7 @@ class WhitespaceTokenizer(Tokenizer):
         return [Token(t) for t in text.split()]
 
 
-class CsvReader(DatasetReader):
+class ClassificationReader(DatasetReader):
     def __init__(self, lazy: bool = False, skip_start_end: bool = False):
         super().__init__(lazy)
         self._tokenizer = WhitespaceTokenizer()
@@ -63,7 +51,7 @@ class CsvReader(DatasetReader):
         return Instance(fields)
 
 
-class OneLangSeq2SeqReader(DatasetReader):
+class CopyNetReader(DatasetReader):
 
     def __init__(self, masker: Optional[Masker] = None, lazy: bool = False):
         super().__init__(lazy)
@@ -103,7 +91,7 @@ class OneLangSeq2SeqReader(DatasetReader):
             fields["source_tokens"] = fields["tokens"]
             maskers_applied = maskers_applied or [IDENTITY_TOKEN]
 
-        fields['masker_tokens'] = TextField(
+        fields['mask_tokens'] = TextField(
             [Token(masker) for masker in maskers_applied],
             {
                 "tokens": SingleIdTokenIndexer(namespace='mask_tokens')

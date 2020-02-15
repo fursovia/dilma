@@ -9,15 +9,15 @@ import pandas as pd
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
-from adat.dataset import OneLangSeq2SeqReader, IDENTITY_TOKEN, Task
+from adat.dataset import CopyNetReader, IDENTITY_TOKEN
 from adat.utils import load_weights
 from adat.attackers import AttackerOutput, GradientAttacker
 from adat.models import (
     get_seq2seq_model,
     get_classification_model_seq2seq,
-    get_deep_levenshtein_seq2seq,
-    get_att_mask_seq2seq_model
-)
+    get_deep_levenshtein_copynet,
+    get_att_mask_seq2seq_model,
+    Task)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--cuda', type=int, default=-1)
@@ -72,7 +72,7 @@ def get_heuristics_maskers(seq: str) -> List[str]:
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    reader = OneLangSeq2SeqReader()
+    reader = CopyNetReader()
     vocab_path = Path(args.seq2seq_path) / 'vocab'
     vocab = Vocabulary.from_files(vocab_path)
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
         seq2seq_model,
         Path(args.classification_path) / 'args.json'
     )
-    levenshtein_model = get_deep_levenshtein_seq2seq(seq2seq_model)
+    levenshtein_model = get_deep_levenshtein_copynet(seq2seq_model)
 
     load_weights(seq2seq_model, Path(args.seq2seq_path) / 'best.th')
     load_weights(classification_model, Path(args.classification_path) / 'best.th')
