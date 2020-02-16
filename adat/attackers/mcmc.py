@@ -87,6 +87,7 @@ class Sampler(ABC):
                 mask_tokens=inputs['mask_tokens']
             )
 
+        self.current_state = self.generation_model.init_decoder_state(self.current_state)
         self.initial_prob, _ = self.predict_prob_and_label(self.initial_sequence)
 
     def empty_history(self) -> None:
