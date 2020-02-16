@@ -2,8 +2,11 @@
 *.ipynb_checkpoints
 *.xml
 .idea
+*.egg-info
+*.ipynb
 
 data/
 experiments/
 notebooks/
 results/
+bin/

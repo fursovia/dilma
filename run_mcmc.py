@@ -1,7 +1,6 @@
 import argparse
 from pathlib import Path
 import csv
-import json
 from tqdm import tqdm
 
 import pandas as pd
@@ -9,9 +8,9 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
 from adat.dataset import ClassificationReader, CopyNetReader, IDENTITY_TOKEN
-from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, SamplerOutput
+from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, AttackerOutput
 from adat.models import get_model_by_name
-from adat.utils import load_weights
+from adat.utils import load_weights, get_args_from_path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--cuda', type=int, default=-1)
@@ -30,26 +29,18 @@ parser.add_argument('--early_stopping', action='store_true')
 parser.add_argument('--sample', type=int, default=None)
 
 
-def get_args(path: str):
-    arguments_to_parse = ['task', 'num_classes', 'max_decoding_steps']
-    with open(path) as file:
-        args = json.load(file)
-    model_info = {arg: args[arg] for arg in arguments_to_parse}
-    return model_info
-
-
 if __name__ == '__main__':
     args = parser.parse_args()
 
     class_reader = ClassificationReader(skip_start_end=True)
     class_vocab = Vocabulary.from_files(Path(args.classifier_path) / 'vocab')
-    class_model_args = get_args(Path(args.classifier_path) / 'args.json')
+    class_model_args = get_args_from_path(Path(args.classifier_path) / 'args.json')
     class_model = get_model_by_name(**class_model_args, vocab=class_vocab)
     load_weights(class_model, Path(args.classifier_path) / 'best.th')
 
     copynet_reader = CopyNetReader(masker=None)
     copynet_vocab = Vocabulary.from_files(Path(args.copynet_path) / 'vocab')
-    copynet_model_args = get_args(Path(args.copynet_path) / 'args.json')
+    copynet_model_args = get_args_from_path(Path(args.copynet_path) / 'args.json')
     copynet_model = get_model_by_name(**copynet_model_args, vocab=copynet_vocab, beam_size=args.beam_size)
     load_weights(copynet_model, Path(args.copynet_path) / 'best.th')
 
@@ -86,7 +77,7 @@ if __name__ == '__main__':
         f'You already have `{path_to_results_file}` file. Delete it or change --results_path.'
     dump_metrics(results_path / 'args.json', args.__dict__)
     with open(path_to_results_file, 'w', newline='') as csv_write:
-        fieldnames = list(SamplerOutput.__annotations__.keys())
+        fieldnames = list(AttackerOutput.__annotations__.keys())
         writer = csv.DictWriter(csv_write, fieldnames=fieldnames)
         writer.writeheader()
         for seq, lab, mask in tqdm(zip(sequences, labels, maskers)):
