@@ -69,9 +69,9 @@ What you'll need for CASCADA
 ```bash
 python train.py \
     --task nonmasked_copynet_with_attention \
-    --model_dir experiments/sample/nonmasked_copynet_with_attention \
+    --model_dir experiments/sample/nonmasked_copynet_with_attention33 \
     --data_dir data/sample \
-    --cuda 3
+    --cuda 2
 ```
 
 
