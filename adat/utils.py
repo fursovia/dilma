@@ -1,5 +1,6 @@
 import ast
 import functools
+import json
 from typing import List, Dict, Any
 
 import torch
@@ -66,3 +67,11 @@ def calculate_bleu2(reference: str, hypothesis: str) -> float:
         weights=(0.5, 0.5),
         smoothing_function=SmoothingFunction().method2
     )
+
+
+def get_args_from_path(path: str):
+    arguments_to_parse = ['task', 'num_classes', 'max_decoding_steps']
+    with open(path) as file:
+        args = json.load(file)
+    model_info = {arg: args[arg] for arg in arguments_to_parse}
+    return model_info
