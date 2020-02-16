@@ -89,7 +89,7 @@ if __name__ == '__main__':
         writer.writeheader()
         for seq, lab in tqdm(zip(sequences, labels)):
             sampler.set_label_to_attack(lab)
-            sampler.set_input(seq)
+            sampler.set_input(seq, mask_tokens=None)
             output = sampler.sample_until_label_is_changed(
                 max_steps=args.num_steps,
                 early_stopping=args.early_stopping

@@ -104,9 +104,13 @@ class Sampler(ABC):
         self.current_state = None
         self.initial_prob = None
 
-    def _seq_to_input(self, seq: str, reader: CopyNetReader,
-                      vocab: Vocabulary) -> Dict[str, Dict[str, torch.LongTensor]]:
-        instance = reader.text_to_instance(seq)
+    def _seq_to_input(
+            self,
+            seq: str,
+            reader: CopyNetReader,
+            vocab: Vocabulary
+    ) -> Dict[str, Dict[str, torch.LongTensor]]:
+        instance = reader.text_to_instance(seq, maskers_applied=None)
         batch = Batch([instance])
         batch.index_instances(vocab)
         return move_to_device(batch.as_tensor_dict(), self.device)
@@ -164,11 +168,18 @@ class RandomSampler(Sampler):
         new_state = self.current_state.copy()
         new_state['decoder_hidden'] = self.proposal_distribution.sample(new_state['decoder_hidden'])
         generated_sequences = self.generate_from_state(new_state.copy())
+
+        curr_outputs = list()
+        # we generated `beam_size` adversarial examples
         for generated_seq in generated_sequences:
+            # sometimes len(generated_seq) = 0
             if generated_seq:
-                self.current_state = new_state
-                output = self.get_output(generated_seq)
-                self.history.append(output)
+                curr_outputs.append(self.get_output(generated_seq))
+
+        if curr_outputs:
+            output = find_best_output(curr_outputs, self.label_to_attack)
+            self.current_state = new_state
+            self.history.append(output)
 
 
 class MCMCSampler(Sampler):
