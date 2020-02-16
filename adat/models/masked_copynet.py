@@ -117,19 +117,20 @@ class MaskedCopyNet(Model):
                 source_tokens: Dict[str, torch.LongTensor],
                 target_tokens: Dict[str, torch.LongTensor] = None,
                 mask_tokens: Dict[str, torch.LongTensor] = None,
-                state: Dict[str, torch.LongTensor] = None,
                 **kwargs) -> Dict[str, torch.Tensor]:
         del kwargs
         assert mask_tokens is not None or self._mask_embedder is None, \
             'You must pass `mask_tokens` when `mask_embedder` is not None'
-        state = state or self.encode(source_tokens, mask_tokens)
+        state = self.encode(source_tokens, mask_tokens)
 
         if target_tokens:
+            state = self.init_decoder_state(state)
             output_dict = self._forward_loop(state, target_tokens)
         else:
             output_dict = {}
 
         if not self.training:
+            state = self.init_decoder_state(state)
             predictions = self.beam_search(state)
             output_dict.update(predictions)
             if target_tokens and self._bleu:
@@ -183,10 +184,9 @@ class MaskedCopyNet(Model):
                     "mask_encoder_outputs": embedded_input
                 }
             )
-        state = self._init_decoder_state(state)
         return state
 
-    def _init_decoder_state(self, state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def init_decoder_state(self, state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         batch_size = state["source_mask"].size(0)
         # shape: (batch_size, encoder_output_dim)
         final_encoder_output = util.get_final_encoder_states(

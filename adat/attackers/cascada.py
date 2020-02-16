@@ -56,6 +56,7 @@ class Cascada:
         self.history: List[AttackerOutput] = list()
 
     def generate_sequence_from_state(self, state: Dict[str, torch.Tensor]) -> List[str]:
+        state = self.masked_copynet.init_decoder_state(state)
         pred_output = self.masked_copynet.beam_search(state)
         predicted_sequences = []
         for seq in self.masked_copynet.decode(pred_output)['predicted_tokens'][0]:
