@@ -11,7 +11,7 @@ from allennlp.common.util import dump_metrics
 
 from adat.dataset import CopyNetReader, IDENTITY_TOKEN
 from adat.utils import load_weights
-from adat.attackers import AttackerOutput, GradientAttacker
+from adat.attackers import AttackerOutput, CascadaAttacker
 from adat.models import (
     get_seq2seq_model,
     get_classification_model_seq2seq,
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     load_weights(classification_model, Path(args.classification_path) / 'best.th')
     load_weights(levenshtein_model, Path(args.levenshtein_path) / 'best.th')
 
-    attacker = GradientAttacker(
+    attacker = CascadaAttacker(
         vocab=vocab,
         reader=reader,
         classification_model=classification_model,

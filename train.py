@@ -40,7 +40,7 @@ parser.add_argument('--resume', action='store_true')
 
 
 def _get_copynet_task_name(path: str) -> str:
-    with open(Path(path) / 'json') as file:
+    with open(Path(path) / 'args.json') as file:
         return json.load(file)['task']
 
 

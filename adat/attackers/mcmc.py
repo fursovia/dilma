@@ -10,27 +10,13 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.nn.util import move_to_device
 from allennlp.data.dataset import Batch
 
-from adat.attackers.attacker import SamplerOutput
+from adat.attackers.attacker import AttackerOutput, find_best_output
 from adat.utils import calculate_normalized_wer
 from adat.models import MaskedCopyNet, Classifier
 from adat.dataset import ClassificationReader, CopyNetReader
 
 
 PROB_DIFF = -100
-
-
-def find_best_output(outputs: List[SamplerOutput], initial_label: int) -> SamplerOutput:
-    changed_label_outputs = []
-    for output in outputs:
-        if output.label != initial_label:
-            changed_label_outputs.append(output)
-
-    if changed_label_outputs:
-        best_output = min(changed_label_outputs, key=lambda x: x.wer)
-    else:
-        best_output = max(outputs, key=lambda x: x.prob_diff)
-
-    return best_output
 
 
 class Proposal(ABC):
@@ -82,7 +68,7 @@ class Sampler(ABC):
         self.initial_sequence = None
         self.current_state = None
         self.initial_prob = None
-        self.history: List[SamplerOutput] = []
+        self.history: List[AttackerOutput] = []
 
     def set_label_to_attack(self, label: int = 1) -> None:
         self.label_to_attack = label
@@ -143,17 +129,17 @@ class Sampler(ABC):
             return float(prob), int(label)
 
     @lru_cache(maxsize=1000)
-    def get_output(self, generated_sequence: str) -> SamplerOutput:
+    def get_output(self, generated_sequence: str) -> AttackerOutput:
         new_prob, new_label = self.predict_prob_and_label(generated_sequence)
         new_wer = calculate_normalized_wer(self.initial_sequence, generated_sequence)
         prob_diff = self.initial_prob - new_prob
-        return SamplerOutput(generated_sequence=generated_sequence, label=new_label, wer=new_wer, prob_diff=prob_diff)
+        return AttackerOutput(generated_sequence=generated_sequence, label=new_label, wer=new_wer, prob_diff=prob_diff)
 
     @abstractmethod
     def step(self):
         pass
 
-    def sample_until_label_is_changed(self, max_steps: int = 200, early_stopping: bool = False) -> SamplerOutput:
+    def sample_until_label_is_changed(self, max_steps: int = 200, early_stopping: bool = False) -> AttackerOutput:
 
         for _ in range(max_steps):
             self.step()
@@ -163,7 +149,7 @@ class Sampler(ABC):
         if self.history:
             output = find_best_output(self.history, self.label_to_attack)
         else:
-            output = SamplerOutput(generated_sequence=self.initial_sequence, label=self.label_to_attack)
+            output = AttackerOutput(generated_sequence=self.initial_sequence, label=self.label_to_attack)
 
         return output
 

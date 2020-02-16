@@ -17,7 +17,7 @@ from adat.utils import load_weights
 parser = argparse.ArgumentParser()
 parser.add_argument('--csv_path', type=str, default='data/test.csv')
 parser.add_argument('--results_path', type=str, default='results')
-parser.add_argument('-cp', '--classification_path', type=str, default='experiments/classification')
+parser.add_argument('--classifier_path', type=str, default='experiments/classification')
 parser.add_argument('--sample', type=int, default=None)
 
 
@@ -32,9 +32,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     class_reader = ClassificationReader(skip_start_end=True)
-    class_vocab = Vocabulary.from_files(Path(args.classification_path) / 'vocab')
-    class_model = _get_classifier_from_args(class_vocab, Path(args.classification_path) / 'args.json')
-    load_weights(class_model, Path(args.classification_path) / 'best.th')
+    class_vocab = Vocabulary.from_files(Path(args.classifier_path) / 'vocab')
+    class_model = _get_classifier_from_args(class_vocab, Path(args.classifier_path) / 'args.json')
+    load_weights(class_model, Path(args.classifier_path) / 'best.th')
 
     predictor = TextClassifierPredictor(class_model, class_reader)
     attacker = HotFlipFixed(predictor)

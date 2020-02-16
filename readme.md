@@ -51,6 +51,19 @@ TODO
 
 ## Usage
 
+What you'll need for MCMC/Random sampler:
+
+* CopyNet (Masked or Non-Masked)
+* Classifier (trained on sequenced and not on hidden representations)
+
+
+What you'll need for HotFlip
+* Classifier (trained on sequenced and not on hidden representations)
+
+
+What you'll need for CASCADA
+* CopyNet
+
 ### CopyNet Training
 
 ```bash
@@ -72,6 +85,37 @@ python train.py \
     --data_dir data/sample \
     --cuda 3
 ```
+
+
+### Deep Levenshtein
+
+```bash
+python train.py \
+    --task deep_levenshtein \
+    --model_dir experiments/sample/deep_levenshtein \
+    --data_dir data/sample/levenshtein \
+    --cuda 3
+```
+
+
+```bash
+python train.py \
+    --task deep_levenshtein_with_attention \
+    --model_dir experiments/sample/deep_levenshtein_with_attention \
+    --data_dir data/sample/levenshtein \
+    --cuda 3
+```
+
+
+```bash
+python train.py \
+    --task deep_levenshtein_copynet \
+    --model_dir experiments/sample/deep_levenshtein_copynet \
+    --data_dir data/sample/levenshtein \
+    --copynet_dir experiments/sample/nonmasked_copynet_with_attention \
+    --cuda 3
+```
+
 
 
 ### MCMC/Random sampler

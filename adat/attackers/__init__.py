@@ -1,2 +1,2 @@
 from .attacker import AttackerOutput
-from .gradient import GradientAttacker
+from .cascada import CascadaAttacker

@@ -9,7 +9,7 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
 from adat.dataset import ClassificationReader, CopyNetReader, IDENTITY_TOKEN
-from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, SamplerOutput
+from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, AttackerOutput
 from adat.models import get_model_by_name
 from adat.utils import load_weights
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
         f'You already have `{path_to_results_file}` file. Delete it or change --results_path.'
     dump_metrics(results_path / 'args.json', args.__dict__)
     with open(path_to_results_file, 'w', newline='') as csv_write:
-        fieldnames = list(SamplerOutput.__annotations__.keys())
+        fieldnames = list(AttackerOutput.__annotations__.keys())
         writer = csv.DictWriter(csv_write, fieldnames=fieldnames)
         writer.writeheader()
         for seq, lab, mask in tqdm(zip(sequences, labels, maskers)):
