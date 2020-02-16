@@ -1,2 +1,2 @@
 from .attacker import AttackerOutput
-from .cascada import CascadaAttacker
+from .cascada import Cascada

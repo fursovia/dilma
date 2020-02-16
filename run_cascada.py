@@ -1,11 +1,10 @@
 import argparse
 from pathlib import Path
 import csv
-import json
-from typing import List
 from tqdm import tqdm
 
 import pandas as pd
+import torch
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
@@ -27,8 +26,8 @@ parser.add_argument('--levenshtein_path', type=str, default='experiments/deep_le
 
 parser.add_argument('--levenshtein_weight', type=float, default=0.1)
 parser.add_argument('--learning_rate', type=float, default=2.0)
-parser.add_argument('--max_steps', type=int, default=50)
-parser.add_argument('--num_updates', type=int, default=5)
+parser.add_argument('--max_steps', type=int, default=30)
+parser.add_argument('--num_updates', type=int, default=1)
 parser.add_argument('--beam_size', type=int, default=1)
 parser.add_argument('--maskers', type=str, default=IDENTITY_TOKEN, help='string with comma-separated values')
 parser.add_argument('--early_stopping', action='store_true')
@@ -42,16 +41,28 @@ if __name__ == '__main__':
 
     copynet_vocab = Vocabulary.from_files(Path(args.copynet_path) / 'vocab')
     copynet_model_args = get_args_from_path(Path(args.copynet_path) / 'args.json')
-    copynet_model = get_model_by_name(**copynet_model_args, vocab=copynet_vocab, beam_size=args.beam_size)
+    copynet_model = get_model_by_name(
+        **copynet_model_args,
+        vocab=copynet_vocab,
+        beam_size=args.beam_size
+    )
     load_weights(copynet_model, Path(args.copynet_path) / 'best.th')
 
     class_model_args = get_args_from_path(Path(args.classifier_path) / 'args.json')
-    class_model = get_model_by_name(**class_model_args, vocab=copynet_vocab)
+    class_model = get_model_by_name(
+        **class_model_args,
+        vocab=copynet_vocab,
+        copynet=copynet_model
+    )
     load_weights(class_model, Path(args.classifier_path) / 'best.th')
 
     deep_levenshtein_model_args = get_args_from_path(Path(args.levenshtein_path) / 'args.json')
-    deep_levenshtein_model = get_model_by_name(**class_model_args, vocab=copynet_vocab)
-    load_weights(class_model, Path(args.levenshtein_path) / 'best.th')
+    deep_levenshtein_model = get_model_by_name(
+        **deep_levenshtein_model_args,
+        vocab=copynet_vocab,
+        copynet=copynet_model
+    )
+    load_weights(deep_levenshtein_model, Path(args.levenshtein_path) / 'best.th')
 
     attacker = Cascada(
         vocab=copynet_vocab,
@@ -71,18 +82,21 @@ if __name__ == '__main__':
     maskers = [args.maskers.split(',')] * len(sequences)
 
     results_path = Path(args.results_path)
-    results_path.mkdir(exist_ok=True)
+    results_path.mkdir(exist_ok=True, parents=True)
     path_to_results_file = results_path / 'results.csv'
     dump_metrics(results_path / 'args.json', args.__dict__)
-    assert not path_to_results_file.exists(), \
-        f'You already have `{path_to_results_file}` file. Delete it or change --results_path.'
+    # assert not path_to_results_file.exists(), \
+    #     f'You already have `{path_to_results_file}` file. Delete it or change --results_path.'
     with open(path_to_results_file, 'w', newline='') as csv_write:
         fieldnames = list(AttackerOutput.__annotations__.keys())
         writer = csv.DictWriter(csv_write, fieldnames=fieldnames)
         writer.writeheader()
         for seq, lab, mask_tokens in tqdm(zip(sequences, labels, maskers)):
-            attacker.set_input(sequence=seq, mask_tokens=mask_tokens)
-            attacker.set_label_to_attack(lab)
+
+            # it's important to do it under `no_grad()`
+            with torch.no_grad():
+                attacker.set_input(sequence=seq, mask_tokens=mask_tokens)
+                attacker.set_label_to_attack(lab)
 
             output = attacker.sample_until_label_is_changed(
                 max_steps=args.max_steps,
