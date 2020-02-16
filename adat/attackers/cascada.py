@@ -169,7 +169,11 @@ class Cascada:
         if self.history:
             output = find_best_output(self.history, self.label_to_attack)
         else:
-            output = AttackerOutput(generated_sequence=self.initial_sequence, label=self.label_to_attack)
+            output = AttackerOutput(
+                sequence=self.initial_sequence,
+                generated_sequence=self.initial_sequence,
+                label=self.label_to_attack
+            )
 
         return output
 
@@ -209,6 +213,7 @@ class Cascada:
             if generated_seq:
                 curr_outputs.append(
                     AttackerOutput(
+                        sequence=self.initial_sequence,
                         generated_sequence=generated_seq,
                         label=int(classifier_output['label'][0]),
                         wer=calculate_wer(self.initial_sequence, generated_seq),
