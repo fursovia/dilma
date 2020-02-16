@@ -32,6 +32,13 @@ python run_mcmc.py --csv_path data/ai_academy_data/random100.csv --results_path 
 python run_mcmc.py --csv_path data/ai_academy_data/random100.csv --results_path results/ai_academy_data/mcmc_results --classification_path experiments/ai_academy_data/classification_fixed --seq2seq_path experiments/ai_academy_data/seq2seq_basic --cuda 1 --num_classes 4 --var 0.3
 
 
+## eval
+
+python train_eval_model.py -dd data/ai_academy_data -mp results/ai_academy_data/logit_tfidf.model -mqp results/ai_academy_data/logit_tfidf_metric.json
+
+python eval.py -mp results/ai_academy_data/logit_tfidf.model -arp results/ai_academy_data/gradient_results/results_for_eval.csv -erp results/ai_academy_data/gradient_results/eval_metric.json
+
+
 --------------------------------------------------------
 #######################################################
 ag_news dataset
