@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 
 import torch
 from allennlp.data.vocabulary import Vocabulary
@@ -7,14 +7,14 @@ from allennlp.nn.util import move_to_device
 
 from adat.models import MaskedCopyNet, Classifier, DeepLevenshtein
 from adat.dataset import CopyNetReader, IDENTITY_TOKEN
-from adat.attackers.attacker import AttackerOutput, Attacker, find_best_output
+from adat.attackers.attacker import AttackerOutput, find_best_output
 from adat.utils import calculate_wer
 
 
 BASIC_MASKER = [IDENTITY_TOKEN]
 
 
-class Cascada(Attacker):
+class Cascada:
     def __init__(
             self,
             vocab: Vocabulary,
@@ -50,6 +50,7 @@ class Cascada(Attacker):
 
         self.initial_sequence = None
         self.initial_state = None
+        self.current_state = None
         self.initial_prob = None
         self.initial_label = None
         self.history: List[AttackerOutput] = list()
@@ -117,6 +118,7 @@ class Cascada(Attacker):
             source_tokens=inputs['tokens'],
             mask_tokens=inputs['mask_tokens']
         )
+        self.current_state = self.initial_state.copy()
 
         output = self.predict_prob_from_state(self.initial_state)
         self.initial_prob = output['probs']
@@ -136,9 +138,12 @@ class Cascada(Attacker):
         loss = torch.add(
             torch.sub(
                 1,
-                torch.sub(original_probs, adversarial_probs)
+                torch.sub(
+                    original_probs[0][self.label_to_attack],
+                    adversarial_probs[0][self.label_to_attack]
+                )
             ),
-            self.levenshtein_weight * torch.sub(1, similarity)
+            self.levenshtein_weight * torch.sub(1, similarity[0])
         )
 
         return loss
@@ -167,19 +172,16 @@ class Cascada(Attacker):
         return output
 
     def step(self):
-        state = self.initial_state.copy()
-        state_adversarial = {key: tensor.clone() for key, tensor in state.items()}
-
-        state['encoder_outputs'].requires_grad = False
+        state_adversarial = {key: tensor.clone() for key, tensor in self.current_state.items()}
         state_adversarial['encoder_outputs'].requires_grad = True
 
-        # Classifier
+        # Classifier [GRAD]
         classifier_output = self.predict_prob_from_state(state_adversarial)
 
-        # Deep Levenshtein
-        similarity = self.calculate_similarity_from_state(state, state_adversarial)
+        # Deep Levenshtein [GRAD]
+        similarity = self.calculate_similarity_from_state(self.initial_state, state_adversarial)
 
-        # Loss
+        # Loss [GRAD]
         loss = self._calculate_loss(
             adversarial_probs=classifier_output['probs'],
             original_probs=self.initial_prob,
@@ -193,7 +195,10 @@ class Cascada(Attacker):
             self.num_updates
         )
 
-        generated_sequences = self.generate_sequence_from_state(state_adversarial)
+        # We need to calculate probability one again
+        with torch.no_grad():
+            classifier_output = self.predict_prob_from_state(state_adversarial)
+            generated_sequences = self.generate_sequence_from_state(state_adversarial.copy())
 
         curr_outputs = list()
         # we generated `beam_size` adversarial examples
@@ -203,11 +208,19 @@ class Cascada(Attacker):
                 curr_outputs.append(
                     AttackerOutput(
                         generated_sequence=generated_seq,
-                        label=int(classifier_output['label']),
-                        wer=calculate_wer(self.initial_sequence, generated_seq)
+                        label=int(classifier_output['label'][0]),
+                        wer=calculate_wer(self.initial_sequence, generated_seq),
+                        prob_diff=(
+                                self.initial_prob[0][self.label_to_attack] -
+                                classifier_output['probs'][0][self.label_to_attack]
+                        ).item()
                     )
                 )
 
         if curr_outputs:
+            for _, val in state_adversarial.items():
+                val.requires_grad = False
+            self.current_state = state_adversarial.copy()
+
             output = find_best_output(curr_outputs, self.label_to_attack)
             self.history.append(output)

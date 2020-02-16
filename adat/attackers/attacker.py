@@ -13,13 +13,6 @@ class AttackerOutput:
     acceptance_probability: float = None
 
 
-class Attacker(ABC):
-
-    @abstractmethod
-    def attack(self, **kwargs):
-        pass
-
-
 def find_best_output(outputs: List[AttackerOutput], initial_label: int) -> AttackerOutput:
     changed_label_outputs = []
     for output in outputs:

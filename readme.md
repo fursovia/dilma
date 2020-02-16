@@ -69,8 +69,8 @@ What you'll need for CASCADA
 ```bash
 python train.py \
     --task nonmasked_copynet_with_attention \
-    --model_dir experiments/tinkoff/nonmasked_copynet_with_attention \
-    --data_dir data/tinkoff \
+    --model_dir experiments/sample/nonmasked_copynet_with_attention \
+    --data_dir data/sample \
     --cuda 3
 ```
 
@@ -82,6 +82,15 @@ python train.py \
     --task classification \
     --model_dir experiments/sample/classification \
     --data_dir data/sample \
+    --cuda 3
+```
+
+```bash
+python train.py \
+    --task classification_copynet \
+    --model_dir experiments/sample/classification_copynet \
+    --data_dir data/sample \
+    --copynet_dir experiments/sample/nonmasked_copynet_with_attention \
     --cuda 3
 ```
 
@@ -124,6 +133,20 @@ python run_mcmc.py \
     --csv_path data/sample/test.csv \
     --results_path results/sample/mcmc \
     --classifier_path experiments/sample/classification \
+    --copynet_path experiments/sample/nonmasked_copynet_with_attention \
+    --beam_size 3 \
+    --cuda 3
+```
+
+
+### Cascada
+
+```bash
+python run_cascada.py \
+    --csv_path data/sample/test.csv \
+    --results_path results/sample/cascada \
+    --classifier_path experiments/sample/classification_copynet \
+    --levenshtein_path experiments/sample/deep_levenshtein_copynet \
     --copynet_path experiments/sample/nonmasked_copynet_with_attention \
     --beam_size 3 \
     --cuda 3
