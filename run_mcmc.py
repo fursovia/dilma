@@ -81,12 +81,14 @@ if __name__ == '__main__':
         writer = csv.DictWriter(csv_write, fieldnames=fieldnames)
         writer.writeheader()
         for seq, lab, mask in tqdm(zip(sequences, labels, maskers)):
+            print(seq, lab)
             sampler.set_label_to_attack(lab)
             sampler.set_input(seq, mask_tokens=mask)
             output = sampler.sample_until_label_is_changed(
                 max_steps=args.num_steps,
                 early_stopping=args.early_stopping
             ).__dict__
+            print(output)
             sampler.empty_history()
 
             writer.writerow(output)

@@ -23,13 +23,14 @@ python train.py --task nonmasked_copynet --model_dir experiments/ai_academy_data
 
 -----------------------------------------------------------------
 
+python train_eval_model.py -dd data/ag_news_mini -mp results/ag_news_mini/logit_tfidf.model -mqp results/ag_news_mini/logit_tfidf_metric.json
 
 python train.py --task nonmasked_copynet_with_attention --model_dir experiments/ag_news_mini/nonmasked_copynet_with_attention --data_dir data/ag_news_mini --use_mask --cuda 0 --num_classes 4 --beam_size 10
-
 
 python train.py --task classification --model_dir experiments/ag_news_mini/classification --data_dir data/ag_news_mini --cuda 0 --num_classes 4 
 
 python train.py --task deep_levenshtein_copynet --model_dir experiments/ag_news_mini/deep_levenshtein_copynet --data_dir data/ag_news_mini/levenshtein --copynet_dir experiments/ag_news_mini/nonmasked_copynet_with_attention --cuda 0
 
+python run_mcmc.py --csv_path data/ag_news_mini/test.csv --results_path results/ag_news_mini/mcmc --classifier_path experiments/ag_news_mini/classification --copynet_path experiments/ag_news_mini/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --sample 100
 
-python run_mcmc.py --csv_path data/ag_news_mini/random100.csv --results_path results/ag_news_mini/mcmc --classifier_path experiments/м/classification --copynet_path experiments/ag_news_mini/nonmasked_copynet_with_attention --beam_size 3 --cuda 0
+python eval.py -mp results/ag_news_mini/logit_tfidf.model -arp results/ag_news_mini/mcmc/results.csv -erp results/ag_news_mini/mcmc/eval_metric.json

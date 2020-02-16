@@ -46,5 +46,5 @@ if __name__ == '__main__':
                                 df['sequences'].values,
                                 df['generated_sequence'].values)
     
-    
+    print(metrics)
     json.dump(metrics, open(args.eval_results_path, 'w'))
