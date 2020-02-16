@@ -8,7 +8,7 @@ import pandas as pd
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
-from adat.dataset import ClassificationReader, CopyNetReader
+from adat.dataset import ClassificationReader, CopyNetReader, IDENTITY_TOKEN
 from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, SamplerOutput
 from adat.models import get_model_by_name
 from adat.utils import load_weights
@@ -19,6 +19,7 @@ parser.add_argument('--csv_path', type=str, default='data/test.csv')
 parser.add_argument('--results_path', type=str, default='results')
 parser.add_argument('--classifier_path', type=str, default='experiments/classification')
 parser.add_argument('--copynet_path', type=str, default='experiments/copynet')
+parser.add_argument('--maskers', type=str, default=IDENTITY_TOKEN, help='string with comma-separated values')
 parser.add_argument('--num_steps', type=int, default=100)
 parser.add_argument('--beam_size', type=int, default=1)
 parser.add_argument('--std', type=float, default=0.01)
@@ -76,6 +77,7 @@ if __name__ == '__main__':
     data = pd.read_csv(args.csv_path)
     sequences = data['sequences'].tolist()[:args.sample]
     labels = data['labels'].tolist()[:args.sample]
+    maskers = [args.maskers.split(',')] * len(sequences)  # can be unique for each sequence
 
     results_path = Path(args.results_path)
     results_path.mkdir(exist_ok=True, parents=True)
@@ -87,9 +89,9 @@ if __name__ == '__main__':
         fieldnames = list(SamplerOutput.__annotations__.keys())
         writer = csv.DictWriter(csv_write, fieldnames=fieldnames)
         writer.writeheader()
-        for seq, lab in tqdm(zip(sequences, labels)):
+        for seq, lab, mask in tqdm(zip(sequences, labels, maskers)):
             sampler.set_label_to_attack(lab)
-            sampler.set_input(seq, mask_tokens=None)
+            sampler.set_input(seq, mask_tokens=mask)
             output = sampler.sample_until_label_is_changed(
                 max_steps=args.num_steps,
                 early_stopping=args.early_stopping

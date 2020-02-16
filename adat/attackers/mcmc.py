@@ -90,9 +90,15 @@ class Sampler(ABC):
     def set_input(self, initial_sequence: str, mask_tokens: Optional[List[str]] = None) -> None:
         self.initial_sequence = initial_sequence
         with torch.no_grad():
-            inputs = self._seq_to_input(self.initial_sequence, self.generation_reader, self.generation_vocab)
+            inputs = self._seq_to_input(
+                self.initial_sequence,
+                self.generation_reader,
+                self.generation_vocab,
+                mask_tokens=mask_tokens
+            )
             self.current_state = self.generation_model.encode(
-                source_tokens=inputs['source_tokens']
+                source_tokens=inputs['source_tokens'],
+                mask_tokens=inputs['mask_tokens']
             )
 
         self.initial_prob, _ = self.predict_prob_and_label(self.initial_sequence)
@@ -108,9 +114,10 @@ class Sampler(ABC):
             self,
             seq: str,
             reader: CopyNetReader,
-            vocab: Vocabulary
+            vocab: Vocabulary,
+            mask_tokens: Optional[List[str]] = None
     ) -> Dict[str, Dict[str, torch.LongTensor]]:
-        instance = reader.text_to_instance(seq, maskers_applied=None)
+        instance = reader.text_to_instance(seq, maskers_applied=mask_tokens)
         batch = Batch([instance])
         batch.index_instances(vocab)
         return move_to_device(batch.as_tensor_dict(), self.device)
