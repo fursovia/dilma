@@ -13,8 +13,13 @@ from allennlp.training.metrics import Auc, F1Measure, CategoricalAccuracy
 from allennlp.nn.util import get_text_field_mask
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
 
-from adat.models.seq2seq_model import OneLanguageSeq2SeqModel
+from adat.models.masked_copynet import MaskedCopyNet
+
+
+EMB_DIM = 64
+HID_DIM = 32
 
 
 class BoWMaxEncoder(Seq2VecEncoder):
@@ -74,7 +79,7 @@ class BoWMaxAndMeanEncoder(Seq2VecEncoder):
         return output
 
 
-class BasicClassifierWithMetric(BasicClassifier):
+class Classifier(BasicClassifier):
     def __init__(self,
                  vocab: Vocabulary,
                  text_field_embedder: TextFieldEmbedder,
@@ -83,7 +88,7 @@ class BasicClassifierWithMetric(BasicClassifier):
                  num_labels: int = None) -> None:
 
         super().__init__(vocab, text_field_embedder, seq2vec_encoder, seq2seq_encoder, num_labels=num_labels)
-        if num_labels == 2:
+        if self._num_labels == 2:
             self._auc = Auc()
             self._f1 = F1Measure(1)
 
@@ -92,9 +97,6 @@ class BasicClassifierWithMetric(BasicClassifier):
                 label: torch.IntTensor = None) -> Dict[str, torch.Tensor]:
         embedded_text = self._text_field_embedder(tokens)
         mask = get_text_field_mask(tokens).float()
-        # TODO: hotflip bug
-        # mask = None
-
         if self._seq2seq_encoder:
             embedded_text = self._seq2seq_encoder(embedded_text, mask=mask)
 
@@ -127,24 +129,17 @@ class BasicClassifierWithMetric(BasicClassifier):
         return metrics
 
 
-class BasicClassifierFromSeq2Seq(BasicClassifierWithMetric):
-    pass
-
-
 def get_classification_model(vocab: Vocabulary, num_classes: int = 2) -> BasicClassifier:
-    embedding_dim = 64
-    hidden_dim = 32
 
     token_embedding = Embedding(
         num_embeddings=vocab.get_vocab_size('tokens'),
-        embedding_dim=embedding_dim
+        embedding_dim=EMB_DIM
     )
 
     word_embeddings = BasicTextFieldEmbedder({"tokens": token_embedding})
-    lstm = PytorchSeq2SeqWrapper(torch.nn.LSTM(embedding_dim, hidden_dim, batch_first=True, bidirectional=True))
-    # body = BagOfEmbeddingsEncoder(embedding_dim=hidden_dim, averaged=True)
-    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim * 2)
-    model = BasicClassifierWithMetric(
+    lstm = PytorchSeq2SeqWrapper(torch.nn.LSTM(EMB_DIM, HID_DIM, batch_first=True, bidirectional=True))
+    body = BoWMaxAndMeanEncoder(embedding_dim=HID_DIM * 2)
+    model = Classifier(
         vocab=vocab,
         text_field_embedder=word_embeddings,
         seq2seq_encoder=lstm,
@@ -154,24 +149,34 @@ def get_classification_model(vocab: Vocabulary, num_classes: int = 2) -> BasicCl
     return model
 
 
-def get_classification_model_seq2seq(
-        one_lang_seq2seq: OneLanguageSeq2SeqModel,
+def get_classification_model_copynet(
+        masked_copynet: MaskedCopyNet,
         num_classes: int = 2
 ) -> BasicClassifier:
-    one_lang_seq2seq.eval()
-    for p in one_lang_seq2seq.parameters():
+    masked_copynet.eval()
+    for p in masked_copynet.parameters():
         p.requires_grad = False
 
-    hidden_dim = one_lang_seq2seq._encoder_output_dim
-    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=[128])
-    model = BasicClassifierWithMetric(
-        vocab=one_lang_seq2seq.vocab,
-        text_field_embedder=one_lang_seq2seq._source_embedder,
-        seq2seq_encoder=one_lang_seq2seq._encoder,
+    hidden_dim = masked_copynet._encoder_output_dim
+    body = BoWMaxAndMeanEncoder(embedding_dim=hidden_dim, hidden_dim=[64, 32])
+    model = Classifier(
+        vocab=masked_copynet.vocab,
+        text_field_embedder=masked_copynet._embedder,
+        seq2seq_encoder=masked_copynet._encoder,
         seq2vec_encoder=body,
         num_labels=num_classes
     )
     return model
+
+
+def get_logistic_regression(ngram_range: Tuple[int, int] = (1, 2)) -> Pipeline:
+    pipeline = Pipeline(
+        [
+            ('tfidf', TfidfVectorizer(ngram_range=ngram_range)),
+            ('logreg', LogisticRegression(max_iter=10000, n_jobs=-1))
+        ]
+    )
+    return pipeline
 
 
 class LogisticRegressionOnTfIdf:

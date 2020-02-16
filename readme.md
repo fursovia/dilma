@@ -48,131 +48,40 @@ Predict an age of a client based on his/her transactions.
 TODO
 
 
-## Basic usage
 
-### Training
+## Usage
 
-Models needed for an attacker:
-* Seq2seq model (encoder-decoder like)
-* Classification model
-* Deep Levenshtein model (optional)
-
-#### Seq2seq
-
-Masked training with attention
+### CopyNet Training
 
 ```bash
 python train.py \
-    --task seq2seq \
-    --model_dir experiments/seq2seq_basic \
-    --data_dir data \
+    --task nonmasked_copynet_with_attention \
+    --model_dir experiments/sample/nonmasked_copynet_with_attention \
+    --data_dir data/sample \
     --use_mask \
-    -ne 30 \
-    --cuda 1
+    --cuda 3
 ```
 
 
-No masking, no attention
-
-```bash
-python train.py \
-    --task seq2seq \
-    --model_dir experiments/seq2seq_basic_no_attention \
-    --data_dir data \
-    -ne 100 \
-    -p 3 \
-    --no_attention \
-    --cuda 2
-```
-
-
-#### Classification
+### Classifier Training
 
 ```bash
 python train.py \
     --task classification \
-    --model_dir experiments/classification_fixed \
-    --data_dir data \
-    -ne 30 \
-    --cuda 1
-```
-
-Classification on pre-trained encoder
-
-```bash
-python train.py \
-    --task classification_seq2seq \
-    --model_dir experiments/classification_att_mask_seq2seq_fixed \
-    --data_dir data \
-    --seq2seq_model_dir experiments/att_mask_seq2seq \
-    -ne 30 \
-    --cuda 1
+    --model_dir experiments/sample/classification \
+    --data_dir data/sample \
+    --cuda 3
 ```
 
 
-#### Deep Levenshtein
-
-How to create a dataset: `notebooks/prepare_lev_dataset.ipynb`
-
-
-Almost like in the paper
-
-```bash
-python train.py \
-    --task deep_levenshtein \
-    --model_dir experiments/deep_levenshtein \
-    --data_dir data \
-    -ne 30 \
-    --cuda 2
-```
-
-With attention
-
-```bash
-python train.py \
-    --task deep_levenshtein_att \
-    --model_dir experiments/deep_levenshtein_att \
-    --data_dir data \
-    -ne 30 \
-    --cuda 2
-```
-
-On pre-trained encoder
-
-```bash
-python train.py \
-    --task deep_levenshtein_seq2seq \
-    --model_dir experiments/deep_levenshtein_seq2seq \
-    --data_dir data \
-    -ne 30 \
-    --seq2seq_model_dir experiments/att_mask_seq2seq \
-    --cuda 1
-```
-
-
-### Adversarial examples
-
-
-#### MCMC
+### MCMC/Random sampler
 
 ```bash
 python run_mcmc.py \
-    --csv_path data/random.csv \
-    --results_path results/mcmc_results_no_att \
-    --classification_path experiments/classification_fixed \
-    --seq2seq_path experiments/seq2seq_basic_no_attention \
-    --cuda 2
-```
-
-
-### Gradient-based adversarial examples
-
-```bash
-python run_gradient_attack.py \
-    --csv_path data/test.csv \
-    --results_path results \
-    --seq2seq_path experiments/att_mask_seq2seq \
-    --classification_path experiments/classification_att_mask_seq2seq_fixed \
-    --levenshtein_path experiments/deep_levenshtein_seq2seq \
-    --cuda 0
+    --csv_path data/sample/test.csv \
+    --results_path results/sample/mcmc \
+    --classifier_path experiments/sample/classification \
+    --copynet_path experiments/sample/nonmasked_copynet_with_attention \
+    --beam_size 3 \
+    --cuda 3
 ```

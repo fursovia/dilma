@@ -12,9 +12,10 @@ class Attacker(ABC):
 @dataclass
 class SamplerOutput:
     generated_sequence: str
-    wer: float = 0.0
-    prob_diff: float = 0.0
-    acceptance_probability: float = 1.0
+    label: int
+    wer: float = None
+    prob_diff: float = None
+    acceptance_probability: float = None
 
 
 @dataclass
