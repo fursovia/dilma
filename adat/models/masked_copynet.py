@@ -125,14 +125,12 @@ class MaskedCopyNet(Model):
         state = state or self.encode(source_tokens, mask_tokens)
 
         if target_tokens:
-            state = self._init_decoder_state(state)
             output_dict = self._forward_loop(state, target_tokens)
         else:
             output_dict = {}
 
         if not self.training:
-            state = self._init_decoder_state(state)
-            predictions = self._forward_beam_search(state)
+            predictions = self.beam_search(state)
             output_dict.update(predictions)
             if target_tokens and self._bleu:
                 # shape: (batch_size, beam_size, max_sequence_length)
@@ -142,11 +140,6 @@ class MaskedCopyNet(Model):
                 self._bleu(best_predictions, target_tokens["tokens"])
 
         return output_dict
-
-    def decode_from_state(self, state: Dict[str, torch.Tensor]):
-        state = self._init_decoder_state(state)
-        predictions = self._forward_beam_search(state)
-        return predictions
 
     @overrides
     def decode(self, output_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
@@ -176,7 +169,7 @@ class MaskedCopyNet(Model):
         source_mask = util.get_text_field_mask(source_tokens)
         # shape: (batch_size, max_input_sequence_length, encoder_output_dim)
         encoder_outputs = self._encoder(embedded_input, source_mask)
-        output = {
+        state = {
             "source_mask": source_mask,
             "encoder_outputs": encoder_outputs
         }
@@ -184,14 +177,14 @@ class MaskedCopyNet(Model):
         if mask_tokens is not None and self._mask_embedder is not None:
             embedded_input = self._mask_embedder(mask_tokens)
             masker_mask = util.get_text_field_mask(mask_tokens)
-            output.update(
+            state.update(
                 {
                     "mask_source_mask": masker_mask,
                     "mask_encoder_outputs": embedded_input
                 }
             )
-
-        return output
+        state = self._init_decoder_state(state)
+        return state
 
     def _init_decoder_state(self, state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         batch_size = state["source_mask"].size(0)
@@ -279,7 +272,7 @@ class MaskedCopyNet(Model):
 
         return output_dict
 
-    def _forward_beam_search(self, state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def beam_search(self, state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         batch_size = state["source_mask"].size()[0]
         start_predictions = state["source_mask"].new_full((batch_size,), fill_value=self._start_index)
 

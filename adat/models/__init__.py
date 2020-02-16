@@ -103,11 +103,11 @@ def get_model_by_name(
         max_decoding_steps: Optional[int] = None,
         copynet: Optional[MaskedCopyNet] = None
 ) -> Model:
-    if 'classification' in task.value:
+    if 'classification' in task:
         model = get_classifier_by_name(task, num_classes=num_classes, vocab=vocab, copynet=copynet)
-    elif 'levenshtein' in task.value:
+    elif 'levenshtein' in task:
         model = get_deep_levenshtein_by_name(task, vocab=vocab, copynet=copynet)
-    elif 'masked' in task.value:
+    elif 'masked' in task:
         model = get_copynet_by_name(task, vocab=vocab, beam_size=beam_size, max_decoding_steps=max_decoding_steps)
     else:
         raise NotImplementedError

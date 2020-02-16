@@ -10,80 +10,63 @@ from allennlp.common.util import dump_metrics
 
 from adat.dataset import ClassificationReader, CopyNetReader
 from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, SamplerOutput
-from adat.models import Task, get_model_by_name
+from adat.models import get_model_by_name
 from adat.utils import load_weights
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--cuda', type=int, default=-1)
 parser.add_argument('--csv_path', type=str, default='data/test.csv')
 parser.add_argument('--results_path', type=str, default='results')
-parser.add_argument('--classification_path', type=str, default='experiments/classification')
-parser.add_argument('--seq2seq_path', type=str, default='experiments/seq2seq')
+parser.add_argument('--classifier_path', type=str, default='experiments/classification')
+parser.add_argument('--copynet_path', type=str, default='experiments/copynet')
 parser.add_argument('--num_steps', type=int, default=100)
 parser.add_argument('--beam_size', type=int, default=1)
 parser.add_argument('--std', type=float, default=0.01)
 parser.add_argument('--sigma_class', type=float, default=1.0)
 parser.add_argument('--sigma_wer', type=float, default=0.5)
-parser.add_argument('--maximum_wer', type=float, default=0.2)
-parser.add_argument('--minimum_prob_drop', type=float, default=2.0)
 parser.add_argument('--random', action='store_true', help='Whether to use RandomSampler instead of MCMC')
 parser.add_argument('--sample', type=int, default=None)
 
 
-def _get_classifier_from_args(vocab: Vocabulary, path: str):
+def get_args(path: str):
+    arguments_to_parse = ['task', 'num_classes', 'max_decoding_steps']
     with open(path) as file:
         args = json.load(file)
-    num_classes = args['num_classes']
-    return get_classification_model(vocab, int(num_classes))
-
-
-def _get_seq2seq_from_args(vocab: Vocabulary, path: str, beam_size: int):
-    with open(path) as file:
-        args = json.load(file)
-    task = args['task']
-    use_attention = args['no_attention']
-    if task == Task.SEQ2SEQ:
-        return get_seq2seq_model(vocab, beam_size=beam_size, use_attention=use_attention)
-    elif task == Task.ATTMASKEDSEQ2SEQ:
-        # TODO: unstable
-        return get_att_mask_seq2seq_model(vocab, beam_size=beam_size, use_attention=use_attention)
-    else:
-        raise NotImplementedError
+    model_info = {arg: args[arg] for arg in arguments_to_parse}
+    return model_info
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
 
     class_reader = ClassificationReader(skip_start_end=True)
-    class_vocab = Vocabulary.from_files(Path(args.classification_path) / 'vocab')
-    class_model = _get_classifier_from_args(class_vocab, Path(args.classification_path) / 'args.json')
-    load_weights(class_model, Path(args.classification_path) / 'best.th')
+    class_vocab = Vocabulary.from_files(Path(args.classifier_path) / 'vocab')
+    class_model_args = get_args(Path(args.classifier_path) / 'args.json')
+    class_model = get_model_by_name(**class_model_args, vocab=class_vocab)
+    load_weights(class_model, Path(args.classifier_path) / 'best.th')
 
-    seq2seq_reader = CopyNetReader(masker=None)
-    seq2seq_vocab = Vocabulary.from_files(Path(args.seq2seq_path) / 'vocab')
-    seq2seq_model = _get_seq2seq_from_args(
-        seq2seq_vocab,
-        Path(args.seq2seq_path) / 'args.json',
-        beam_size=args.beam_size
-    )
-    load_weights(seq2seq_model, Path(args.seq2seq_path) / 'best.th')
+    copynet_reader = CopyNetReader(masker=None)
+    copynet_vocab = Vocabulary.from_files(Path(args.copynet_path) / 'vocab')
+    copynet_model_args = get_args(Path(args.copynet_path) / 'args.json')
+    copynet_model = get_model_by_name(**copynet_model_args, vocab=copynet_vocab, beam_size=args.beam_size)
+    load_weights(copynet_model, Path(args.copynet_path) / 'best.th')
 
     if args.random:
         sampler = RandomSampler(
-            proposal_distribution=NormalProposal(args.std),
+            proposal_distribution=NormalProposal(scale=args.std),
             classification_model=class_model,
             classification_reader=class_reader,
-            generation_model=seq2seq_model,
-            generation_reader=seq2seq_reader,
+            generation_model=copynet_model,
+            generation_reader=copynet_reader,
             device=args.cuda
         )
     else:
         sampler = MCMCSampler(
-            proposal_distribution=NormalProposal(args.std),
+            proposal_distribution=NormalProposal(scale=args.std),
             classification_model=class_model,
             classification_reader=class_reader,
-            generation_model=seq2seq_model,
-            generation_reader=seq2seq_reader,
+            generation_model=copynet_model,
+            generation_reader=copynet_reader,
             sigma_class=args.sigma_class,
             sigma_wer=args.sigma_wer,
             device=args.cuda
@@ -94,7 +77,7 @@ if __name__ == '__main__':
     labels = data['labels'].tolist()[:args.sample]
 
     results_path = Path(args.results_path)
-    results_path.mkdir(exist_ok=True)
+    results_path.mkdir(exist_ok=True, parents=True)
     path_to_results_file = results_path / 'results.csv'
     assert not path_to_results_file.exists(), \
         f'You already have `{path_to_results_file}` file. Delete it or change --results_path.'
@@ -106,12 +89,8 @@ if __name__ == '__main__':
         for seq, lab in tqdm(zip(sequences, labels)):
             sampler.set_label_to_attack(lab)
             sampler.set_input(seq)
-            ex = sampler.sample_until_satisfied(
-                max_steps=args.num_steps,
-                wer=args.maximum_wer,
-                prob_drop=args.minimum_prob_drop
-            ).__dict__
+            output = sampler.sample_until_label_is_changed(max_steps=args.num_steps).__dict__
             sampler.empty_history()
 
-            writer.writerow(ex)
+            writer.writerow(output)
             csv_write.flush()

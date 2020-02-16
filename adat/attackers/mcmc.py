@@ -19,6 +19,20 @@ from adat.dataset import ClassificationReader, CopyNetReader
 PROB_DIFF = -100
 
 
+def find_best_output(outputs: List[SamplerOutput], initial_label: int) -> SamplerOutput:
+    changed_label_outputs = []
+    for output in outputs:
+        if output.label != initial_label:
+            changed_label_outputs.append(output)
+
+    if changed_label_outputs:
+        best_output = min(changed_label_outputs, key=lambda x: x.wer)
+    else:
+        best_output = max(outputs, key=lambda x: x.prob_diff)
+
+    return best_output
+
+
 class Proposal(ABC):
     @abstractmethod
     def sample(self, curr_state: torch.Tensor) -> torch.Tensor:
@@ -76,7 +90,7 @@ class Sampler(ABC):
     def set_input(self, initial_sequence: str) -> None:
         self.initial_sequence = initial_sequence
         with torch.no_grad():
-            self.current_state = self.generation_model.get_state_for_beam_search(
+            self.current_state = self.generation_model.encode(
                 self._seq_to_input(
                     self.initial_sequence,
                     self.generation_reader,
@@ -88,6 +102,10 @@ class Sampler(ABC):
 
     def empty_history(self) -> None:
         self.history = []
+        self.label_to_attack = None
+        self.initial_sequence = None
+        self.current_state = None
+        self.initial_prob = None
 
     def _seq_to_input(self, seq: str, reader: CopyNetReader,
                       vocab: Vocabulary) -> Dict[str, Dict[str, torch.LongTensor]]:
@@ -131,9 +149,8 @@ class Sampler(ABC):
 
         for _ in range(max_steps):
             self.step()
-            if self.history:
-                if self.history[-1].label != self.label_to_attack:
-                    return self.history[-1]
+            if self.history and self.history[-1].label != self.label_to_attack:
+                return self.history[-1]
         return SamplerOutput(generated_sequence=self.initial_sequence, label=self.label_to_attack) if not self.history \
             else max(self.history, key=lambda x: x.prob_diff)
 
@@ -164,8 +181,14 @@ class MCMCSampler(Sampler):
             sigma_wer: float = 0.5,
             device: int = -1
     ) -> None:
-        super().__init__(proposal_distribution, classification_model, classification_reader,
-                         generation_model, generation_reader, device)
+        super().__init__(
+            proposal_distribution=proposal_distribution,
+            classification_model=classification_model,
+            classification_reader=classification_reader,
+            generation_model=generation_model,
+            generation_reader=generation_reader,
+            device=device
+        )
         self.sigma_class = sigma_class
         self.sigma_wer = sigma_wer
 
@@ -174,21 +197,27 @@ class MCMCSampler(Sampler):
         new_state = self.current_state.copy()
         new_state['decoder_hidden'] = self.proposal_distribution.sample(new_state['decoder_hidden'])
         generated_sequences = self.generate_from_state(new_state.copy())
+        # import ipdb; ipdb.set_trace()
 
+        curr_outputs = list()
+        # we generated `beam_size` adversarial examples
         for generated_seq in generated_sequences:
+            # sometimes len(generated_seq) = 0
             if generated_seq:
-                output = self.get_output(generated_seq)
+                curr_outputs.append(self.get_output(generated_seq))
 
-                prob_diff = output.prob_diff if output.prob_diff > 0 else PROB_DIFF
-                exp_base = (-output.wer / self.sigma_wer) + (-1 + prob_diff) / self.sigma_class
+        if curr_outputs:
+            output = find_best_output(curr_outputs, self.label_to_attack)
+            prob_diff = output.prob_diff if output.prob_diff > 0 else PROB_DIFF
+            exp_base = (-output.wer / self.sigma_wer) + (-1 + prob_diff) / self.sigma_class
 
-                acceptance_probability = min(
-                    [
-                        1.,
-                        np.exp(exp_base)
-                    ]
-                )
+            acceptance_probability = min(
+                [
+                    1.,
+                    np.exp(exp_base)
+                ]
+            )
 
-                if acceptance_probability > random.random():
-                    self.current_state = new_state
-                    self.history.append(output)
+            if acceptance_probability > random.random():
+                self.current_state = new_state
+                self.history.append(output)
