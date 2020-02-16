@@ -30,3 +30,6 @@ python train.py --task nonmasked_copynet_with_attention --model_dir experiments/
 python train.py --task classification --model_dir experiments/ag_news_mini/classification --data_dir data/ag_news_mini --cuda 0 --num_classes 4 
 
 python train.py --task deep_levenshtein_copynet --model_dir experiments/ag_news_mini/deep_levenshtein_copynet --data_dir data/ag_news_mini/levenshtein --copynet_dir experiments/ag_news_mini/nonmasked_copynet_with_attention --cuda 0
+
+
+python run_mcmc.py --csv_path data/ag_news_mini/random100.csv --results_path results/ag_news_mini/mcmc --classifier_path experiments/м/classification --copynet_path experiments/ag_news_mini/nonmasked_copynet_with_attention --beam_size 3 --cuda 0
