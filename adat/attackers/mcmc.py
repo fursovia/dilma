@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from functools import lru_cache
 import random
 
@@ -87,7 +87,7 @@ class Sampler(ABC):
     def set_label_to_attack(self, label: int = 1) -> None:
         self.label_to_attack = label
 
-    def set_input(self, initial_sequence: str) -> None:
+    def set_input(self, initial_sequence: str, mask_tokens: Optional[List[str]] = None) -> None:
         self.initial_sequence = initial_sequence
         with torch.no_grad():
             inputs = self._seq_to_input(self.initial_sequence, self.generation_reader, self.generation_vocab)
@@ -199,7 +199,6 @@ class MCMCSampler(Sampler):
         new_state = self.current_state.copy()
         new_state['decoder_hidden'] = self.proposal_distribution.sample(new_state['decoder_hidden'])
         generated_sequences = self.generate_from_state(new_state.copy())
-        # import ipdb; ipdb.set_trace()
 
         curr_outputs = list()
         # we generated `beam_size` adversarial examples
@@ -219,7 +218,7 @@ class MCMCSampler(Sampler):
                     np.exp(exp_base)
                 ]
             )
-
+            output.acceptance_probability = acceptance_probability
             if acceptance_probability > random.random():
                 self.current_state = new_state
                 self.history.append(output)
