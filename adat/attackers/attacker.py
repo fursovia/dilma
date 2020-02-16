@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from typing import List
 
 from dataclasses import dataclass
@@ -20,7 +19,8 @@ def find_best_output(outputs: List[AttackerOutput], initial_label: int) -> Attac
             changed_label_outputs.append(output)
 
     if changed_label_outputs:
-        best_output = min(changed_label_outputs, key=lambda x: x.wer)
+        sorted_outputs = sorted(changed_label_outputs, key=lambda x: x.prob_diff, reverse=True)
+        best_output = min(sorted_outputs, key=lambda x: x.wer)
     else:
         best_output = max(outputs, key=lambda x: x.prob_diff)
 

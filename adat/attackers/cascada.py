@@ -127,6 +127,7 @@ class Cascada:
     def empty_history(self) -> None:
         self.initial_sequence = None
         self.initial_state = None
+        self.current_state = None
         self.initial_prob = None
         self.initial_label = None
         self.history = list()
