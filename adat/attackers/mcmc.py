@@ -90,12 +90,9 @@ class Sampler(ABC):
     def set_input(self, initial_sequence: str) -> None:
         self.initial_sequence = initial_sequence
         with torch.no_grad():
+            inputs = self._seq_to_input(self.initial_sequence, self.generation_reader, self.generation_vocab)
             self.current_state = self.generation_model.encode(
-                self._seq_to_input(
-                    self.initial_sequence,
-                    self.generation_reader,
-                    self.generation_vocab
-                )['source_tokens']
+                source_tokens=inputs['source_tokens']
             )
 
         self.initial_prob, _ = self.predict_prob_and_label(self.initial_sequence)
@@ -145,14 +142,19 @@ class Sampler(ABC):
     def step(self):
         pass
 
-    def sample_until_label_is_changed(self, max_steps: int = 200) -> SamplerOutput:
+    def sample_until_label_is_changed(self, max_steps: int = 200, early_stopping: bool = False) -> SamplerOutput:
 
         for _ in range(max_steps):
             self.step()
-            if self.history and self.history[-1].label != self.label_to_attack:
+            if early_stopping and self.history and self.history[-1].label != self.label_to_attack:
                 return self.history[-1]
-        return SamplerOutput(generated_sequence=self.initial_sequence, label=self.label_to_attack) if not self.history \
-            else max(self.history, key=lambda x: x.prob_diff)
+
+        if self.history:
+            output = find_best_output(self.history, self.label_to_attack)
+        else:
+            output = SamplerOutput(generated_sequence=self.initial_sequence, label=self.label_to_attack)
+
+        return output
 
 
 # TODO: should I update state?

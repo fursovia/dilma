@@ -25,6 +25,7 @@ parser.add_argument('--std', type=float, default=0.01)
 parser.add_argument('--sigma_class', type=float, default=1.0)
 parser.add_argument('--sigma_wer', type=float, default=0.5)
 parser.add_argument('--random', action='store_true', help='Whether to use RandomSampler instead of MCMC')
+parser.add_argument('--early_stopping', action='store_true')
 parser.add_argument('--sample', type=int, default=None)
 
 
@@ -89,7 +90,10 @@ if __name__ == '__main__':
         for seq, lab in tqdm(zip(sequences, labels)):
             sampler.set_label_to_attack(lab)
             sampler.set_input(seq)
-            output = sampler.sample_until_label_is_changed(max_steps=args.num_steps).__dict__
+            output = sampler.sample_until_label_is_changed(
+                max_steps=args.num_steps,
+                early_stopping=args.early_stopping
+            ).__dict__
             sampler.empty_history()
 
             writer.writerow(output)
