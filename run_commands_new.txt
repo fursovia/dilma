@@ -56,6 +56,8 @@ python train_eval_model.py -dd data/ag_news -mp results/ag_news/logit_tfidf.mode
 
 python train.py --task nonmasked_copynet_with_attention --model_dir experiments/ag_news/nonmasked_copynet_with_attention --data_dir data/ag_news --use_mask --cuda 1 --num_classes 4 --batch_size 256
 
+python train.py --task nonmasked_copynet --model_dir experiments/ag_news/nonmasked_copynet --data_dir data/ag_news --use_mask --cuda 1 --num_classes 4 --batch_size 256
+
 
 ### CLASSIFIERS 
 
@@ -77,8 +79,18 @@ python run_mcmc.py --csv_path data/ag_news/test.csv --results_path results/ag_ne
 
 python run_mcmc.py --csv_path data/ag_news/test.csv --results_path results/ag_news/random --classifier_path experiments/ag_news/classification --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --random --sample 100
 
+python run_cascada.py --csv_path data/ag_news/test.csv --results_path results/ag_news/cascada --classifier_path experiments/ag_news/classification_copynet --levenshtein_path experiments/ag_news/deep_levenshtein_copynet --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --sample 100
 
 
+
+
+
+
+
+
+
+
+python run_cascada.py --csv_path data/ag_news/test.csv --results_path results/ag_news/cascada --classifier_path experiments/ag_news/classification_copynet --levenshtein_path experiments/ag_news/deep_levenshtein_copynet --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --num_updates 10 --sample 100
 
 python run_mcmc.py --csv_path data/ag_news/test.csv --results_path results/ag_news/mcmc --classifier_path experiments/ag_news/classification --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --sample 100 --sigma_wer 1.5
 
@@ -94,6 +106,7 @@ BASE="results/ag_news/mcmc" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && p
 
 BASE="results/ag_news/random" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
 
+BASE="results/ag_news/cascada" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
 
 ### BASE="results/ag_news_results/cascada" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && echo $FOLDER
 ### python eval.py -mp results/ag_news/logit_tfidf.model -arp results/ag_news/mcmc/results.csv -erp results/ag_news/mcmc/eval_metric.json
@@ -114,8 +127,14 @@ BASE="results/ag_news_results/hotflip" && FOLDER="$(ls ${BASE} | sort -z | tail 
 
 
 
+python run_cascada.py --csv_path data/ag_news/test.csv --results_path results/ag_news_results/cascada --classifier_path experiments/ag_news/classification_copynet --levenshtein_path experiments/ag_news/deep_levenshtein_copynet --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --sample 100
 
 
+python run_cascada.py --csv_path data/ag_news/test.csv --results_path results/ag_news_results/cascada --classifier_path experiments/ag_news/classification_copynet --levenshtein_path experiments/ag_news/deep_levenshtein_copynet --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --num_updates 5 --sample 1000
 
 
+python run_cascada.py --csv_path data/ag_news/test.csv --results_path results/ag_news_results/cascada --classifier_path experiments/ag_news/classification_copynet --levenshtein_path experiments/ag_news/deep_levenshtein_copynet --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 10 --cuda 0 --num_updates 5 --sample 100
 
+python run_cascada.py --csv_path data/ag_news/test.csv --results_path results/ag_news_results/cascada --classifier_path experiments/ag_news/classification_copynet --levenshtein_path experiments/ag_news/deep_levenshtein_copynet --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 30 --cuda 0 --num_updates 5 --learning_rate 4 --sample 1000
+
+python run_cascada.py --csv_path data/ag_news/test.csv --results_path results/ag_news_results/cascada --classifier_path experiments/ag_news/classification_copynet --levenshtein_path experiments/ag_news/deep_levenshtein_copynet --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 30 --cuda 0 --num_updates 5 --learning_rate 2 --sample 1000
