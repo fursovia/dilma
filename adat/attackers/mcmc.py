@@ -135,7 +135,13 @@ class Sampler(ABC):
         new_prob, new_label = self.predict_prob_and_label(generated_sequence)
         new_wer = calculate_normalized_wer(self.initial_sequence, generated_sequence)
         prob_diff = self.initial_prob - new_prob
-        return AttackerOutput(generated_sequence=generated_sequence, label=new_label, wer=new_wer, prob_diff=prob_diff)
+        return AttackerOutput(
+            sequence=self.initial_sequence,
+            generated_sequence=generated_sequence,
+            label=new_label,
+            wer=new_wer,
+            prob_diff=prob_diff
+        )
 
     @abstractmethod
     def step(self):
@@ -151,7 +157,12 @@ class Sampler(ABC):
         if self.history:
             output = find_best_output(self.history, self.label_to_attack)
         else:
-            output = AttackerOutput(generated_sequence=self.initial_sequence, label=self.label_to_attack)
+            output = AttackerOutput(
+                sequence=self.initial_sequence,
+                generated_sequence=self.initial_sequence,
+                label=self.label_to_attack,
+                wer=0.0
+            )
 
         return output
 

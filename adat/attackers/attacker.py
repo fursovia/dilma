@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 @dataclass
 class AttackerOutput:
+    sequence: str
     generated_sequence: str
     label: int
     wer: float = None

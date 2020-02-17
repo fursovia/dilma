@@ -153,7 +153,7 @@ class MaskedCopyNet(Model):
             for ind in indices:
                 ind = list(ind)
                 # Collect indices till the first end_symbol
-                if self._end_index in indices:
+                if self._end_index in ind:
                     ind = ind[:ind.index(self._end_index)]
                 predicted_tokens = [self.vocab.get_token_from_index(x, namespace=self._target_namespace)
                                     for x in ind]
