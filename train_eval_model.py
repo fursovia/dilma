@@ -36,7 +36,10 @@ if __name__ == '__main__':
         
         probs = model.predict(test_x)
         
-        auc = roc_auc_score(y_true=test_y, y_score=probs, multi_class='ovr', average='macro')
+        if len(set(test_y)) > 2:
+            auc = roc_auc_score(y_true=test_y, y_score=probs, multi_class='ovr', average='macro')
+        else:
+            auc = roc_auc_score(y_true=test_y, y_score=probs[:, 1])
         acc = (test_y == probs.argmax(axis=1)).mean()
         acc_random = (test_y == np.random.choice(test_y, len(test_y), replace=False)).mean()
 
