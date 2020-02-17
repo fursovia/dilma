@@ -42,8 +42,8 @@ if __name__ == '__main__':
     df = pd.read_csv(args.attack_results_path)
     
     metrics = calculate_metrics(model, 
-                                df['labels'].values, 
-                                df['sequences'].values,
+                                df['label'].values, 
+                                df['sequence'].values,
                                 df['generated_sequence'].values)
     
     print(metrics)

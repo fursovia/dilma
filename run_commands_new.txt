@@ -49,20 +49,62 @@ python run_cascada.py --csv_path data/ag_news_mini/test.csv --results_path resul
 
 -----------------------------------------------------------------
 
+### EVAL CLF
 python train_eval_model.py -dd data/ag_news -mp results/ag_news/logit_tfidf.model -mqp results/ag_news/logit_tfidf_metric.json
+
+### COPYNET
 
 python train.py --task nonmasked_copynet_with_attention --model_dir experiments/ag_news/nonmasked_copynet_with_attention --data_dir data/ag_news --use_mask --cuda 1 --num_classes 4 --batch_size 256
 
-python train.py --task deep_levenshtein_copynet --model_dir experiments/ag_news_mini/deep_levenshtein_copynet --data_dir data/ag_news_mini/levenshtein --copynet_dir experiments/ag_news_mini/nonmasked_copynet_with_attention --cuda 0 --batch_size 256
+
+### CLASSIFIERS 
+
+python train.py --task classification --model_dir experiments/ag_news/classification --data_dir data/ag_news --cuda 0 --num_classes 4 
+
+
+python train.py --task classification_copynet --model_dir experiments/ag_news/classification_copynet --data_dir data/ag_news --copynet_dir experiments/ag_news/nonmasked_copynet_with_attention --cuda 0 --num_classes 4
+
+### LEVENSHTEIN
+
+python train.py --task deep_levenshtein_copynet --model_dir experiments/ag_news/deep_levenshtein_copynet --data_dir data/ag_news/levenshtein --copynet_dir experiments/ag_news/nonmasked_copynet_with_attention --cuda 0 --batch_size 256
+
+
+
+### ATTACKS
+
+python run_mcmc.py --csv_path data/ag_news/test.csv --results_path results/ag_news/mcmc --classifier_path experiments/ag_news/classification --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --sample 100
+
+
+python run_mcmc.py --csv_path data/ag_news/test.csv --results_path results/ag_news/random --classifier_path experiments/ag_news/classification --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --random --sample 100
 
 
 
 
+python run_mcmc.py --csv_path data/ag_news/test.csv --results_path results/ag_news/mcmc --classifier_path experiments/ag_news/classification --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --sample 100 --sigma_wer 1.5
+
+python run_mcmc.py --csv_path data/ag_news/test.csv --results_path results/ag_news/mcmc --classifier_path experiments/ag_news/classification --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --sample 100 --sigma_wer 4
+
+python run_mcmc.py --csv_path data/ag_news/test.csv --results_path results/ag_news/random --classifier_path experiments/ag_news/classification --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --random --sample 100 --std 0.1
+
+python run_mcmc.py --csv_path data/ag_news/test.csv --results_path results/ag_news/random --classifier_path experiments/ag_news/classification --copynet_path experiments/ag_news/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --random --sample 100 --std 1.0
+
+### EVAL
+
+BASE="results/ag_news/mcmc" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
+
+BASE="results/ag_news/random" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
 
 
+### BASE="results/ag_news_results/cascada" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && echo $FOLDER
+### python eval.py -mp results/ag_news/logit_tfidf.model -arp results/ag_news/mcmc/results.csv -erp results/ag_news/mcmc/eval_metric.json
 
+BASE="results/ag_news_results/cascada" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
 
+BASE="results/ag_news_results/mcmc" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
 
+BASE="results/ag_news_results/random" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
+
+BASE="results/ag_news_results/hotflip" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
 
 
 
