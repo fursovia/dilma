@@ -16,16 +16,11 @@ CLASSIFIER_BASIC_DIR=$6
 BEAM_SIZE=${7:-3}
 SAMPLE=${8:-1000}
 
-CURR_DATE=$(date +%Y%m%d_%H%M%S)
-CASCADA_DIR=results/${BASENAME}/cascada/${CURR_DATE}
-MCMC_DIR=results/${BASENAME}/mcmc/${CURR_DATE}
-RANDOM_DIR=results/${BASENAME}/random/${CURR_DATE}
-HOTFLIP_DIR=results/${BASENAME}/hotflip/${CURR_DATE}
+CASCADA_DIR=results/${BASENAME}/cascada
+MCMC_DIR=results/${BASENAME}/mcmc
+RANDOM_DIR=results/${BASENAME}/random
+HOTFLIP_DIR=results/${BASENAME}/hotflip
 
-mkdir -p ${CASCADA_DIR}
-mkdir -p ${MCMC_DIR}
-mkdir -p ${RANDOM_DIR}
-mkdir -p ${HOTFLIP_DIR}
 
 echo "Running MCMC..."
 python run_mcmc.py \
