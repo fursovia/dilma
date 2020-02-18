@@ -39,7 +39,7 @@ def calculate_metrics(model, w, labels, seqs_orig, seqs_gen):
     metrics['probability_drop'] = (proba_orig - proba_gen).mean() 
     metrics['WER'] = np.mean([calculate_wer(seqs_orig[i], seqs_gen[i]) 
                               for i in range(len(seqs_orig))])
-    metrics['NAD'] = calculate_nad(labels, probs_orig, probs_gen, seqs_orig, seqs_gen)
+    metrics['NAD'] = calculate_nad(labels, probs_orig*w, probs_gen*w, seqs_orig, seqs_gen)
     return metrics
 
 if __name__ == '__main__':
