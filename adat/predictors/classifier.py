@@ -10,7 +10,7 @@ from adat.dataset import ClassificationReader
 class ClassifierPredictor:
     def __init__(self, model: Classifier) -> None:
         self.model = model
-        self.reader = ClassificationReader()
+        self.reader = ClassificationReader(skip_start_end=True)
         self.predictor = TextClassifierPredictor(self.model, self.reader)
 
     def predict(self, sequences: List[str]) -> np.ndarray:
