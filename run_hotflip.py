@@ -11,7 +11,7 @@ from allennlp.common.util import dump_metrics
 from allennlp.predictors import TextClassifierPredictor
 
 from adat.dataset import ClassificationReader
-from adat.attackers.hotflip import HotFlipFixed
+from adat.attackers import HotFlipFixed, AttackerOutput
 from adat.models import get_classification_model
 from adat.utils import load_weights
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     path_to_results_file = results_path / 'results.csv'
     dump_metrics(results_path / 'args.json', args.__dict__)
     with open(path_to_results_file, 'w', newline='') as csv_write:
-        fieldnames = ['generated_sequence']
+        fieldnames = list(AttackerOutput.__annotations__.keys())
         writer = csv.DictWriter(csv_write, fieldnames=fieldnames)
         writer.writeheader()
         for seq, lab in tqdm(zip(sequences, labels)):
@@ -62,5 +62,11 @@ if __name__ == '__main__':
             attack = attacker.attack_from_json(inputs)
             generated_seq = ' '.join(attack['final'][0])
 
-            writer.writerow({'generated_sequence': generated_seq})
+            output = AttackerOutput(
+                sequence=seq,
+                label=lab,
+                adversarial_sequence=generated_seq
+            )
+
+            writer.writerow(output.__dict__)
             csv_write.flush()

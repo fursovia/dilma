@@ -7,14 +7,14 @@ from allennlp.nn.util import move_to_device
 
 from adat.models import MaskedCopyNet, Classifier, DeepLevenshtein
 from adat.dataset import CopyNetReader, IDENTITY_TOKEN
-from adat.attackers.attacker import AttackerOutput, find_best_output
+from adat.attackers.attacker import Attacker, AttackerOutput, find_best_output
 from adat.utils import calculate_wer
 
 
 BASIC_MASKER = [IDENTITY_TOKEN]
 
 
-class Cascada:
+class Cascada(Attacker):
     def __init__(
             self,
             vocab: Vocabulary,
@@ -28,6 +28,7 @@ class Cascada:
             num_labels: int = 2,
             device: int = -1
     ) -> None:
+        super().__init__()
         self.vocab = vocab
         self.reader = reader
         self.classification_model = classification_model
@@ -48,12 +49,7 @@ class Cascada:
         self.learning_rate = learning_rate
         self.num_updates = num_updates
 
-        self.initial_sequence = None
         self.initial_state = None
-        self.current_state = None
-        self.initial_prob = None
-        self.initial_label = None
-        self.history: List[AttackerOutput] = list()
 
     def generate_sequence_from_state(self, state: Dict[str, torch.Tensor]) -> List[str]:
         state = self.masked_copynet.init_decoder_state(state)
@@ -123,15 +119,10 @@ class Cascada:
 
         output = self.predict_prob_from_state(self.initial_state)
         self.initial_prob = output['probs']
-        self.initial_label = output['label']
 
     def empty_history(self) -> None:
-        self.initial_sequence = None
+        super().empty_history()
         self.initial_state = None
-        self.current_state = None
-        self.initial_prob = None
-        self.initial_label = None
-        self.history = list()
 
     def _calculate_loss(self,
                         adversarial_probs: torch.Tensor,
@@ -158,24 +149,6 @@ class Cascada:
             hidden.grad.zero_()
 
         return hidden
-
-    def sample_until_label_is_changed(self, max_steps: int = 200, early_stopping: bool = False) -> AttackerOutput:
-
-        for _ in range(max_steps):
-            self.step()
-            if early_stopping and self.history and self.history[-1].label != self.label_to_attack:
-                return self.history[-1]
-
-        if self.history:
-            output = find_best_output(self.history, self.label_to_attack)
-        else:
-            output = AttackerOutput(
-                sequence=self.initial_sequence,
-                generated_sequence=self.initial_sequence,
-                label=self.label_to_attack
-            )
-
-        return output
 
     def step(self):
         state_adversarial = {key: tensor.clone() for key, tensor in self.current_state.items()}
@@ -214,8 +187,9 @@ class Cascada:
                 curr_outputs.append(
                     AttackerOutput(
                         sequence=self.initial_sequence,
-                        generated_sequence=generated_seq,
-                        label=int(classifier_output['label'][0]),
+                        label=self.label_to_attack,
+                        adversarial_sequence=generated_seq,
+                        adversarial_label=int(classifier_output['label'][0]),
                         wer=calculate_wer(self.initial_sequence, generated_seq),
                         prob_diff=(
                                 self.initial_prob[0][self.label_to_attack] -

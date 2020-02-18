@@ -9,7 +9,7 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
 from adat.dataset import ClassificationReader, CopyNetReader, IDENTITY_TOKEN
-from adat.attackers.mcmc import MCMCSampler, RandomSampler, NormalProposal, AttackerOutput
+from adat.attackers import MCMCSampler, RandomSampler, NormalProposal, AttackerOutput
 from adat.models import get_model_by_name
 from adat.utils import load_weights, get_args_from_path
 

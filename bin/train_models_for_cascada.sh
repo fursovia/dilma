@@ -11,7 +11,7 @@ EXP_DIR=${5:-"./experiments"}
 BASE_EXP_DIR=$(basename ${DATA_DIR})
 BATCH_SIZE=512
 NUM_EPOCHS=100
-PATIENCE=4
+PATIENCE=2
 
 COPYNET_TYPE=${4:-"masked_copynet_with_attention"}
 CLASSIFIER_TYPE=classification_copynet

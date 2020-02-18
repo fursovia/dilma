@@ -9,11 +9,10 @@ import torch
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
-from adat.dataset import CopyNetReader, IDENTITY_TOKEN
-from adat.utils import load_weights, get_args_from_path
-from adat.attackers import AttackerOutput
-from adat.attackers.cascada import Cascada
 from adat.models import get_model_by_name
+from adat.dataset import CopyNetReader, IDENTITY_TOKEN
+from adat.attackers import AttackerOutput, Cascada
+from adat.utils import load_weights, get_args_from_path
 
 
 parser = argparse.ArgumentParser()
