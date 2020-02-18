@@ -10,10 +10,10 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.nn.util import move_to_device
 from allennlp.data.dataset import Batch
 
-from adat.attackers.attacker import AttackerOutput, find_best_output
 from adat.utils import calculate_normalized_wer
 from adat.models import MaskedCopyNet, Classifier
 from adat.dataset import ClassificationReader, CopyNetReader
+from adat.attackers.attacker import Attacker, AttackerOutput, find_best_output
 
 
 PROB_DIFF = -100
@@ -33,7 +33,7 @@ class NormalProposal(Proposal):
         return Normal(curr_state, torch.ones_like(curr_state) * self.scale).sample()
 
 
-class Sampler(ABC):
+class Sampler(Attacker):
     def __init__(
             self,
             proposal_distribution: Proposal,
@@ -43,6 +43,7 @@ class Sampler(ABC):
             generation_reader: CopyNetReader,
             device: int = -1
     ) -> None:
+        super().__init__()
         self.proposal_distribution = proposal_distribution
 
         # models
@@ -64,12 +65,6 @@ class Sampler(ABC):
             self.classification_model.cpu()
             self.generation_model.cpu()
 
-        self.label_to_attack = None
-        self.initial_sequence = None
-        self.current_state = None
-        self.initial_prob = None
-        self.history: List[AttackerOutput] = []
-
     def set_label_to_attack(self, label: int = 1) -> None:
         self.label_to_attack = label
 
@@ -89,13 +84,6 @@ class Sampler(ABC):
 
         self.current_state = self.generation_model.init_decoder_state(self.current_state)
         self.initial_prob, _ = self.predict_prob_and_label(self.initial_sequence)
-
-    def empty_history(self) -> None:
-        self.history = []
-        self.label_to_attack = None
-        self.initial_sequence = None
-        self.current_state = None
-        self.initial_prob = None
 
     def _seq_to_input(
             self,
@@ -137,34 +125,12 @@ class Sampler(ABC):
         prob_diff = self.initial_prob - new_prob
         return AttackerOutput(
             sequence=self.initial_sequence,
-            generated_sequence=generated_sequence,
-            label=new_label,
+            label=self.label_to_attack,
+            adversarial_sequence=generated_sequence,
+            adversarial_label=new_label,
             wer=new_wer,
             prob_diff=prob_diff
         )
-
-    @abstractmethod
-    def step(self):
-        pass
-
-    def sample_until_label_is_changed(self, max_steps: int = 200, early_stopping: bool = False) -> AttackerOutput:
-
-        for _ in range(max_steps):
-            self.step()
-            if early_stopping and self.history and self.history[-1].label != self.label_to_attack:
-                return self.history[-1]
-
-        if self.history:
-            output = find_best_output(self.history, self.label_to_attack)
-        else:
-            output = AttackerOutput(
-                sequence=self.initial_sequence,
-                generated_sequence=self.initial_sequence,
-                label=self.label_to_attack,
-                wer=0.0
-            )
-
-        return output
 
 
 # TODO: should I update state?
