@@ -88,6 +88,7 @@ if __name__ == '__main__':
                 max_steps=args.num_steps,
                 early_stopping=args.early_stopping
             ).__dict__
+            print(len(sampler.history))
             sampler.empty_history()
 
             writer.writerow(output)

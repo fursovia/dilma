@@ -27,7 +27,14 @@ def calculate_metrics(model, labels, seqs_orig, seqs_gen):
     proba_orig = probs_orig[np.arange(len(labels)), labels]
     proba_gen = probs_gen[np.arange(len(labels)), labels]
     metrics = {}
+    if len(set(test_y)) > 2:
+        auc_orig = roc_auc_score(y_true=test_y, y_score=proba_orig, multi_class='ovr', average='macro')
+        auc_gen = roc_auc_score(y_true=test_y, y_score=proba_gen, multi_class='ovr', average='macro')
+    else:
+        auc_orig = roc_auc_score(y_true=test_y, y_score=proba_orig[:, 1])
+        auc_gen = roc_auc_score(y_true=test_y, y_score=auc_gen[:, 1])
     metrics['accuracy_drop'] = acc_orig - acc_gen
+    metrics['roc_auc_drop'] = auc_orig - auc_gen
     metrics['probability_drop'] = (proba_orig - proba_gen).mean() 
     metrics['WER'] = np.mean([calculate_wer(seqs_orig[i], seqs_gen[i]) 
                               for i in range(len(seqs_orig))])
@@ -40,11 +47,12 @@ if __name__ == '__main__':
     model = joblib.load(args.model_path)
     
     df = pd.read_csv(args.attack_results_path)
+    df.rename(columns={'generated_sequence':'adversarial_sequence'}, inplace=True)
     
     metrics = calculate_metrics(model, 
                                 df['label'].values, 
                                 df['sequence'].values,
-                                df['generated_sequence'].values)
+                                df['adversarial_sequence'].values)
     
     print(metrics)
     json.dump(metrics, open(args.eval_results_path, 'w'))
