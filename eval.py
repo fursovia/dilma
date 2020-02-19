@@ -20,6 +20,16 @@ def calculate_nad(labels, probs_orig, probs_gen, seqs_orig, seqs_gen):
     errs = (probs_orig.argmax(axis=1) != probs_gen.argmax(axis=1))
     return np.mean(errs[correct_inds]/(1e-6 + wers[correct_inds]))
 
+def calculate_new_nad(labels, probs_orig, probs_gen, seqs_orig, seqs_gen):
+    correct_inds = np.where(probs_orig.argmax(axis=1) == labels)[0]
+    wers = np.array([calculate_wer(seqs_orig[i], seqs_gen[i]) for i in range(len(seqs_orig))])
+    errs = (probs_orig.argmax(axis=1) != probs_gen.argmax(axis=1))
+
+    lens_orig = np.array([len(x.split()) for x in seqs_orig])
+    lens_gen = np.array([len(x.split()) for x in seqs_gen])
+    lens_max = np.maximum(lens_orig, lens_gen)
+    return np.mean(errs[correct_inds]*((lens_max[correct_inds] - wers[correct_inds])/(1e-6 + lens_max[correct_inds] - 1)))
+
 def calculate_metrics(model, w, labels, seqs_orig, seqs_gen):
     probs_orig = model.predict(seqs_orig)
     probs_gen = model.predict(seqs_gen)
@@ -40,6 +50,7 @@ def calculate_metrics(model, w, labels, seqs_orig, seqs_gen):
     metrics['WER'] = np.mean([calculate_wer(seqs_orig[i], seqs_gen[i]) 
                               for i in range(len(seqs_orig))])
     metrics['NAD'] = calculate_nad(labels, probs_orig*w, probs_gen*w, seqs_orig, seqs_gen)
+    metrics['NAD_new'] = calculate_new_nad(labels, probs_orig*w, probs_gen*w, seqs_orig, seqs_gen)
     return metrics
 
 if __name__ == '__main__':
