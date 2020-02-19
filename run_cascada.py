@@ -5,7 +5,6 @@ from tqdm import tqdm
 from datetime import datetime
 
 import pandas as pd
-import torch
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
@@ -24,6 +23,7 @@ parser.add_argument('--copynet_path', type=str, default='experiments/copynet')
 parser.add_argument('--classifier_path', type=str, default='experiments/classification')
 parser.add_argument('--levenshtein_path', type=str, default='experiments/deep_levenshtein')
 
+parser.add_argument('--prob_diff_weight', type=float, default=1.0)
 parser.add_argument('--levenshtein_weight', type=float, default=0.1)
 parser.add_argument('--learning_rate', type=float, default=2.0)
 parser.add_argument('--max_steps', type=int, default=30)
@@ -70,6 +70,7 @@ if __name__ == '__main__':
         classification_model=class_model,
         masked_copynet=copynet_model, deep_levenshtein_model=deep_levenshtein_model,
         levenshtein_weight=args.levenshtein_weight,
+        prob_diff_weight=args.prob_diff_weight,
         learning_rate=args.learning_rate,
         num_updates=args.num_updates,
         num_labels=class_model_args['num_classes'],
@@ -91,10 +92,8 @@ if __name__ == '__main__':
         writer.writeheader()
         for seq, lab, mask_tokens in tqdm(zip(sequences, labels, maskers)):
 
-            # it's important to do it under `no_grad()`
-            with torch.no_grad():
-                attacker.set_input(sequence=seq, mask_tokens=mask_tokens)
-                attacker.set_label_to_attack(lab)
+            attacker.set_input(sequence=seq, mask_tokens=mask_tokens)
+            attacker.set_label_to_attack(lab)
 
             output = attacker.sample_until_label_is_changed(
                 max_steps=args.max_steps,

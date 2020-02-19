@@ -43,7 +43,7 @@ class Sampler(Attacker):
             generation_reader: CopyNetReader,
             device: int = -1
     ) -> None:
-        super().__init__()
+        super().__init__(device=device)
         self.proposal_distribution = proposal_distribution
 
         # models
@@ -57,7 +57,6 @@ class Sampler(Attacker):
         self.generation_reader = generation_reader
         self.generation_vocab = self.generation_model.vocab
 
-        self.device = device
         if self.device >= 0 and torch.cuda.is_available():
             self.classification_model.cuda(self.device)
             self.generation_model.cuda(self.device)
@@ -65,25 +64,22 @@ class Sampler(Attacker):
             self.classification_model.cpu()
             self.generation_model.cpu()
 
-    def set_label_to_attack(self, label: int = 1) -> None:
-        self.label_to_attack = label
-
-    def set_input(self, initial_sequence: str, mask_tokens: Optional[List[str]] = None) -> None:
-        self.initial_sequence = initial_sequence
+    def set_input(self, sequence: str, mask_tokens: Optional[List[str]] = None) -> None:
+        self.initial_sequence = sequence
+        inputs = self._sequence2batch(
+            sequence=sequence,
+            reader=self.generation_reader,
+            vocab=self.generation_vocab,
+            mask_tokens=mask_tokens
+        )
         with torch.no_grad():
-            inputs = self._seq_to_input(
-                self.initial_sequence,
-                self.generation_reader,
-                self.generation_vocab,
-                mask_tokens=mask_tokens
-            )
             self.current_state = self.generation_model.encode(
                 source_tokens=inputs['source_tokens'],
                 mask_tokens=inputs['mask_tokens']
             )
 
-        self.current_state = self.generation_model.init_decoder_state(self.current_state)
-        self.initial_prob, _ = self.predict_prob_and_label(self.initial_sequence)
+            self.current_state = self.generation_model.init_decoder_state(self.current_state)
+            self.initial_prob, _ = self.predict_prob_and_label(self.initial_sequence)
 
     def _seq_to_input(
             self,
