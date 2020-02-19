@@ -99,7 +99,6 @@ class Sampler(Attacker):
 
     def generate_from_state(self, state: Dict[str, torch.Tensor]) -> List[str]:
         with torch.no_grad():
-            state = self.generation_model.init_decoder_state(state)
             pred_output = self.generation_model.beam_search(state)
             predicted_sequences = []
             for seq in self.generation_model.decode(pred_output)['predicted_tokens'][0]:
