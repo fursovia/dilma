@@ -58,7 +58,7 @@ if __name__ == '__main__':
         for seq, lab in tqdm(zip(sequences, labels)):
             inputs = {
                 'sentence': seq,
-                'label': lab
+                # 'label': lab
             }
 
             attack = attacker.attack_from_json(inputs)

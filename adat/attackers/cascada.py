@@ -2,8 +2,6 @@ from typing import List, Dict, Optional
 
 import torch
 from allennlp.data.vocabulary import Vocabulary
-from allennlp.data.dataset import Batch
-from allennlp.nn.util import move_to_device
 
 from adat.models import MaskedCopyNet, Classifier, DeepLevenshtein
 from adat.dataset import CopyNetReader, IDENTITY_TOKEN
