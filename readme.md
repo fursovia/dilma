@@ -63,91 +63,11 @@ What you'll need for HotFlip
 
 What you'll need for CASCADA
 * CopyNet
-
-### CopyNet Training
-
-```bash
-python train.py \
-    --task nonmasked_copynet_with_attention \
-    --model_dir experiments/sample/nonmasked_copynet_with_attention33 \
-    --data_dir data/sample \
-    --cuda 2
-```
-
-
-### Classifier Training
-
-```bash
-python train.py \
-    --task classification \
-    --model_dir experiments/sample/classification \
-    --data_dir data/sample \
-    --cuda 3
-```
-
-```bash
-python train.py \
-    --task classification_copynet \
-    --model_dir experiments/sample/classification_copynet \
-    --data_dir data/sample \
-    --copynet_dir experiments/sample/nonmasked_copynet_with_attention \
-    --cuda 3
-```
-
-
-### Deep Levenshtein
-
-```bash
-python train.py \
-    --task deep_levenshtein \
-    --model_dir experiments/sample/deep_levenshtein \
-    --data_dir data/sample/levenshtein \
-    --cuda 3
-```
+* Classifier trained on hidden representations
+* Deep Levenshtein trained on hidden representations
 
 
 ```bash
-python train.py \
-    --task deep_levenshtein_with_attention \
-    --model_dir experiments/sample/deep_levenshtein_with_attention \
-    --data_dir data/sample/levenshtein \
-    --cuda 3
-```
-
-
-```bash
-python train.py \
-    --task deep_levenshtein_copynet \
-    --model_dir experiments/sample/deep_levenshtein_copynet \
-    --data_dir data/sample/levenshtein \
-    --copynet_dir experiments/sample/nonmasked_copynet_with_attention \
-    --cuda 3
-```
-
-
-
-### MCMC/Random sampler
-
-```bash
-python run_mcmc.py \
-    --csv_path data/sample/test.csv \
-    --results_path results/sample/mcmc \
-    --classifier_path experiments/sample/classification \
-    --copynet_path experiments/sample/nonmasked_copynet_with_attention \
-    --beam_size 3 \
-    --cuda 3
-```
-
-
-### Cascada
-
-```bash
-python run_cascada.py \
-    --csv_path data/sample/test.csv \
-    --results_path results/sample/cascada \
-    --classifier_path experiments/sample/classification_copynet \
-    --levenshtein_path experiments/sample/deep_levenshtein_copynet \
-    --copynet_path experiments/sample/nonmasked_copynet_with_attention \
-    --beam_size 3 \
-    --cuda 3
+# bash bin/train_models_for_cascada.sh {DATA_DIR} {GPU_ID} {NUM_CLASSES} {COPYNET_TYPE} {EXP_DIR}
+bash bin/train_models_for_cascada.sh data/my_data 0 2 masked_copynet_with_attention experiments/my_experiment
 ```

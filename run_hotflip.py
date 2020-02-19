@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--csv_path', type=str, default='data/test.csv')
 parser.add_argument('--results_path', type=str, default='results')
 parser.add_argument('--classifier_path', type=str, default='experiments/classification')
+parser.add_argument('--max_tokens', type=int, default=None)
 parser.add_argument('--sample', type=int, default=None)
 
 
@@ -38,7 +39,8 @@ if __name__ == '__main__':
     load_weights(class_model, Path(args.classifier_path) / 'best.th')
 
     predictor = TextClassifierPredictor(class_model, class_reader)
-    attacker = HotFlipFixed(predictor)
+    max_tokens = args.max_tokens or class_vocab.get_vocab_size('tokens')
+    attacker = HotFlipFixed(predictor, max_tokens=max_tokens)
     attacker.initialize()
 
     data = pd.read_csv(args.csv_path)
