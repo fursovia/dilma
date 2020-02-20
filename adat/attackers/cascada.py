@@ -203,7 +203,7 @@ class Cascada(Attacker):
 
         # We need to calculate probability one again
         with torch.no_grad():
-            classifier_output = self.predict_prob_from_state(state_adversarial)
+            # classifier_output = self.predict_prob_from_state(state_adversarial)
             generated_sequences = self.generate_sequence_from_state(state_adversarial.copy())
 
         curr_outputs = list()
