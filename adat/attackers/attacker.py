@@ -36,6 +36,23 @@ def find_best_output(outputs: List[AttackerOutput], initial_label: int) -> Attac
     return best_output
 
 
+def find_best_output(outputs: List[AttackerOutput], initial_label: int, wer_max: int = 3) -> AttackerOutput:
+    outputs_new = [output for output in outputs if output.wer <= wer_max]
+    outputs = outputs_new if outputs_new else outputs
+    changed_label_outputs = []
+    for output in outputs:
+        if output.adversarial_label != initial_label:
+            changed_label_outputs.append(output)
+
+    if changed_label_outputs:
+        sorted_outputs = sorted(changed_label_outputs, key=lambda x: x.prob_diff, reverse=True)
+        best_output = min(sorted_outputs, key=lambda x: x.wer)
+    else:
+        best_output = max(outputs, key=lambda x: x.prob_diff)
+
+    return best_output
+
+
 class Attacker(ABC):
     def __init__(self, device: int = -1) -> None:
         self.device = device

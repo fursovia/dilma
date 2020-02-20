@@ -32,22 +32,6 @@ poetry shell
 3. `sequences` is a `string`, where each event is separated by a space.
 4. `labels` is an `int`.
 
-### [Prediction of client gender on card transactions](https://www.kaggle.com/c/python-and-analyze-data-final-project/data)
-
-Predict a gender of a client based on his/her transactions.
-
-Check [this](https://github.com/fursovia/adversarial_attacks/blob/master/notebooks/kaggle_dataset_preparation.ipynb)
-notebook to see how the dataset was collected.
-
-### [Ai Academy Competition](https://onti.ai-academy.ru/competition)
-
-Predict an age of a client based on his/her transactions.
-
-### Insurance dataset by Martin
-
-TODO
-
-
 
 ## Usage
 
