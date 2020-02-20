@@ -144,3 +144,24 @@ class LevenshteinReader(DatasetReader):
             )
 
         return Instance(fields)
+
+
+class LanguageModelingReader(DatasetReader):
+    def __init__(self, lazy: bool = False):
+        super().__init__(lazy)
+        self._tokenizer = WhitespaceTokenizer()
+
+    def _read(self, file_path):
+        with open(cached_path(file_path), "r") as data_file:
+            tsv_in = csv.reader(data_file, delimiter=',')
+            next(tsv_in, None)
+            for row in tsv_in:
+                yield self.text_to_instance(sequence=row[0])
+
+    def text_to_instance(self, sequence: str) -> Instance:
+        fields: Dict[str, Field] = dict()
+        fields["source"] = TextField(
+            self._tokenizer.tokenize(sequence),
+            {"tokens": _get_default_indexer()}
+        )
+        return Instance(fields)
