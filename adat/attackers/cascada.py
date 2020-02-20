@@ -1,12 +1,13 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
+from functools import lru_cache
 
 import torch
 from allennlp.data.vocabulary import Vocabulary
 
 from adat.models import MaskedCopyNet, Classifier, DeepLevenshtein
-from adat.dataset import CopyNetReader, IDENTITY_TOKEN
+from adat.dataset import CopyNetReader, IDENTITY_TOKEN, ClassificationReader
 from adat.attackers.attacker import Attacker, AttackerOutput, find_best_output
-from adat.utils import calculate_wer
+from adat.utils import calculate_wer, calculate_normalized_wer
 
 
 BASIC_MASKER = [IDENTITY_TOKEN]
@@ -17,7 +18,9 @@ class Cascada(Attacker):
             self,
             vocab: Vocabulary,
             reader: CopyNetReader,
+            class_reader: ClassificationReader,
             classification_model: Classifier,
+            classification_model_basic: Classifier,
             masked_copynet: MaskedCopyNet,
             deep_levenshtein_model: DeepLevenshtein,
             levenshtein_weight: float = 0.1,
@@ -30,17 +33,21 @@ class Cascada(Attacker):
         super().__init__(device=device)
         self.vocab = vocab
         self.reader = reader
+        self.classification_reader = class_reader
         self.classification_model = classification_model
+        self.classification_model_basic = classification_model_basic
         self.masked_copynet = masked_copynet
         self.deep_levenshtein_model = deep_levenshtein_model
         if self.device >= 0 and torch.cuda.is_available():
             self.classification_model.cuda(self.device)
             self.masked_copynet.cuda(self.device)
             self.deep_levenshtein_model.cuda(self.device)
+            self.classification_model_basic.cuda(self.device)
         else:
             self.classification_model.cpu()
             self.masked_copynet.cpu()
             self.deep_levenshtein_model.cpu()
+            self.classification_model_basic.cpu()
 
         self.num_labels = num_labels
         self.levenshtein_weight = levenshtein_weight
@@ -49,6 +56,33 @@ class Cascada(Attacker):
         self.num_updates = num_updates
 
         self.initial_state = None
+        self.initial_prob_from_seq = None
+
+    @lru_cache(maxsize=1000)
+    def predict_prob_and_label(self, sequence: str) -> Tuple[float, int]:
+        assert self.label_to_attack is not None, 'You must run `.set_label_to_attack()` first.'
+        # logits, probs, label
+        with torch.no_grad():
+            predictions = self.classification_model_basic.forward_on_instance(
+                self.classification_reader.text_to_instance(sequence)
+            )
+            prob = predictions['probs'][self.label_to_attack]
+            label = predictions['label']
+            return float(prob), int(label)
+
+    @lru_cache(maxsize=1000)
+    def get_output(self, generated_sequence: str) -> AttackerOutput:
+        new_prob, new_label = self.predict_prob_and_label(generated_sequence)
+        new_wer = calculate_wer(self.initial_sequence, generated_sequence)
+        prob_diff = self.initial_prob_from_seq - new_prob
+        return AttackerOutput(
+            sequence=self.initial_sequence,
+            label=self.label_to_attack,
+            adversarial_sequence=generated_sequence,
+            adversarial_label=new_label,
+            wer=new_wer,
+            prob_diff=prob_diff
+        )
 
     def generate_sequence_from_state(self, state: Dict[str, torch.Tensor]) -> List[str]:
         state = self.masked_copynet.init_decoder_state(state)
@@ -109,10 +143,13 @@ class Cascada(Attacker):
             )
             self.current_state = self.initial_state.copy()
             self.initial_prob = self.predict_prob_from_state(self.initial_state)['probs']
+            generated_sequences = self.generate_sequence_from_state(self.initial_state.copy())
+            self.initial_prob_from_seq = self.predict_prob_and_label(generated_sequences[0])[0]
 
     def empty_history(self) -> None:
         super().empty_history()
         self.initial_state = None
+        self.initial_prob_from_seq = None
 
     def _calculate_loss(self,
                         adversarial_probs: torch.Tensor,
@@ -172,21 +209,23 @@ class Cascada(Attacker):
         curr_outputs = list()
         # we generated `beam_size` adversarial examples
         for generated_seq in generated_sequences:
+
             # sometimes len(generated_seq) = 0
             if generated_seq:
-                curr_outputs.append(
-                    AttackerOutput(
-                        sequence=self.initial_sequence,
-                        label=self.label_to_attack,
-                        adversarial_sequence=generated_seq,
-                        adversarial_label=int(classifier_output['label'][0]),
-                        wer=calculate_wer(self.initial_sequence, generated_seq),
-                        prob_diff=(
-                                self.initial_prob[0][self.label_to_attack] -
-                                classifier_output['probs'][0][self.label_to_attack]
-                        ).item()
-                    )
-                )
+                curr_outputs.append(self.get_output(generated_seq))
+                # curr_outputs.append(
+                #     AttackerOutput(
+                #         sequence=self.initial_sequence,
+                #         label=self.label_to_attack,
+                #         adversarial_sequence=generated_seq,
+                #         adversarial_label=int(classifier_output['label'][0]),
+                #         wer=calculate_wer(self.initial_sequence, generated_seq),
+                #         prob_diff=(
+                #                 self.initial_prob[0][self.label_to_attack] -
+                #                 classifier_output['probs'][0][self.label_to_attack]
+                #         ).item()
+                #     )
+                # )
 
         if curr_outputs:
             for _, val in state_adversarial.items():
