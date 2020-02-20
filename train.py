@@ -15,6 +15,7 @@ from adat.dataset import (
     ClassificationReader,
     CopyNetReader,
     LevenshteinReader,
+    LanguageModelingReader,
     END_SYMBOL,
     START_SYMBOL
 )
@@ -60,6 +61,9 @@ if __name__ == '__main__':
     elif args.task in [Task.DEEP_LEVENSHTEIN, Task.DEEP_LEVENSHTEIN_COPYNET, Task.DEEP_LEVENSHTEIN_WITH_ATTENTION]:
         reader = LevenshteinReader()
         sorting_keys = [('sequence_a', 'num_tokens'), ('sequence_b', 'num_tokens')]
+    elif args.task == Task.LM:
+        reader = LanguageModelingReader()
+        sorting_keys = [('source', 'num_tokens')]
     else:
         raise NotImplementedError(f'{args.task} -- no such task')
 

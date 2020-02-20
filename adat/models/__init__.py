@@ -21,6 +21,7 @@ from .deep_levenshtein import (
     get_deep_levenshtein_attention,
     get_deep_levenshtein_copynet
 )
+from .language_model import get_lm
 
 
 class Task(str, Enum):
@@ -32,6 +33,7 @@ class Task(str, Enum):
     DEEP_LEVENSHTEIN = 'deep_levenshtein'
     DEEP_LEVENSHTEIN_WITH_ATTENTION = 'deep_levenshtein_with_attention'
     DEEP_LEVENSHTEIN_COPYNET = 'deep_levenshtein_copynet'
+    LM = 'lm'
 
 
 def get_copynet_by_name(
@@ -109,6 +111,8 @@ def get_model_by_name(
         model = get_deep_levenshtein_by_name(task, vocab=vocab, copynet=copynet)
     elif 'masked' in task:
         model = get_copynet_by_name(task, vocab=vocab, beam_size=beam_size, max_decoding_steps=max_decoding_steps)
+    elif 'lm' == task:
+        model = get_lm(vocab)
     else:
         raise NotImplementedError
     return model

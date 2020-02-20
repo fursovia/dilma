@@ -4,13 +4,14 @@ import json
 from typing import List, Dict, Any
 
 import torch
+import numpy as np
 from allennlp.models import Model
-from allennlp.data.dataset_readers import DatasetReader
-from allennlp.data.vocabulary import Vocabulary
-from allennlp.data.iterators import BasicIterator
-from allennlp.training.metrics import Perplexity
+from allennlp.models import LanguageModel
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import Levenshtein as lvs
+
+
+from adat.dataset import LanguageModelingReader
 
 
 def load_weights(model: Model, path: str, location: str = 'cpu') -> None:
@@ -27,20 +28,13 @@ def read_logs(results_path: str) -> List[Dict[str, Any]]:
     return results
 
 
-def calculate_perplexity(texts: List[str], model: Model, reader: DatasetReader, vocab: Vocabulary) -> float:
-    iterator = BasicIterator(batch_size=128)
-    iterator.index_with(vocab)
-
-    text_instances = [reader.text_to_instance(t) for t in texts]
-
-    perplexity = Perplexity()
-
-    for i, x in enumerate(iterator(text_instances, num_epochs=1)):
-        with torch.no_grad():
-            average_loss = model(**x)['loss']
-            perplexity(average_loss)
-
-    return perplexity.get_metric()
+def calculate_perplexity(sequences: List[str], model: LanguageModel, reader: LanguageModelingReader) -> List[float]:
+    perplexities = []
+    for sequence in sequences:
+        instance = reader.text_to_instance(sequence)
+        perplexity = np.exp(model.forward_on_instance(instance)['loss'])
+        perplexities.append(float(perplexity))
+    return perplexities
 
 
 @functools.lru_cache(maxsize=500)
