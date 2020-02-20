@@ -21,9 +21,25 @@ python train.py --task classification_copynet --model_dir experiments/ai_academy
 python run_cascada.py --csv_path data/ai_academy_data_mini/test.csv --results_path results/ai_academy_data_mini/cascada --classifier_path experiments/ai_academy_data_mini/classification_copynet --levenshtein_path experiments/ai_academy_data_mini/deep_levenshtein_copynet --copynet_path experiments/ai_academy_data_mini/nonmasked_copynet_with_attention --beam_size 3 --cuda 0 --sample 100
 
 
+python run_cascada.py     --csv_path data/insurance/test.csv     --results_path results/insurance/cascada    --classifier_path experiments/insurance/classification_copynet     --levenshtein_path experiments/insurance/deep_levenshtein_copynet     --copynet_path experiments/insurance/nonmasked_copynet_with_attention     --levenshtein_weight 1    --beam_size      --max_steps 5    --cuda 0     --num_updates 5     --learning_rate 1     --sample 100
+
+
+-------------------------------------------------------
+
+python run_cascada.py     --csv_path data/ag_news/test.csv     --results_path results/ag_news/cascada_masked    --classifier_path experiments/ag_news/classifier_basic  --classifier_copynet_path experiments/ag_news/classifier_nonmasked_copynet_with_attention   --levenshtein_path experiments/ag_news/deep_levenshtein_nonmasked_copynet_with_attention     --copynet_path experiments/ag_news/nonmasked_copynet_with_attention     --levenshtein_weight 1    --beam_size 30     --max_steps 30    --cuda 0     --num_updates 5     --learning_rate 1     --sample 100  
 
 
 
+
+python run_cascada.py     --csv_path data/ag_news/test.csv     --results_path results/ag_news/cascada_masked    --classifier_path experiments/ag_news/classifier_basic  --classifier_copynet_path experiments/ag_news/classifier_masked_copynet_with_attention   --levenshtein_path experiments/ag_news/deep_levenshtein_masked_copynet_with_attention     --copynet_path experiments/ag_news/masked_copynet_with_attention     --levenshtein_weight 1    --beam_size 30     --max_steps 30    --cuda 0     --num_updates 5     --learning_rate 1     --sample 100   
+
+python run_cascada.py     --csv_path data/ag_news/test.csv     --results_path results/ag_news/cascada_masked    --classifier_path experiments/ag_news/classifier_basic  --classifier_copynet_path experiments/ag_news/classifier_masked_copynet_with_attention   --levenshtein_path experiments/ag_news/deep_levenshtein_masked_copynet_with_attention     --copynet_path experiments/ag_news/masked_copynet_with_attention     --levenshtein_weight 1    --beam_size 30     --max_steps 30    --cuda 0     --num_updates 5     --learning_rate 1     --sample 100   --maskers AddMasker
+
+python run_cascada.py     --csv_path data/ag_news/test.csv     --results_path results/ag_news/cascada_masked    --classifier_path experiments/ag_news/classifier_basic  --classifier_copynet_path experiments/ag_news/classifier_masked_copynet_with_attention   --levenshtein_path experiments/ag_news/deep_levenshtein_masked_copynet_with_attention     --copynet_path experiments/ag_news/masked_copynet_with_attention     --levenshtein_weight 1    --beam_size 30     --max_steps 30    --cuda 0     --num_updates 5     --learning_rate 1     --sample 100   --maskers RemoveMasker
+
+python run_cascada.py     --csv_path data/ag_news/test.csv     --results_path results/ag_news/cascada_masked    --classifier_path experiments/ag_news/classifier_basic  --classifier_copynet_path experiments/ag_news/classifier_masked_copynet_with_attention   --levenshtein_path experiments/ag_news/deep_levenshtein_masked_copynet_with_attention     --copynet_path experiments/ag_news/masked_copynet_with_attention     --levenshtein_weight 1    --beam_size 30     --max_steps 30    --cuda 0     --num_updates 5     --learning_rate 1     --sample 100   --maskers ReplaceMasker
+
+python run_cascada.py     --csv_path data/ag_news/test.csv     --results_path results/ag_news/cascada_masked    --classifier_path experiments/ag_news/classifier_basic  --classifier_copynet_path experiments/ag_news/classifier_masked_copynet_with_attention   --levenshtein_path experiments/ag_news/deep_levenshtein_masked_copynet_with_attention     --copynet_path experiments/ag_news/masked_copynet_with_attention     --levenshtein_weight 1    --beam_size 30     --max_steps 30    --cuda 0     --num_updates 5     --learning_rate 1     --sample 100   --maskers TwoSwapMasker
 
 -----------------------------------------------------------------
 
@@ -118,6 +134,24 @@ BASE="results/ag_news_results/mcmc" && FOLDER="$(ls ${BASE} | sort -z | tail -n 
 BASE="results/ag_news_results/random" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
 
 BASE="results/ag_news_results/hotflip" && FOLDER="$(ls ${BASE} | sort -z | tail -n 2)" && python eval.py -mp results/ag_news/logit_tfidf.model -arp ${BASE}/${FOLDER}/results.csv -erp ${BASE}/${FOLDER}/eval_metric.json
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

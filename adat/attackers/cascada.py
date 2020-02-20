@@ -100,12 +100,12 @@ class Cascada(Attacker):
         logits = self.classification_model._classification_layer(encdoded_class)
         probs = torch.nn.functional.softmax(logits, dim=-1) 
         output_dict = {"logits": logits, "probs": probs}
-        w = torch.tensor([0.5, 0.01])
-        w = w/w.sum()
-        output_dict2 = {"logits": logits, "probs": probs * w.to(self.device)}
-        output_dict2 = self.classification_model.decode(output_dict2)
-        output_dict['label'] = output_dict2['label']
-        #output_dict = self.classification_model.decode(output_dict)
+        # w = torch.tensor([0.5, 0.01])
+        # w = w/w.sum()
+        # output_dict2 = {"logits": logits, "probs": probs * w.to(self.device)}
+        # output_dict2 = self.classification_model.decode(output_dict2)
+        # output_dict['label'] = output_dict2['label']
+        output_dict = self.classification_model.decode(output_dict)
         return output_dict
 
     def _get_embedded_input(self, state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
