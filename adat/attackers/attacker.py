@@ -36,7 +36,7 @@ def find_best_output(outputs: List[AttackerOutput], initial_label: int) -> Attac
     return best_output
 
 
-def find_best_output(outputs: List[AttackerOutput], initial_label: int, wer_max: int = 3) -> AttackerOutput:
+def find_best_output(outputs: List[AttackerOutput], initial_label: int, wer_max: int = 5) -> AttackerOutput:
     outputs_new = [output for output in outputs if output.wer <= wer_max]
     outputs = outputs_new if outputs_new else outputs
     changed_label_outputs = []
