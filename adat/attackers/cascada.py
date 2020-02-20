@@ -203,7 +203,6 @@ class Cascada(Attacker):
 
         # We need to calculate probability one again
         with torch.no_grad():
-            # classifier_output = self.predict_prob_from_state(state_adversarial)
             generated_sequences = self.generate_sequence_from_state(state_adversarial.copy())
 
         curr_outputs = list()
@@ -213,19 +212,6 @@ class Cascada(Attacker):
             # sometimes len(generated_seq) = 0
             if generated_seq:
                 curr_outputs.append(self.get_output(generated_seq))
-                # curr_outputs.append(
-                #     AttackerOutput(
-                #         sequence=self.initial_sequence,
-                #         label=self.label_to_attack,
-                #         adversarial_sequence=generated_seq,
-                #         adversarial_label=int(classifier_output['label'][0]),
-                #         wer=calculate_wer(self.initial_sequence, generated_seq),
-                #         prob_diff=(
-                #                 self.initial_prob[0][self.label_to_attack] -
-                #                 classifier_output['probs'][0][self.label_to_attack]
-                #         ).item()
-                #     )
-                # )
 
         if curr_outputs:
             for _, val in state_adversarial.items():
