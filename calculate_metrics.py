@@ -1,18 +1,18 @@
 import argparse
-from pathlib import Path
 import json
-
-import numpy as np
-import pandas as pd
 import joblib
-from sklearn.metrics import roc_auc_score
+import pandas as pd
+import numpy as np
 
 from adat.utils import calculate_wer
+from adat.models.classification_model import LogisticRegressionOnTfIdf
+from sklearn.metrics import roc_auc_score
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--model_path', type=str, help='path to text classifier')
-parser.add_argument('--results_dir', type=str, help='path adversarial attack results csv file')
+parser.add_argument('-mp', '--model_path', type=str, help='path to text classifier')
+parser.add_argument('-arp', '--attack_results_path', type=str, help='path adversarial attack results csv file')
+parser.add_argument('-erp', '--eval_results_path', type=str, help='path to json file with results of evaluation')
 
 
 def calculate_nad(labels, probs_orig, probs_gen, seqs_orig, seqs_gen):
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     model = model_with_weights['model']
     w = model_with_weights['weights']
 
-    df = pd.read_csv(Path(args.results_dir) / 'results.csv')
+    df = pd.read_csv(args.attack_results_path)
     df.rename(columns={'generated_sequence': 'adversarial_sequence'}, inplace=True)
 
     metrics = calculate_metrics(model,
@@ -75,4 +75,4 @@ if __name__ == '__main__':
                                 df['adversarial_sequence'].values)
 
     print(metrics)
-    json.dump(metrics, open(Path(args.results_dir) / 'final_metrics.json', 'w'))
+    json.dump(metrics, open(args.eval_results_path, 'w'))

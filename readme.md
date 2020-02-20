@@ -51,7 +51,45 @@ What you'll need for CASCADA
 * Deep Levenshtein trained on hidden representations
 
 
+### Models training
+
 ```bash
 # bash bin/train_models_for_cascada.sh {DATA_DIR} {GPU_ID} {NUM_CLASSES} {COPYNET_TYPE} {EXP_DIR}
 bash bin/train_models_for_cascada.sh data/my_data 0 2 masked_copynet_with_attention experiments/my_experiment
+```
+
+```bash
+bash bin/train_logreg.sh data/my_data
+```
+
+
+### Adversarial attacks
+
+```bash
+# usage
+# sh bin/run_attacks.sh {DATA_DIR} {GPU_ID}
+# {COPYNET_DIR} {CLASSIFIER_COPYNET_DIR} {DEEP_LEVENSHTEIN_COPYNET_DIR}
+# {CLASSIFIER_BASIC_DIR}
+# {BEAM_SIZE} {SAMPLE}
+sh bin/run_attakcs.sh \
+    data/my_data \
+    3 \
+    experiments/masked_copynet_with_attention experiments \
+    experiments/classifier_masked_copynet_with_attention \
+    experiments/deep_levenshtein_masked_copynet_with_attention \
+    experiments/classifier_basic \
+    3 \
+    5000
+```
+
+
+### Evaluation
+
+Run
+
+```bash
+python calculate_metrics.py \
+    --model_path PATH_TO_LOGREG \
+    --attack_results_path PATH_TO_RESULTS \
+    --eval_results_path WHERE_TO_SAVE_METRICS
 ```
