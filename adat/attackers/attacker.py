@@ -15,6 +15,20 @@ class AttackerOutput:
     acceptance_probability: float = None
 
 
+# def find_best_output(outputs: List[AttackerOutput], initial_label: int) -> AttackerOutput:
+#     changed_label_outputs = []
+#     for output in outputs:
+#         if output.adversarial_label != initial_label:
+#             changed_label_outputs.append(output)
+
+#     if changed_label_outputs:
+#         sorted_outputs = sorted(changed_label_outputs, key=lambda x: x.prob_diff, reverse=True)
+#         best_output = min(sorted_outputs, key=lambda x: x.wer)
+#     else:
+#         best_output = max(outputs, key=lambda x: x.prob_diff)
+
+#     return best_output
+
 def find_best_output(outputs: List[AttackerOutput], initial_label: int) -> AttackerOutput:
     changed_label_outputs = []
     for output in outputs:
@@ -22,13 +36,16 @@ def find_best_output(outputs: List[AttackerOutput], initial_label: int) -> Attac
             changed_label_outputs.append(output)
 
     if changed_label_outputs:
+#         bounded_outputs = [output for output in changed_label_outputs if output.wer <= 3]
+#         changed_label_outputs = bounded_outputs if len(bounded_outputs) > 0 else changed_label_outputs
         sorted_outputs = sorted(changed_label_outputs, key=lambda x: x.prob_diff, reverse=True)
         best_output = min(sorted_outputs, key=lambda x: x.wer)
     else:
-        best_output = max(outputs, key=lambda x: x.prob_diff)
+        bounded_outputs = [output for output in outputs if output.wer <= 3]
+        bounded_outputs = bounded_outputs if len(bounded_outputs) > 0 else outputs
+        best_output = max(bounded_outputs, key=lambda x: x.prob_diff)
 
     return best_output
-
 
 class Attacker(ABC):
     def __init__(self) -> None:

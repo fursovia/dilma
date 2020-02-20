@@ -65,9 +65,14 @@ class Cascada(Attacker):
             mask=state['source_mask']
         )
         logits = self.classification_model._classification_layer(encdoded_class)
-        probs = torch.nn.functional.softmax(logits, dim=-1)
+        probs = torch.nn.functional.softmax(logits, dim=-1) 
         output_dict = {"logits": logits, "probs": probs}
-        output_dict = self.classification_model.decode(output_dict)
+        w = torch.tensor([0.5, 0.01])
+        w = w/w.sum()
+        output_dict2 = {"logits": logits, "probs": probs * w.to(self.device)}
+        output_dict2 = self.classification_model.decode(output_dict2)
+        output_dict['label'] = output_dict2['label']
+        #output_dict = self.classification_model.decode(output_dict)
         return output_dict
 
     def _get_embedded_input(self, state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
@@ -128,12 +133,14 @@ class Cascada(Attacker):
                         adversarial_probs: torch.Tensor,
                         original_probs: torch.Tensor,
                         similarity: torch.Tensor) -> torch.Tensor:
+        #coef = 1 if self.label_to_attack == 1 else 10
+        coef = 1
         loss = torch.add(
             torch.sub(
                 1,
-                torch.sub(
-                    original_probs[0][self.label_to_attack],
-                    adversarial_probs[0][self.label_to_attack]
+                coef * torch.sub(
+                            original_probs[0][self.label_to_attack],
+                            adversarial_probs[0][self.label_to_attack]
                 )
             ),
             self.levenshtein_weight * torch.sub(1, similarity[0])
