@@ -28,6 +28,7 @@ parser.add_argument('--std', type=float, default=0.01)
 parser.add_argument('--sigma_class', type=float, default=1.0)
 parser.add_argument('--sigma_wer', type=float, default=0.5)
 parser.add_argument('--maskers', type=str, default=IDENTITY_TOKEN, help='string with comma-separated values')
+parser.add_argument('--space', type=str, default='decoder_hidden')
 parser.add_argument('--early_stopping', action='store_true')
 parser.add_argument('--sample', type=int, default=None)
 
@@ -54,6 +55,7 @@ if __name__ == '__main__':
             classification_reader=class_reader,
             generation_model=copynet_model,
             generation_reader=copynet_reader,
+            space=args.space,
             device=args.cuda
         )
     else:
@@ -65,6 +67,7 @@ if __name__ == '__main__':
             generation_reader=copynet_reader,
             sigma_class=args.sigma_class,
             sigma_wer=args.sigma_wer,
+            space=args.space,
             device=args.cuda
         )
 

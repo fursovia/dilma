@@ -2,8 +2,6 @@ from typing import List, Dict, Optional
 
 import torch
 from allennlp.data.vocabulary import Vocabulary
-from allennlp.data.dataset import Batch
-from allennlp.nn.util import move_to_device
 
 from adat.models import MaskedCopyNet, Classifier, DeepLevenshtein
 from adat.dataset import CopyNetReader, IDENTITY_TOKEN
@@ -23,18 +21,18 @@ class Cascada(Attacker):
             masked_copynet: MaskedCopyNet,
             deep_levenshtein_model: DeepLevenshtein,
             levenshtein_weight: float = 0.1,
+            prob_diff_weight: float = 1.0,
             learning_rate: float = 0.5,
             num_updates: int = 2,
             num_labels: int = 2,
             device: int = -1
     ) -> None:
-        super().__init__()
+        super().__init__(device=device)
         self.vocab = vocab
         self.reader = reader
         self.classification_model = classification_model
         self.masked_copynet = masked_copynet
         self.deep_levenshtein_model = deep_levenshtein_model
-        self.device = device
         if self.device >= 0 and torch.cuda.is_available():
             self.classification_model.cuda(self.device)
             self.masked_copynet.cuda(self.device)
@@ -46,6 +44,7 @@ class Cascada(Attacker):
 
         self.num_labels = num_labels
         self.levenshtein_weight = levenshtein_weight
+        self.prob_diff_weight = prob_diff_weight
         self.learning_rate = learning_rate
         self.num_updates = num_updates
 
@@ -100,30 +99,21 @@ class Cascada(Attacker):
         )
         return similarity
 
-    def _sequence2batch(
-            self,
-            seq: str,
-            mask_tokens: Optional[List[str]] = None
-    ) -> Dict[str, Dict[str, torch.LongTensor]]:
-        instance = self.reader.text_to_instance(seq, maskers_applied=mask_tokens)
-        batch = Batch([instance])
-        batch.index_instances(self.vocab)
-        return move_to_device(batch.as_tensor_dict(), self.device)  # tokens, mask_tokens
-
-    def set_label_to_attack(self, label: int) -> None:
-        self.label_to_attack = label
-
     def set_input(self, sequence: str, mask_tokens: Optional[List[str]] = None) -> None:
         self.initial_sequence = sequence
-        inputs = self._sequence2batch(sequence, mask_tokens)
-        self.initial_state = self.masked_copynet.encode(
-            source_tokens=inputs['tokens'],
-            mask_tokens=inputs['mask_tokens']
+        inputs = self._sequence2batch(
+            sequence=sequence,
+            reader=self.reader,
+            vocab=self.vocab,
+            mask_tokens=mask_tokens
         )
-        self.current_state = self.initial_state.copy()
-
-        output = self.predict_prob_from_state(self.initial_state)
-        self.initial_prob = output['probs']
+        with torch.no_grad():
+            self.initial_state = self.masked_copynet.encode(
+                source_tokens=inputs['tokens'],
+                mask_tokens=inputs['mask_tokens']
+            )
+            self.current_state = self.initial_state.copy()
+            self.initial_prob = self.predict_prob_from_state(self.initial_state)['probs']
 
     def empty_history(self) -> None:
         super().empty_history()
@@ -136,7 +126,7 @@ class Cascada(Attacker):
         #coef = 1 if self.label_to_attack == 1 else 10
         coef = 1
         loss = torch.add(
-            torch.sub(
+            self.prob_diff_weight * torch.sub(
                 1,
                 coef * torch.sub(
                             original_probs[0][self.label_to_attack],
