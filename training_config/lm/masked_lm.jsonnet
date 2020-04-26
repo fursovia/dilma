@@ -8,7 +8,7 @@
             "end_tokens": ["<END>"]
         }
     }
-    }
+    },
     "tokenizer": {
         "type": "just_spaces"
     },
