@@ -26,8 +26,11 @@
   "data_loader": {
       "batch_size" : 32
   },
+  "distributed": {
+    "cuda_devices": [2, 3]
+  },
   "trainer": {
-    "num_epochs": 1,
-    "patience": 1
+    "num_epochs": 50,
+    "patience": 3
   }
 }

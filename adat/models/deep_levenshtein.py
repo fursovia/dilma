@@ -51,5 +51,5 @@ class DeepLevenshtein(Model):
         output_dict = {"distance": approx_distance}
 
         if distance is not None:
-            output_dict["loss"] = self._loss(approx_distance, distance.view(-1))
+            output_dict["loss"] = self._loss(approx_distance.view(-1), distance.view(-1))
         return output_dict

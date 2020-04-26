@@ -42,7 +42,7 @@ class MaskedLanguageModel(Model):
     ) -> Dict[str, torch.Tensor]:
         mask = get_text_field_mask(tokens)
 
-        if self.training and self._tokens_masker is not None:
+        if self._tokens_masker is not None:
             tokens, targets = self._tokens_masker.mask_tokens(tokens)
         else:
             # TODO: pad-tokens in the loss
