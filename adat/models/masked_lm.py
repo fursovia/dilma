@@ -7,7 +7,6 @@ from allennlp.models.model import Model
 from allennlp.modules import Seq2SeqEncoder, TextFieldEmbedder
 from allennlp.training.metrics import Perplexity
 from allennlp.nn.util import get_text_field_mask
-
 from allennlp_models.lm.language_model_heads import LinearLanguageModelHead
 
 from adat.tokens_masker import TokensMasker
@@ -46,6 +45,7 @@ class MaskedLanguageModel(Model):
         if self.training and self._tokens_masker is not None:
             tokens, targets = self._tokens_masker.mask_tokens(tokens)
         else:
+            # TODO: pad-tokens in the loss
             targets = tokens
 
         embeddings = self._text_field_embedder(tokens)

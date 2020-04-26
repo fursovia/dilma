@@ -1,53 +1,52 @@
-import csv
 from typing import Optional, Dict
+import json
 
 import numpy as np
 from allennlp.common.file_utils import cached_path
 from allennlp.data import DatasetReader, Instance, Field
 from allennlp.data.fields import TextField, ArrayField
 from allennlp.data.tokenizers import WhitespaceTokenizer
+from allennlp.data.token_indexers import SingleIdTokenIndexer
 
 
-class LevenshteinReader(DatasetReader):
+@DatasetReader.register(name="deep_levenshtein")
+class DeepLevenshteinReader(DatasetReader):
     def __init__(self, lazy: bool = False):
         super().__init__(lazy)
         self._tokenizer = WhitespaceTokenizer()
 
     def _read(self, file_path):
         with open(cached_path(file_path), "r") as data_file:
-            tsv_in = csv.reader(data_file, delimiter=',')
-            next(tsv_in, None)
-            for row in tsv_in:
-                if len(row) == 3:
-                    yield self.text_to_instance(sequence_a=row[0], sequence_b=row[1], similarity=row[2])
-                else:
-                    yield self.text_to_instance(sequence_a=row[0], sequence_b=row[1])
+            for line in data_file.readlines():
+                if not line:
+                    continue
+                items = json.loads(line)
+                seq_a = items["seq_a"]
+                seq_b = items["seq_b"]
+                dist = items.get("dist")
+                instance = self.text_to_instance(sequence_a=seq_a, sequence_b=seq_b, distance=dist)
+                yield instance
 
     def text_to_instance(
         self,
         sequence_a: str,
         sequence_b: str,
-        similarity: Optional[float] = None
+        distance: Optional[float] = None
     ) -> Instance:
         fields: Dict[str, Field] = dict()
         fields["sequence_a"] = TextField(
             self._tokenizer.tokenize(sequence_a),
-            {
-                "tokens": _get_default_indexer()
-            }
+            {"tokens": SingleIdTokenIndexer()}
         )
 
         fields["sequence_b"] = TextField(
             self._tokenizer.tokenize(sequence_b),
-            {
-                "tokens": _get_default_indexer()
-            }
+            {"tokens": SingleIdTokenIndexer()}
         )
 
-        if similarity is not None:
-            # TODO: fix this hack
-            fields["similarity"] = ArrayField(
-                array=np.array([similarity])
+        if distance is not None:
+            fields["distance"] = ArrayField(
+                array=np.array([distance])
             )
 
         return Instance(fields)
