@@ -37,7 +37,9 @@
         "type": "pytorch_transformer",
         "input_dim": 100,
         "num_layers": 4,
-        "num_attention_heads": 4
+        "num_attention_heads": 4,
+        "positional_encoding": "embedding",
+        "positional_embedding_size": 64
      },
      "tokens_masker": {
         "type": "tokens_masker"

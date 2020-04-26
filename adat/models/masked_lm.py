@@ -38,7 +38,8 @@ class MaskedLanguageModel(Model):
 
     def forward(
         self,
-        tokens: TextFieldTensors
+        tokens: TextFieldTensors,
+        **kwargs
     ) -> Dict[str, torch.Tensor]:
         mask = get_text_field_mask(tokens)
 
