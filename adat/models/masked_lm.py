@@ -46,22 +46,24 @@ class MaskedLanguageModel(Model):
         if self.training and self._tokens_masker is not None:
             tokens, targets = self._tokens_masker.mask_tokens(tokens)
         else:
-            targets = None
+            targets = tokens
 
         embeddings = self._text_field_embedder(tokens)
         contextual_embeddings = self._seq2seq_encoder(embeddings, mask)
 
         logits = self._head(contextual_embeddings)
 
-        output_dict = {"contextual_embeddings": contextual_embeddings, "logits": logits}
-        if targets is not None:
-            output_dict["loss"] = self._loss(
-                logits.view(-1, self.vocab.get_vocab_size()),
-                # TODO: it is not always tokens-tokens
-                targets["tokens"]["tokens"].view(-1)
-            )
+        output_dict = {
+            "contextual_embeddings": contextual_embeddings,
+            "logits": logits
+        }
 
-            self._perplexity(output_dict["loss"])
+        output_dict["loss"] = self._loss(
+            logits.view(-1, self.vocab.get_vocab_size()),
+            # TODO: it is not always tokens-tokens
+            targets["tokens"]["tokens"].view(-1)
+        )
+        self._perplexity(output_dict["loss"])
         return output_dict
 
     def get_metrics(self, reset: bool = False):
