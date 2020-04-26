@@ -7,7 +7,6 @@
             "start_tokens": ["<START>"],
             "end_tokens": ["<END>"]
         }
-    }
     },
     "tokenizer": {
         "type": "just_spaces"
