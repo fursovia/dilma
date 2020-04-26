@@ -18,7 +18,7 @@
   "validation_data_path": "data/json_ins/test.json",
   "vocabulary": {
       "tokens_to_add": {
-          "tokens": ["@@MASK@@"]
+          "tokens": ["@@MASK@@", "<START>", "<END>"]
       },
   },
 
