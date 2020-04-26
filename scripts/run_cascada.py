@@ -9,7 +9,9 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 
 from adat.models import get_model_by_name
-from adat.dataset import CopyNetReader, ClassificationReader, IDENTITY_TOKEN
+from adat.dataset import IDENTITY_TOKEN
+from adat.datasets.classifier import ClassificationReader
+from adat.datasets.copynet import CopyNetReader
 from adat.attackers import AttackerOutput, Cascada
 from adat.utils import load_weights, get_args_from_path
 

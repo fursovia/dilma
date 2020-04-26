@@ -10,7 +10,7 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.common.util import dump_metrics
 from allennlp.predictors import TextClassifierPredictor
 
-from adat.dataset import ClassificationReader
+from adat.datasets.classifier import ClassificationReader
 from adat.attackers import HotFlipFixed, AttackerOutput
 from adat.models import get_classification_model
 from adat.utils import load_weights

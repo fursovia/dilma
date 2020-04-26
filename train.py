@@ -12,13 +12,13 @@ from allennlp.common.util import dump_metrics
 
 from adat.models import Task, get_model_by_name
 from adat.dataset import (
-    ClassificationReader,
-    CopyNetReader,
-    LevenshteinReader,
     LanguageModelingReader,
     END_SYMBOL,
     START_SYMBOL
 )
+from adat.datasets.classifier import ClassificationReader
+from adat.datasets.copynet import CopyNetReader
+from adat.datasets.deep_levenshtein import LevenshteinReader
 from adat.masker import get_default_masker
 from adat.utils import load_weights
 
