@@ -14,9 +14,17 @@ class TokensMasker(Registrable):
     # https://github.com/huggingface/transformers/blob/master/src/transformers/data/data_collator.py#L111
     skip_index = -100
 
-    def __init__(self, vocab: Vocabulary, mlm_probability: float = 0.15, namespace: str = "tokens") -> None:
+    def __init__(
+            self, vocab: Vocabulary,
+            mlm_probability: float = 0.95,
+            mask_probability: float = 0.3,
+            replace_probability: float = 0.1,
+            namespace: str = "tokens"
+    ) -> None:
         self.vocab = vocab
         self.mlm_probability = mlm_probability
+        self.mask_probability = mask_probability
+        self.replace_probability = replace_probability
         self.pad_idx = self.vocab.get_token_index(DEFAULT_PADDING_TOKEN, namespace)
         self.mask_idx = self.vocab.get_token_index(MASK_TOKEN, namespace)
         self.ovv_idx = self.vocab.get_token_index(DEFAULT_OOV_TOKEN, namespace)
@@ -41,18 +49,17 @@ class TokensMasker(Registrable):
 
                 # 80% of the time, we replace masked input tokens with mask_idx
                 indices_replaced = torch.bernoulli(
-                    torch.full(labels.shape, 0.8, device=tokens.device)
+                    torch.full(labels.shape, self.mask_probability, device=tokens.device)
                 ).bool() & masked_indices
                 tokens[indices_replaced] = self.mask_idx
 
                 # 10% of the time, we replace masked input tokens with random word
                 indices_random = torch.bernoulli(
-                    torch.full(labels.shape, 0.5, device=tokens.device)
+                    torch.full(labels.shape, self.replace_probability, device=tokens.device)
                 ).bool() & masked_indices & ~indices_replaced
                 random_words = torch.randint(self.vocab_size, labels.shape, dtype=torch.long, device=tokens.device)
                 tokens[indices_random] = random_words[indices_random]
 
-                # The rest of the time (10% of the time) we keep the masked input tokens unchanged
                 masked_inputs[text_field_name][key] = tokens
                 masked_targets[text_field_name][key] = labels
         return masked_inputs, masked_targets
