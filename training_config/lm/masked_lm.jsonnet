@@ -50,6 +50,7 @@
       "batch_size" : 32
   },
   "trainer": {
-    "num_epochs": 1
+    "num_epochs": 50,
+    "patience": 3
   }
 }
