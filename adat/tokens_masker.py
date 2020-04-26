@@ -32,26 +32,31 @@ class TokensMasker(Registrable):
             masked_targets[text_field_name] = dict()
             for key, tokens in text_field.items():
                 labels = tokens.clone()
-                probability_matrix = torch.full(labels.shape, self.mlm_probability)
+                probability_matrix = torch.full(labels.shape, self.mlm_probability, device=tokens.device)
 
                 padding_mask = labels.eq(self.pad_idx)
                 probability_matrix.masked_fill_(padding_mask, value=0.0)
-                masked_indices = torch.bernoulli(probability_matrix).bool()
+                masked_indices = torch.bernoulli(probability_matrix).bool().to(tokens.device)
                 labels[~masked_indices] = self.skip_index  # We only compute loss on masked tokens
 
                 # 80% of the time, we replace masked input tokens with mask_idx
-                indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
+                indices_replaced = torch.bernoulli(
+                    torch.full(labels.shape, 0.8, device=tokens.device)
+                ).bool() & masked_indices
                 tokens[indices_replaced] = self.mask_idx
 
                 # 10% of the time, we replace masked input tokens with random word
-                indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
-                random_words = torch.randint(self.vocab_size, labels.shape, dtype=torch.long)
+                indices_random = torch.bernoulli(
+                    torch.full(labels.shape, 0.5, device=tokens.device)
+                ).bool() & masked_indices & ~indices_replaced
+                random_words = torch.randint(self.vocab_size, labels.shape, dtype=torch.long, device=tokens.device)
                 tokens[indices_random] = random_words[indices_random]
 
                 # The rest of the time (10% of the time) we keep the masked input tokens unchanged
                 masked_inputs[text_field_name][key] = tokens
                 masked_targets[text_field_name][key] = labels
         return masked_inputs, masked_targets
+
 
 # We can't decorate `TokensMasker` with `TokensMasker.register()`, because `Model` hasn't been defined yet.  So we
 # put this down here.
