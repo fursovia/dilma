@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 from adat.utils import calculate_wer
-from adat.models.classification_model import LogisticRegressionOnTfIdf
+from adat.models.classifier import LogisticRegressionOnTfIdf
 from sklearn.metrics import roc_auc_score
 
 parser = argparse.ArgumentParser()

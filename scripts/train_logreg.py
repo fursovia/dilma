@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import roc_auc_score, f1_score
 
-from adat.models.classification_model import LogisticRegressionOnTfIdf
+from adat.models.classifier import LogisticRegressionOnTfIdf
 
 parser = argparse.ArgumentParser()
 

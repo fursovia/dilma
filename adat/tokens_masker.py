@@ -10,6 +10,7 @@ from allennlp.data import TextFieldTensors
 MASK_TOKEN = "@@MASK@@"
 
 
+# TODO: should take start/end/unknown tokens into account
 class TokensMasker(Registrable):
     # https://github.com/huggingface/transformers/blob/master/src/transformers/data/data_collator.py#L111
     skip_index = -100
