@@ -6,6 +6,11 @@
   "train_data_path": "data/json_ins_dl/train.json",
   "validation_data_path": "data/json_ins_dl/test.json",
 
+  "vocabulary": {
+     "type": "from_files",
+     "directory": "exp_lm/vocabulary"
+  },
+
   "model": {
     "type": "deep_levenshtein",
     "text_field_embedder": {
