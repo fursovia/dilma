@@ -1,14 +1,14 @@
 from typing import Dict, Union
 
 import torch
-from allennlp.models import BasicClassifier
+from allennlp.models import BasicClassifier, Model
 from allennlp.nn.util import get_text_field_mask
 from allennlp.data import TextFieldTensors
 
 from .deep_levenshtein import OneHot
 
 
-@BasicClassifier.register(name="basic_classifier_one_hot_support")
+@Model.register(name="basic_classifier_one_hot_support")
 class BasicClassifierOneHotSupport(BasicClassifier):
     def forward(  # type: ignore
         self, tokens: Union[TextFieldTensors, OneHot], label: torch.IntTensor = None
