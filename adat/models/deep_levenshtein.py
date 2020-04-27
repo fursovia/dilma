@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import torch
 from allennlp.data import Vocabulary
@@ -8,6 +8,14 @@ from allennlp.modules.seq2vec_encoders import Seq2VecEncoder
 from allennlp.data import TextFieldTensors
 from allennlp.modules.text_field_embedders import TextFieldEmbedder
 from allennlp.nn import util
+
+
+OneHot = torch.Tensor
+
+
+def get_onehot_mask(tensors: OneHot) -> torch.BoolTensor:
+    indexes = torch.argmax(tensors, dim=-1)
+    return torch.eq(indexes, 0).type(torch.bool)
 
 
 @Model.register(name="deep_levenshtein")
@@ -26,9 +34,15 @@ class DeepLevenshtein(Model):
         self.linear = torch.nn.Linear(self.seq2vec_encoder.get_output_dim() * 3, 1)
         self._loss = torch.nn.MSELoss()
 
-    def encode_sequence(self, sequence: TextFieldTensors) -> torch.Tensor:
-        embedded_sequence = self.text_field_embedder(sequence)
-        mask = util.get_text_field_mask(sequence).float()
+    def encode_sequence(self, sequence: Union[OneHot, TextFieldTensors]) -> torch.Tensor:
+
+        if isinstance(sequence, OneHot):
+            # TODO: sparse tensors support
+            embedded_sequence = torch.matmul(sequence, self.text_field_embedder._token_embedders["tokens"].weight)
+            mask = get_onehot_mask(sequence)
+        else:
+            embedded_sequence = self.text_field_embedder(sequence)
+            mask = util.get_text_field_mask(sequence).float()
         # It is needed if we pad the initial sequence (or truncate)
         mask = torch.nn.functional.pad(mask, pad=[0, embedded_sequence.size(1) - mask.size(1)])
         if self.seq2seq_encoder is not None:
@@ -38,8 +52,8 @@ class DeepLevenshtein(Model):
 
     def forward(
         self,
-        sequence_a: TextFieldTensors,
-        sequence_b: TextFieldTensors,
+        sequence_a: Union[OneHot, TextFieldTensors],
+        sequence_b: Union[OneHot, TextFieldTensors],
         distance: Optional[torch.Tensor] = None,
     ) -> Dict[str, torch.Tensor]:
         embedded_sequence_a = self.encode_sequence(sequence_a)
