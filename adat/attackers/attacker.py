@@ -7,7 +7,7 @@
 # from allennlp.nn.util import move_to_device
 # from allennlp.data.vocabulary import Vocabulary
 #
-# from adat.datasets.copynet import CopyNetReader
+# from adat.dataset_readers.copynet import CopyNetReader
 #
 #
 # @dataclass

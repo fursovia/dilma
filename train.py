@@ -16,9 +16,9 @@ from adat.dataset import (
     END_SYMBOL,
     START_SYMBOL
 )
-from adat.datasets.classifier import ClassificationReader
-from adat.datasets.copynet import CopyNetReader
-from adat.datasets.deep_levenshtein import LevenshteinReader
+from adat.dataset_readers.classifier import ClassificationReader
+from adat.dataset_readers.copynet import CopyNetReader
+from adat.dataset_readers.deep_levenshtein import LevenshteinReader
 from adat.masker import get_default_masker
 from adat.utils import load_weights
 

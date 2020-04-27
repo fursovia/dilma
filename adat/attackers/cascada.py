@@ -6,8 +6,8 @@
 #
 # # from adat.models import MaskedCopyNet, Classifier, DeepLevenshtein
 # # from adat.dataset import IDENTITY_TOKEN
-# from adat.datasets.classifier import ClassificationReader
-# from adat.datasets.copynet import CopyNetReader
+# from adat.dataset_readers.classifier import ClassificationReader
+# from adat.dataset_readers.copynet import CopyNetReader
 # from adat.attackers.attacker import Attacker, AttackerOutput, find_best_output
 # from adat.utils import calculate_wer, calculate_normalized_wer
 #

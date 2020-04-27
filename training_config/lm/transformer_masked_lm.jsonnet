@@ -1,5 +1,6 @@
 {
   "dataset_reader": {
+    // this is not a mistake
     "type": "text_classification_json",
     "token_indexers": {
         "tokens": {

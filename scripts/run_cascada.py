@@ -10,8 +10,8 @@ from allennlp.common.util import dump_metrics
 
 from adat.models import get_model_by_name
 from adat.dataset import IDENTITY_TOKEN
-from adat.datasets.classifier import ClassificationReader
-from adat.datasets.copynet import CopyNetReader
+from adat.dataset_readers.classifier import ClassificationReader
+from adat.dataset_readers.copynet import CopyNetReader
 from adat.attackers import AttackerOutput, Cascada
 from adat.utils import load_weights, get_args_from_path
 

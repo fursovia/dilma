@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "type": "deep_levenshtein",
+    "type": "text_classification_json",
     // DO NOT CHANGE token_indexers
     "token_indexers": {
         "tokens": {
@@ -15,8 +15,8 @@
     },
     "lazy": false
   },
-  "train_data_path": "data/json_ins_dl/train.json",
-  "validation_data_path": "data/json_ins_dl/test.json",
+  "train_data_path": "data/json_ins_class/train.json",
+  "validation_data_path": "data/json_ins_class/test.json",
 
   // Make sure you load vocab from LM
   "vocabulary": {
@@ -25,7 +25,7 @@
   },
 
   "model": {
-    "type": "deep_levenshtein",
+    "type": "basic_classifier",
     "text_field_embedder": {
         "token_embedders": {
             "tokens": {
