@@ -52,6 +52,7 @@ class MaskedLanguageModel(Model):
         embeddings = self._text_field_embedder(tokens)
         contextual_embeddings = self._seq2seq_encoder(embeddings, mask)
 
+        # take PAD tokens into account when decoding
         logits = self._head(contextual_embeddings)
 
         output_dict = {

@@ -16,9 +16,9 @@ class BasicClassifierOneHotSupport(BasicClassifier):
 
         if isinstance(tokens, OneHot):
             # TODO: sparse tensors support
-            indexes = torch.argmax(tokens, dim=-1)
-            mask = torch.eq(indexes, 0).type(torch.bool)
             embedded_text = torch.matmul(tokens, self.text_field_embedder._token_embedders["tokens"].weight)
+            indexes = torch.argmax(tokens, dim=-1)
+            mask = (~torch.eq(indexes, 0)).float()
         else:
             embedded_text = self._text_field_embedder(tokens)
             mask = get_text_field_mask(tokens)

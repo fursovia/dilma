@@ -40,7 +40,7 @@ class DeepLevenshtein(Model):
             # TODO: sparse tensors support
             embedded_sequence = torch.matmul(sequence, self.text_field_embedder._token_embedders["tokens"].weight)
             indexes = torch.argmax(sequence, dim=-1)
-            mask = torch.eq(indexes, 0).type(torch.bool)
+            mask = (~torch.eq(indexes, 0)).float()
         else:
             embedded_sequence = self.text_field_embedder(sequence)
             mask = util.get_text_field_mask(sequence).float()
