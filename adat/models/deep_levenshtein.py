@@ -13,11 +13,6 @@ from allennlp.nn import util
 OneHot = torch.Tensor
 
 
-def get_onehot_mask(tensors: OneHot) -> torch.BoolTensor:
-    indexes = torch.argmax(tensors, dim=-1)
-    return torch.eq(indexes, 0).type(torch.bool)
-
-
 @Model.register(name="deep_levenshtein")
 class DeepLevenshtein(Model):
     def __init__(
@@ -32,7 +27,7 @@ class DeepLevenshtein(Model):
         self.seq2seq_encoder = seq2seq_encoder
         self.seq2vec_encoder = seq2vec_encoder
         self.linear = torch.nn.Linear(self.seq2vec_encoder.get_output_dim() * 3, 1)
-        self._loss = torch.nn.MSELoss()
+        self._loss = torch.nn.L1Loss()
 
     def encode_sequence(self, sequence: Union[OneHot, TextFieldTensors]) -> torch.Tensor:
 

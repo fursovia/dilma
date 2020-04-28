@@ -3,11 +3,8 @@
 #
 # import torch
 # from dataclasses import dataclass
-# # from allennlp.data.dataset import Batch
 # from allennlp.nn.util import move_to_device
 # from allennlp.data.vocabulary import Vocabulary
-#
-# from adat.dataset_readers.copynet import CopyNetReader
 #
 #
 # @dataclass
@@ -21,19 +18,19 @@
 #     acceptance_probability: float = None
 #
 #
-# def find_best_output(outputs: List[AttackerOutput], initial_label: int) -> AttackerOutput:
-#     changed_label_outputs = []
-#     for output in outputs:
-#         if output.adversarial_label != initial_label:
-#             changed_label_outputs.append(output)
-#
-#     if changed_label_outputs:
-#         sorted_outputs = sorted(changed_label_outputs, key=lambda x: x.prob_diff, reverse=True)
-#         best_output = min(sorted_outputs, key=lambda x: x.wer)
-#     else:
-#         best_output = max(outputs, key=lambda x: x.prob_diff)
-#
-#     return best_output
+# # def find_best_output(outputs: List[AttackerOutput], initial_label: int) -> AttackerOutput:
+# #     changed_label_outputs = []
+# #     for output in outputs:
+# #         if output.adversarial_label != initial_label:
+# #             changed_label_outputs.append(output)
+# #
+# #     if changed_label_outputs:
+# #         sorted_outputs = sorted(changed_label_outputs, key=lambda x: x.prob_diff, reverse=True)
+# #         best_output = min(sorted_outputs, key=lambda x: x.wer)
+# #     else:
+# #         best_output = max(outputs, key=lambda x: x.prob_diff)
+# #
+# #     return best_output
 #
 #
 # def find_best_output(outputs: List[AttackerOutput], initial_label: int, wer_max: int = 5) -> AttackerOutput:

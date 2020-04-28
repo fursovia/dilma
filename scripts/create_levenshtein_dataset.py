@@ -4,7 +4,7 @@ import jsonlines
 
 import numpy as np
 import pandas as pd
-from adat.utils import calculate_wer
+from adat.utils import calculate_normalized_wer
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         for id1, id2 in tqdm(train_indexes):
             tr1 = sequences[id1]
             tr2 = sequences[id2]
-            dist = calculate_wer(tr1, tr2)
+            dist = calculate_normalized_wer(tr1, tr2)
             ex = {"seq_a": tr1, "seq_b": tr2, "dist": dist}
             writer.write(ex)
 
@@ -41,6 +41,6 @@ if __name__ == "__main__":
         for id1, id2 in tqdm(test_indexes):
             tr1 = sequences[id1]
             tr2 = sequences[id2]
-            dist = calculate_wer(tr1, tr2)
+            dist = calculate_normalized_wer(tr1, tr2)
             ex = {"seq_a": tr1, "seq_b": tr2, "dist": dist}
             writer.write(ex)

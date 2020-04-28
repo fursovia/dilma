@@ -1,0 +1,120 @@
+from pathlib import Path
+
+import torch
+from torch.optim import SGD
+
+from allennlp.models import Model
+from allennlp.data.vocabulary import Vocabulary
+from allennlp.data.dataset_readers import DatasetReader
+from allennlp.common.params import Params
+from allennlp.data.batch import Batch
+from allennlp.data import TextFieldTensors
+
+from adat.models.deep_levenshtein import DeepLevenshtein
+from adat.models.classifier import BasicClassifierOneHotSupport
+from adat.utils import calculate_wer
+
+
+class MaskedCascada:
+
+    def __init__(
+            self,
+            masked_lm_dir: str,
+            classifier_dir: str,
+            deep_levenshtein_dir: str,
+            alpha: float = 5.0,
+            lr: float = 1.0
+    ) -> None:
+        masked_lm_dir = Path(masked_lm_dir)
+        classifier_dir = Path(classifier_dir)
+        deep_levenshtein_dir = Path(deep_levenshtein_dir)
+
+        lm_params = Params.from_file(masked_lm_dir / "config.json")
+        self.reader = DatasetReader.from_params(lm_params["dataset_reader"])
+
+        self.lm_model = Model.from_params(
+            params=lm_params["model"],
+            vocab=Vocabulary.from_files(masked_lm_dir / "vocabulary")
+        )
+        # TODO: should be fixed
+        self.lm_model._tokens_masker = None
+        # initial LM weights
+        self._lm_state = torch.load(masked_lm_dir / "best.th")
+        self.initialize_load_state_dict()
+
+        self.classifier = BasicClassifierOneHotSupport.from_archive(classifier_dir / "model.tar.gz")
+        self.deep_levenshtein = DeepLevenshtein.from_archive(deep_levenshtein_dir / "model.tar.gz")
+
+        self.alpha = alpha
+        self.lr = lr
+        self.optimizer = None
+        self.initialize_optimizer()
+
+    def initialize_load_state_dict(self) -> None:
+        self.lm_model.load_state_dict(self._lm_state)
+
+    def initialize_optimizer(self) -> None:
+        self.optimizer = SGD(self.lm_model.parameters(), self.lr)
+
+    def sequence_to_input(self, sequence: str) -> TextFieldTensors:
+        instances = Batch([
+            self.reader.text_to_instance(sequence)
+        ])
+
+        instances.index_instances(self.lm_model.vocab)
+        inputs = instances.as_tensor_dict()["tokens"]
+        return inputs
+
+    def calculate_loss(self, prob: torch.Tensor, distance: torch.Tensor) -> torch.Tensor:
+        return distance + self.alpha * prob
+
+    def decode_sequence(self, logits: torch.Tensor) -> str:
+        indexes = logits[0].argmax(dim=-1)
+        out = [self.lm_model.vocab.get_token_from_index(idx.item()) for idx in indexes]
+        if "<START>" in out:
+            out.remove("<START>")
+        if "<END>" in out:
+            out.remove("<END>")
+        return " ".join(out)
+
+    def step(self, inputs: TextFieldTensors, label_to_attack: int) -> str:
+        logits = self.lm_model(inputs)["logits"]
+        # decoded sequence
+        onehot_with_gradients = torch.nn.functional.gumbel_softmax(logits, hard=True)
+
+        prob = self.classifier(onehot_with_gradients)["probs"][0, label_to_attack]
+        distance = torch.relu(
+            self.deep_levenshtein(
+                onehot_with_gradients,
+                inputs
+            )['distance']
+        )[0, 0]
+
+        loss = self.calculate_loss(prob, distance)
+        loss.backward()
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+
+        logits = self.lm_model(inputs)["logits"]
+        adversarial_sequence = self.decode_sequence(logits)
+        return adversarial_sequence
+
+    def attack(self, sequence_to_attack: str, max_steps: int = 10, label_to_attack: int = 1) -> str:
+        inputs = self.sequence_to_input(sequence_to_attack)
+        prob = self.classifier(inputs)["probs"][0, label_to_attack]
+
+        for _ in range(max_steps):
+            adversarial_sequence = self.step(inputs, label_to_attack)
+
+            new_prob = self.classifier(
+                self.sequence_to_input(adversarial_sequence)
+            )["probs"][0, label_to_attack]
+            distance = calculate_wer(adversarial_sequence, sequence_to_attack)
+
+            if distance <= 3 and new_prob < prob:
+                return adversarial_sequence
+
+        self.initialize_load_state_dict()
+        self.initialize_optimizer()
+
+        return adversarial_sequence
