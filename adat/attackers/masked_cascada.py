@@ -9,6 +9,7 @@ from allennlp.data.dataset_readers import DatasetReader
 from allennlp.common.params import Params
 from allennlp.data.batch import Batch
 from allennlp.data import TextFieldTensors
+from allennlp.nn.util import move_to_device
 
 from adat.attackers.attacker import AttackerOutput, find_best_attack
 from adat.models.deep_levenshtein import DeepLevenshtein
@@ -24,7 +25,8 @@ class MaskedCascada:
             classifier_dir: str,
             deep_levenshtein_dir: str,
             alpha: float = 5.0,
-            lr: float = 1.0
+            lr: float = 1.0,
+            device: int = -1
     ) -> None:
         masked_lm_dir = Path(masked_lm_dir)
         classifier_dir = Path(classifier_dir)
@@ -46,6 +48,12 @@ class MaskedCascada:
         self.classifier = BasicClassifierOneHotSupport.from_archive(classifier_dir / "model.tar.gz")
         self.deep_levenshtein = DeepLevenshtein.from_archive(deep_levenshtein_dir / "model.tar.gz")
 
+        self.device = device
+        if self.device >= 0 and torch.cuda.is_available():
+            self.lm_model.cuda(self.device)
+            self.classifier.cuda(self.device)
+            self.deep_levenshtein.cuda(self.device)
+
         self.alpha = alpha
         self.lr = lr
         self.optimizer = None
@@ -64,7 +72,7 @@ class MaskedCascada:
 
         instances.index_instances(self.lm_model.vocab)
         inputs = instances.as_tensor_dict()["tokens"]
-        return inputs
+        return move_to_device(inputs, self.device)
 
     def calculate_loss(self, prob: torch.Tensor, distance: torch.Tensor) -> torch.Tensor:
         return distance + self.alpha * prob
