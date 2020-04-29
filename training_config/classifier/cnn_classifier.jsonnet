@@ -25,7 +25,7 @@
   // Make sure you load vocab from LM
   "vocabulary": {
     "type": "from_files",
-    "directory": "exp_lm/vocabulary"
+    "directory": std.extVar("LM_VOCAB_PATH")
   },
   "model": {
     "type": "basic_classifier_one_hot_support",
@@ -50,7 +50,7 @@
     "num_labels": 2
   },
   "data_loader": {
-    "batch_size": 32
+    "batch_size": 64
   },
   "distributed": {
     "cuda_devices": [

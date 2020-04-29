@@ -19,16 +19,12 @@
     },
     "lazy": false
   },
-  "train_data_path": std.extVar(
-  "DL_TRAIN_DATA_PATH"
-  ),
-  "validation_data_path": std.extVar(
-  "DL_VALID_DATA_PATH"
-  ),
+  "train_data_path": std.extVar("DL_TRAIN_DATA_PATH"),
+  "validation_data_path": std.extVar("DL_VALID_DATA_PATH"),
   // Make sure you load vocab from LM
   "vocabulary": {
     "type": "from_files",
-    "directory": "exp_lm/vocabulary"
+    "directory": std.extVar("LM_VOCAB_PATH")
   },
   "model": {
     "type": "deep_levenshtein",
@@ -52,7 +48,7 @@
     }
   },
   "data_loader": {
-    "batch_size": 32
+    "batch_size": 64
   },
   "distributed": {
     "cuda_devices": [

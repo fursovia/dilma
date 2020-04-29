@@ -38,6 +38,7 @@ Classifier
 ```bash
 export CLS_TRAIN_DATA_PATH="data/wine_class/train.json"
 export CLS_VALID_DATA_PATH="data/wine_class/test.json"
+export LM_VOCAB_PATH="logs/wine_lm/vocabulary"
 
 allennlp train training_config/classifier/cnn_classifier.jsonnet \
     -s logs/wine_classifier \
@@ -49,6 +50,7 @@ Deep Levenshtein
 ```bash
 export DL_TRAIN_DATA_PATH="data/wine_lev/train.json"
 export DL_VALID_DATA_PATH="data/wine_lev/test.json"
+export LM_VOCAB_PATH="logs/wine_lm/vocabulary"
 
 allennlp train training_config/levenshtein/cnn_deep_levenshtein.jsonnet \
     -s logs/wine_levenshtein \
