@@ -17,14 +17,14 @@
     "tokenizer": {
       "type": "just_spaces"
     },
+    "skip_label_indexing": true,
     "lazy": false
   },
-  "train_data_path": "data/json_ins_class/train.json",
-  "validation_data_path": "data/json_ins_class/test.json",
+  "train_data_path": std.extVar("CLS_TRAIN_DATA_PATH"),
+  "validation_data_path": std.extVar("CLS_VALID_DATA_PATH"),
   // Make sure you load vocab from LM
   "vocabulary": {
-    // TODO: create `extend_labels` classmethod
-    "type": "extend",
+    "type": "from_files",
     "directory": "exp_lm/vocabulary"
   },
   "model": {
@@ -41,7 +41,11 @@
     "seq2vec_encoder": {
       "type": "cnn",
       "embedding_dim": 100,
-      "num_filters": 32
+      "num_filters": 8,
+      "ngram_filter_sizes": [
+        3,
+        5
+      ]
     },
     "num_labels": 2
   },

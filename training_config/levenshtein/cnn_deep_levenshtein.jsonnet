@@ -19,8 +19,12 @@
     },
     "lazy": false
   },
-  "train_data_path": "data/json_ins_dl/train.json",
-  "validation_data_path": "data/json_ins_dl/test.json",
+  "train_data_path": std.extVar(
+  "DL_TRAIN_DATA_PATH"
+  ),
+  "validation_data_path": std.extVar(
+  "DL_VALID_DATA_PATH"
+  ),
   // Make sure you load vocab from LM
   "vocabulary": {
     "type": "from_files",
@@ -40,7 +44,11 @@
     "seq2vec_encoder": {
       "type": "cnn",
       "embedding_dim": 100,
-      "num_filters": 32
+      "num_filters": 8,
+      "ngram_filter_sizes": [
+        3,
+        5
+      ]
     }
   },
   "data_loader": {

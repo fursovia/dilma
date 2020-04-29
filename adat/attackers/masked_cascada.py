@@ -72,6 +72,7 @@ class MaskedCascada:
         indexes = logits[0].argmax(dim=-1)
         out = [self.lm_model.vocab.get_token_from_index(idx.item()) for idx in indexes]
         if "<START>" in out:
+            # TODO: does not remove all start tokens
             out.remove("<START>")
         if "<END>" in out:
             out.remove("<END>")

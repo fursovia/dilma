@@ -25,23 +25,32 @@ poetry shell
 Masked LM
 
 ```bash
+export LM_TRAIN_DATA_PATH="data/wine_lm/train.json"
+export LM_VALID_DATA_PATH="data/wine_lm/test.json"
+
 allennlp train training_config/lm/transformer_masked_lm.jsonnet \
-    -s logs/lm \
+    -s logs/wine_lm \
     --include-package adat
 ```
 
 Classifier
 
 ```bash
+export CLS_TRAIN_DATA_PATH="data/wine_class/train.json"
+export CLS_VALID_DATA_PATH="data/wine_class/test.json"
+
 allennlp train training_config/classifier/cnn_classifier.jsonnet \
-    -s logs/classifier \
+    -s logs/wine_classifier \
     --include-package adat
 ```
 
 Deep Levenshtein
 
 ```bash
+export DL_TRAIN_DATA_PATH="data/wine_lev/train.json"
+export DL_VALID_DATA_PATH="data/wine_lev/test.json"
+
 allennlp train training_config/levenshtein/cnn_deep_levenshtein.jsonnet \
-    -s logs/levenshtein \
+    -s logs/wine_levenshtein \
     --include-package adat
 ```

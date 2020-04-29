@@ -21,8 +21,8 @@
     "max_sequence_length": 60,
     "lazy": false
   },
-  "train_data_path": "data/json_ins/train.json",
-  "validation_data_path": "data/json_ins/test.json",
+  "train_data_path": std.extVar("LM_TRAIN_DATA_PATH"),
+  "validation_data_path": std.extVar("LM_VALID_DATA_PATH"),
   "vocabulary": {
     "tokens_to_add": {
       "tokens": [
