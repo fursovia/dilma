@@ -10,6 +10,7 @@ from allennlp.common.params import Params
 from allennlp.data.batch import Batch
 from allennlp.data import TextFieldTensors
 
+from adat.attackers.attacker import AttackerOutput, find_best_attack
 from adat.models.deep_levenshtein import DeepLevenshtein
 from adat.models.classifier import BasicClassifierOneHotSupport
 from adat.utils import calculate_wer
@@ -100,10 +101,20 @@ class MaskedCascada:
         adversarial_sequence = self.decode_sequence(logits)
         return adversarial_sequence
 
-    def attack(self, sequence_to_attack: str, max_steps: int = 10, label_to_attack: int = 1) -> str:
+    def attack(
+            self,
+            sequence_to_attack: str,
+            label_to_attack: int = 1,
+            max_steps: int = 10,
+            thresh_drop: float = 0.2,
+            early_stopping: bool = False
+    ) -> AttackerOutput:
+        assert max_steps > 0
         inputs = self.sequence_to_input(sequence_to_attack)
         prob = self.classifier(inputs)["probs"][0, label_to_attack]
+        thresh_drop = min(prob.item() / 2, thresh_drop)
 
+        outputs = []
         for _ in range(max_steps):
             adversarial_sequence = self.step(inputs, label_to_attack)
 
@@ -112,10 +123,20 @@ class MaskedCascada:
             )["probs"][0, label_to_attack]
             distance = calculate_wer(adversarial_sequence, sequence_to_attack)
 
-            if distance <= 3 and new_prob < prob:
-                return adversarial_sequence
+            output = AttackerOutput(
+                sequence=sequence_to_attack,
+                probability=prob.item(),
+                adversarial_sequence=adversarial_sequence,
+                adversarial_probability=new_prob.item(),
+                wer=distance,
+                prob_diff=(prob - new_prob).item()
+            )
 
+            outputs.append(output)
+            if early_stopping and output.prob_diff > thresh_drop:
+                break
+
+        output = find_best_attack(outputs, threshold=thresh_drop)
         self.initialize_load_state_dict()
         self.initialize_optimizer()
-
-        return adversarial_sequence
+        return output
