@@ -3,6 +3,7 @@ from tqdm import tqdm
 from pathlib import Path
 import jsonlines
 
+import numpy as np
 from allennlp.predictors import Predictor
 
 from adat.utils import load_jsonlines, calculate_wer
@@ -29,21 +30,28 @@ if __name__ == "__main__":
         predictor_name="text_classifier",
         cuda_device=args.cuda
     )
+    preds = predictor.predict_batch_json([{"sentence": el["text"]} for el in data])
 
     attacker = HotFlipFixed(predictor=predictor, max_tokens=args.max_tokens)
 
     with jsonlines.open(args.out_path, "w") as writer:
-        for el in tqdm(data):
+        for el, p in tqdm(zip(data, preds)):
 
-            out = attacker.attack_from_json(el)
+            # if it works then it's not stupid
+            attacked_label = int(el["label"])
+            probs = np.ones(predictor._model._num_labels)
+            probs[attacked_label] = 0
+            out = attacker.attack_from_json({"sentence": el["text"]}, target={"probs": probs})
             adversarial_sequence = " ".join(out["final"][0])
+            adversarial_probability = out["outputs"]["probs"][int(el["label"])]
             adversarial_output = AttackerOutput(
                 sequence=el["text"],
-                probability=float("nan"),
+                probability=p["probs"][attacked_label],
                 adversarial_sequence=adversarial_sequence,
-                adversarial_probability=float("nan"),
+                adversarial_probability=adversarial_probability,
                 wer=calculate_wer(el["text"], adversarial_sequence),
-                prob_diff=float("nan")
+                prob_diff=(p["probs"][attacked_label] - adversarial_probability),
+                attacked_label=attacked_label
             )
 
             writer.write(adversarial_output.__dict__)

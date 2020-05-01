@@ -135,7 +135,8 @@ class MaskedCascada(Attacker):
                 adversarial_sequence=adversarial_sequence,
                 adversarial_probability=new_prob.item(),
                 wer=distance,
-                prob_diff=(prob - new_prob).item()
+                prob_diff=(prob - new_prob).item(),
+                attacked_label=label_to_attack
             )
 
             outputs.append(output)

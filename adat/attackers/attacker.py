@@ -12,6 +12,7 @@ class AttackerOutput:
     adversarial_probability: float
     wer: int
     prob_diff: float
+    attacked_label: int
 
 
 class Attacker(ABC):

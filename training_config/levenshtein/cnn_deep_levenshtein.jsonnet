@@ -10,7 +10,9 @@
         ],
         "end_tokens": [
           "<END>"
-        ]
+        ],
+        // should be set to the maximum value of `ngram_filter_sizes`
+        "token_min_padding_length": 5
       }
     },
     // DO NOT CHANGE tokenizer
