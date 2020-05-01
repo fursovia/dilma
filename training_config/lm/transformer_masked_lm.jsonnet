@@ -52,7 +52,9 @@
       "positional_embedding_size": 64
     },
     "tokens_masker": {
-      "type": "tokens_masker"
+      "type": "tokens_masker",
+      "mask_probability": 0.3,
+      "replace_probability": 0.1
     }
   },
   "distributed": {

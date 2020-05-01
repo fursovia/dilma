@@ -3,6 +3,7 @@ from typing import Dict, Optional
 import torch
 
 from allennlp.data import TextFieldTensors, Vocabulary
+from allennlp.data.vocabulary import DEFAULT_PADDING_TOKEN
 from allennlp.models.model import Model
 from allennlp.modules import Seq2SeqEncoder, TextFieldEmbedder
 from allennlp.training.metrics import Perplexity
@@ -32,7 +33,7 @@ class MaskedLanguageModel(Model):
         )
         self._tokens_masker = tokens_masker
 
-        ignore_index = -100 if self._tokens_masker is None else self._tokens_masker.skip_index
+        ignore_index = self.vocab.get_token_index(DEFAULT_PADDING_TOKEN)
         self._loss = torch.nn.CrossEntropyLoss(ignore_index=ignore_index)
         self._perplexity = Perplexity()
 
@@ -46,7 +47,6 @@ class MaskedLanguageModel(Model):
         if self._tokens_masker is not None:
             tokens, targets = self._tokens_masker.mask_tokens(tokens)
         else:
-            # TODO: pad-tokens in the loss
             targets = tokens
 
         embeddings = self._text_field_embedder(tokens)
@@ -55,15 +55,15 @@ class MaskedLanguageModel(Model):
         # take PAD tokens into account when decoding
         logits = self._head(contextual_embeddings)
 
-        output_dict = {
-            "contextual_embeddings": contextual_embeddings,
-            "logits": logits
-        }
+        output_dict = dict(
+            contextual_embeddings=contextual_embeddings,
+            logits=logits
+        )
 
         output_dict["loss"] = self._loss(
-            logits.view(-1, self.vocab.get_vocab_size()),
+            logits.transpose(1, 2),
             # TODO: it is not always tokens-tokens
-            targets["tokens"]["tokens"].view(-1)
+            targets["tokens"]["tokens"]
         )
         self._perplexity(output_dict["loss"])
         return output_dict
