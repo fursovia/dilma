@@ -50,7 +50,7 @@
       ]
     },
     "dropout": 0.4,
-    "num_labels": 2
+    "num_labels": std.extVar("CLS_NUM_CLASSES")
   },
   "data_loader": {
     "batch_size": 64

@@ -19,7 +19,7 @@
     "tokenizer": {
       "type": "just_spaces"
     },
-    "lazy": false
+    "lazy": true
   },
   "train_data_path": std.extVar("DL_TRAIN_DATA_PATH"),
   "validation_data_path": std.extVar("DL_VALID_DATA_PATH"),
