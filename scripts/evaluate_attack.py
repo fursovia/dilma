@@ -9,12 +9,12 @@ from allennlp.predictors import Predictor
 from adat.utils import load_jsonlines, calculate_wer
 
 parser = argparse.ArgumentParser()
-parser.add_argument("test-path", type=str, required=True)
-parser.add_argument("adversarial-test-path", type=str, required=True)
-parser.add_argument("classifier-dir", type=str, required=True)
-parser.add_argument("out-dir", type=str, required=True)
-parser.add_argument("sample-size", type=int, default=None)
-parser.add_argument("gamma", type=float, default=1.0)
+parser.add_argument("--test-path", type=str, required=True)
+parser.add_argument("--adversarial-test-path", type=str, required=True)
+parser.add_argument("--classifier-dir", type=str, required=True)
+parser.add_argument("--out-dir", type=str, required=True)
+parser.add_argument("--sample-size", type=int, default=None)
+parser.add_argument("--gamma", type=float, default=1.0)
 
 
 def normalized_accuracy_drop(

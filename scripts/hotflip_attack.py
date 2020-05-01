@@ -9,11 +9,11 @@ from adat.utils import load_jsonlines, calculate_wer
 from adat.attackers import HotFlipFixed, AttackerOutput
 
 parser = argparse.ArgumentParser()
-parser.add_argument("classifier-dir", type=str, required=True)
-parser.add_argument("test-path", type=str, required=True)
-parser.add_argument("out-path", type=str, required=True)
+parser.add_argument("--classifier-dir", type=str, required=True)
+parser.add_argument("--test-path", type=str, required=True)
+parser.add_argument("--out-path", type=str, required=True)
 
-parser.add_argument("max-tokens", type=int, default=None)
+parser.add_argument("--max-tokens", type=int, default=None)
 
 
 if __name__ == "__main__":
