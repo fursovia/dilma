@@ -29,10 +29,10 @@ allennlp train training_config/classifier/cnn_classifier.jsonnet \
 if [ -f "$DL_TRAIN_DATA_PATH" ]; then
     echo "Skipping Levenshtein dataset creation"
 else
+    mkdir -p ${DL_DATA_DIR}
     PYTHONPATH=. python scripts/create_levenshtein_dataset.py \
-        --csv-path ${LM_DATA_DIR}/data.csv \
-        --col-name "sequence" \
-        --output-dir ${DL_TRAIN_DATA_PATH}
+        --data-path ${LM_DATA_DIR}/train.json \
+        --output-dir ${DL_DATA_DIR}
 fi
 
 allennlp train training_config/levenshtein/cnn_deep_levenshtein.jsonnet \

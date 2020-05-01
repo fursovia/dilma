@@ -3,14 +3,13 @@ from pathlib import Path
 import jsonlines
 
 import numpy as np
-import pandas as pd
-from adat.utils import calculate_normalized_wer
+from adat.utils import calculate_normalized_wer, load_jsonlines
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--csv-path", type=str, required=True)
-parser.add_argument("--col-name", type=str, required=True)
+parser.add_argument("--data-path", type=str, required=True)
 parser.add_argument("--output-dir", type=str, required=True)
+parser.add_argument("--field-name", type=str, default="text")
 parser.add_argument("--train-size", type=int, default=200000)
 parser.add_argument("--test-size", type=int, default=10000)
 
@@ -23,9 +22,8 @@ if __name__ == "__main__":
     test_path = output_dir / "test.json"
     assert not train_path.exists() and not test_path.exists()
 
-    data = pd.read_csv(args.csv_path)
-    data = data[~data[args.col_name].isna()]
-    sequences = data[args.col_name].astype(str).tolist()
+    data = load_jsonlines(args.data_path)
+    sequences = [str(el[args.field_name]) for el in data]
 
     train_indexes = np.random.randint(0, len(sequences), size=(args.train_size, 2))
     with jsonlines.open(train_path, "w") as writer:
