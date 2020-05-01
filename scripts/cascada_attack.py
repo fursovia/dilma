@@ -33,7 +33,7 @@ if __name__ == "__main__":
         device=args.cuda
     )
 
-    with jsonlines.open(args.out_path) as writer:
+    with jsonlines.open(args.out_path, "w") as writer:
         for el in tqdm(data):
             adversarial_output = attacker.attack(
                 sequence_to_attack=el["text"],

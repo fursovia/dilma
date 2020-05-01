@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     attacker = HotFlipFixed(predictor=predictor, max_tokens=args.max_tokens)
 
-    with jsonlines.open(args.out_path) as writer:
+    with jsonlines.open(args.out_path, "w") as writer:
         for el in tqdm(data):
 
             out = attacker.attack_from_json(el)
