@@ -8,11 +8,11 @@ from adat.utils import calculate_normalized_wer
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--csv_path", type=str, required=True)
-parser.add_argument("--col_name", type=str, required=True)
-parser.add_argument("--output_dir", type=str, required=True)
-parser.add_argument("--train_size", type=int, default=200000)
-parser.add_argument("--test_size", type=int, default=10000)
+parser.add_argument("--csv-path", type=str, required=True)
+parser.add_argument("--col-name", type=str, required=True)
+parser.add_argument("--output-dir", type=str, required=True)
+parser.add_argument("--train-size", type=int, default=200000)
+parser.add_argument("--test-size", type=int, default=10000)
 
 
 if __name__ == "__main__":

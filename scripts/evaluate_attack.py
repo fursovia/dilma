@@ -11,21 +11,23 @@ from adat.utils import load_jsonlines, calculate_wer
 parser = argparse.ArgumentParser()
 parser.add_argument("test-path", type=str, required=True)
 parser.add_argument("adversarial-test-path", type=str, required=True)
-parser.add_argument("target-model-dir", type=str, required=True)
+parser.add_argument("classifier-dir", type=str, required=True)
 parser.add_argument("out-dir", type=str, required=True)
 parser.add_argument("sample-size", type=int, default=None)
+parser.add_argument("gamma", type=float, default=1.0)
 
 
 def normalized_accuracy_drop(
         wers: List[int],
         y_true: List[int],
-        y_adv: List[int]
+        y_adv: List[int],
+        gamma: float = 1.0
 ) -> float:
     assert len(y_true) == len(y_adv)
     nads = []
     for wer, lab, alab in zip(wers, y_true, y_adv):
         if wer > 0 and lab != alab:
-            nads.append(1 / wer)
+            nads.append(1 / wer ** gamma)
         else:
             nads.append(0.0)
 
@@ -45,7 +47,7 @@ def calculate_wers(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    target_model_dir = Path(args.target_model_dir)
+    classifier_dir = Path(args.classifier_dir)
     out_dir = Path(args.out_dir)
     out_dir.mkdir(exist_ok=True, parents=True)
 
@@ -53,7 +55,7 @@ if __name__ == "__main__":
     adversarial_test = load_jsonlines(args.adversarial_test_path)[:args.sample_size]
 
     predictor = Predictor.from_path(
-        target_model_dir / "model.tar.gz",
+        classifier_dir / "model.tar.gz",
         predictor_name="text_classifier"
     )
     preds = predictor.predict_batch_json(test)
@@ -71,7 +73,8 @@ if __name__ == "__main__":
     nad = normalized_accuracy_drop(
         wers=wers,
         y_true=y_true,
-        y_adv=y_adv
+        y_adv=y_adv,
+        gamma=args.gamma
     )
 
     metrics = dict(
