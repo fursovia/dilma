@@ -2,7 +2,7 @@ from typing import Dict, Union
 
 import torch
 from allennlp.models import BasicClassifier, Model
-from allennlp.nn.util import get_text_field_mask
+from allennlp.nn.util import get_text_field_mask, get_token_ids_from_text_field_tensors
 from allennlp.data import TextFieldTensors
 
 from .deep_levenshtein import OneHot
@@ -38,6 +38,7 @@ class BasicClassifierOneHotSupport(BasicClassifier):
         probs = torch.nn.functional.softmax(logits, dim=-1)
 
         output_dict = {"logits": logits, "probs": probs}
+        output_dict["token_ids"] = get_token_ids_from_text_field_tensors(tokens)
 
         if label is not None:
             loss = self._loss(logits, label.long().view(-1))
