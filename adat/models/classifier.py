@@ -13,14 +13,16 @@ class BasicClassifierOneHotSupport(BasicClassifier):
     def forward(  # type: ignore
         self, tokens: Union[TextFieldTensors, OneHot], label: torch.IntTensor = None
     ) -> Dict[str, torch.Tensor]:
-        output_dict = dict(token_ids=get_token_ids_from_text_field_tensors(tokens))
+        output_dict = dict()
 
         if isinstance(tokens, OneHot):
             # TODO: sparse tensors support
             embedded_text = torch.matmul(tokens, self._text_field_embedder._token_embedders["tokens"].weight)
             indexes = torch.argmax(tokens, dim=-1)
             mask = (~torch.eq(indexes, 0)).float()
+            output_dict["token_ids"] = indexes
         else:
+            output_dict["token_ids"] = get_token_ids_from_text_field_tensors(tokens)
             embedded_text = self._text_field_embedder(tokens)
             mask = get_text_field_mask(tokens)
 
