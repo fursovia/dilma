@@ -49,6 +49,7 @@
         5
       ]
     },
+    "dropout": 0.4,
     "num_labels": 2
   },
   "data_loader": {
