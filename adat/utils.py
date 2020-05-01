@@ -1,7 +1,8 @@
 import functools
 from tqdm import tqdm
 from multiprocessing import Pool
-from typing import Sequence
+from typing import Sequence, Dict, Any, List
+import json
 from IPython.core.display import display, HTML
 
 import torch
@@ -15,7 +16,15 @@ def load_weights(model: Model, path: str, location: str = 'cpu') -> None:
         model.load_state_dict(torch.load(f, map_location=location))
 
 
-@functools.lru_cache(maxsize=500)
+def load_jsonlines(path: str) -> List[Dict[str, Any]]:
+    data = []
+    with open(path) as file:
+        for line in file.readlines():
+            data.append(json.loads(line))
+    return data
+
+
+@functools.lru_cache(maxsize=5000)
 def calculate_wer(sequence_a: str, sequence_b: str) -> int:
     # taken from https://github.com/SeanNaren/deepspeech.pytorch/blob/master/decoder.py
     b = set(sequence_a.split() + sequence_b.split())

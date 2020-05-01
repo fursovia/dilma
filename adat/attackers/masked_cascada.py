@@ -2,7 +2,6 @@ from pathlib import Path
 
 import torch
 from torch.optim import SGD
-
 from allennlp.models import Model
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.data.dataset_readers import DatasetReader
@@ -11,13 +10,13 @@ from allennlp.data.batch import Batch
 from allennlp.data import TextFieldTensors
 from allennlp.nn.util import move_to_device
 
-from adat.attackers.attacker import AttackerOutput, find_best_attack
+from adat.attackers.attacker import Attacker, AttackerOutput, find_best_attack
 from adat.models.deep_levenshtein import DeepLevenshtein
 from adat.models.classifier import BasicClassifierOneHotSupport
 from adat.utils import calculate_wer
 
 
-class MaskedCascada:
+class MaskedCascada(Attacker):
 
     def __init__(
             self,
@@ -63,6 +62,8 @@ class MaskedCascada:
         self.lm_model.load_state_dict(self._lm_state)
 
     def initialize_optimizer(self) -> None:
+        # TODO: we can choose parameters to change
+        # TODO: check how the efficiency depends on it
         self.optimizer = SGD(self.lm_model.parameters(), self.lr)
 
     def sequence_to_input(self, sequence: str) -> TextFieldTensors:
@@ -80,11 +81,8 @@ class MaskedCascada:
     def decode_sequence(self, logits: torch.Tensor) -> str:
         indexes = logits[0].argmax(dim=-1)
         out = [self.lm_model.vocab.get_token_from_index(idx.item()) for idx in indexes]
-        if "<START>" in out:
-            # TODO: does not remove all start tokens
-            out.remove("<START>")
-        if "<END>" in out:
-            out.remove("<END>")
+        out = [o for o in out if o != "<START>"]
+        out = [o for o in out if o != "<END>"]
         return " ".join(out)
 
     def step(self, inputs: TextFieldTensors, label_to_attack: int) -> str:
