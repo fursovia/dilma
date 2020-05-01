@@ -17,12 +17,14 @@ parser.add_argument("--thresh-drop", type=float, default=0.2)
 parser.add_argument("--early-stopping", action="store_true", default=False)
 parser.add_argument("--alpha", type=float, default=1.0)
 parser.add_argument("--lr", type=float, default=0.1)
+
+parser.add_argument("--sample-size", type=int, default=None)
 parser.add_argument("--cuda", type=int, default=-1)
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    data = load_jsonlines(args.test_path)
+    data = load_jsonlines(args.test_path)[:args.sample_size]
 
     attacker = MaskedCascada(
         masked_lm_dir=args.lm_dir,
