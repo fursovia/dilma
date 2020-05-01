@@ -13,6 +13,7 @@ class BasicClassifierOneHotSupport(BasicClassifier):
     def forward(  # type: ignore
         self, tokens: Union[TextFieldTensors, OneHot], label: torch.IntTensor = None
     ) -> Dict[str, torch.Tensor]:
+        output_dict = dict(token_ids=get_token_ids_from_text_field_tensors(tokens))
 
         if isinstance(tokens, OneHot):
             # TODO: sparse tensors support
@@ -37,8 +38,7 @@ class BasicClassifierOneHotSupport(BasicClassifier):
         logits = self._classification_layer(embedded_text)
         probs = torch.nn.functional.softmax(logits, dim=-1)
 
-        output_dict = {"logits": logits, "probs": probs}
-        output_dict["token_ids"] = get_token_ids_from_text_field_tensors(tokens)
+        output_dict.update({"logits": logits, "probs": probs})
 
         if label is not None:
             loss = self._loss(logits, label.long().view(-1))
