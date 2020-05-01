@@ -8,7 +8,7 @@ from adat.attackers import MaskedCascada
 parser = argparse.ArgumentParser()
 parser.add_argument("--lm-dir", type=str, required=True)
 parser.add_argument("--classifier-dir", type=str, required=True)
-parser.add_argument("--deep-leveneshtein-dir", type=str, required=True)
+parser.add_argument("--deep-levenshtein-dir", type=str, required=True)
 parser.add_argument("--test-path", type=str, required=True)
 parser.add_argument("--out-path", type=str, required=True)
 
