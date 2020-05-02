@@ -91,12 +91,7 @@ class MaskedCascada(Attacker):
         onehot_with_gradients = torch.nn.functional.gumbel_softmax(logits, hard=True)
 
         prob = self.classifier(onehot_with_gradients)["probs"][0, label_to_attack]
-        distance = torch.relu(
-            self.deep_levenshtein(
-                onehot_with_gradients,
-                inputs
-            )['distance']
-        )[0, 0]
+        distance = self.deep_levenshtein(onehot_with_gradients, inputs)["distance"][0, 0]
 
         loss = self.calculate_loss(prob, distance)
         loss.backward()
@@ -145,6 +140,7 @@ class MaskedCascada(Attacker):
                 break
 
         output = find_best_attack(outputs)
+        output.history = [o.__dict__ for o in outputs]
         self.initialize_load_state_dict()
         self.initialize_optimizer()
         return output

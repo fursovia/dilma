@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
 
 from dataclasses import dataclass
@@ -14,6 +14,7 @@ class AttackerOutput:
     prob_diff: float
     attacked_label: int
     adversarial_label: int
+    history: Optional[Dict[str, Any]] = None
 
 
 class Attacker(ABC):
