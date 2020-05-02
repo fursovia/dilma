@@ -41,9 +41,14 @@ if __name__ == "__main__":
             attacked_label = int(el["label"])
             probs = np.ones(predictor._model._num_labels)
             probs[attacked_label] = 0
-            out = attacker.attack_from_json({"sentence": el["text"]}, target={"probs": probs})
+            out = attacker.attack_from_json({"sentence": el["text"].strip()}, target={"probs": probs})
             adversarial_sequence = " ".join(out["final"][0])
-            adversarial_probability = out["outputs"]["probs"][int(el["label"])]
+            adversarial_probability = out["outputs"]["probs"]
+            if len(adversarial_probability) == 1:
+                adversarial_probability = adversarial_probability[0][attacked_label]
+            else:
+                adversarial_probability = adversarial_probability[attacked_label]
+
             adversarial_output = AttackerOutput(
                 sequence=el["text"],
                 probability=p["probs"][attacked_label],

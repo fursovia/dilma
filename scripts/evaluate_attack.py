@@ -48,6 +48,7 @@ if __name__ == "__main__":
     )
     preds = predictor.predict_batch_json([{"sentence": el["sequence"]} for el in data])
     y_true = [int(el["attacked_label"]) for el in data]
+    correctly_predicted = [y == int(p["label"]) for y, p in zip(y_true, preds)]
 
     adv_preds = predictor.predict_batch_json([{"sentence": el["adversarial_sequence"]} for el in data])
     y_adv = [int(el["label"]) for el in adv_preds]
