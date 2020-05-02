@@ -62,9 +62,6 @@ class HotFlipFixed(Hotflip):
             fields_to_compare = utils.get_fields_to_compare(inputs, instance, input_field_to_attack)
 
             text_field: TextField = instance[input_field_to_attack]  # type: ignore
-            text_field.tokens = text_field._token_indexers["tokens"]._start_tokens + \
-                                text_field.tokens + \
-                                text_field._token_indexers["tokens"]._end_tokens
             grads, outputs = self.predictor.get_gradients([instance])
 
             flipped: List[int] = []
@@ -97,6 +94,7 @@ class HotFlipFixed(Hotflip):
                 new_token = Token(
                     self.vocab._index_to_token[self.namespace][new_id]
                 )  # type: ignore
+                index_of_token_to_flip -= 1
                 text_field.tokens[index_of_token_to_flip] = new_token
                 instance.indexed = False
 
