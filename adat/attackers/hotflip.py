@@ -77,6 +77,7 @@ class HotFlipFixed(Hotflip):
                     grads_magnitude[index] = -1
 
                 index_of_token_to_flip = numpy.argmax(grads_magnitude)
+                index_of_token_to_flip -= 1
                 if grads_magnitude[index_of_token_to_flip] == -1:
                     # If we've already flipped all of the tokens, we give up.
                     break
@@ -94,7 +95,6 @@ class HotFlipFixed(Hotflip):
                 new_token = Token(
                     self.vocab._index_to_token[self.namespace][new_id]
                 )  # type: ignore
-                index_of_token_to_flip -= 1
                 text_field.tokens[index_of_token_to_flip] = new_token
                 instance.indexed = False
 
