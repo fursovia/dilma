@@ -15,7 +15,8 @@ from allennlp.interpret.attackers import Hotflip
 
 from adat.tokens_masker import MASK_TOKEN
 
-DEFAULT_IGNORE_TOKENS = ["@@NULL@@", ".", ",", ";", "!", "?", "[MASK]", "[SEP]", "[CLS]"]
+DEFAULT_IGNORE_TOKENS = ["@@NULL@@", ".", ",", ";", "!", "?", "[MASK]",
+                         "[SEP]", "[CLS]", MASK_TOKEN, "<START>", "<END>"]
 TO_DROP_TOKENS = [DEFAULT_OOV_TOKEN, DEFAULT_PADDING_TOKEN, MASK_TOKEN, "<START>", "<END>"]
 
 
