@@ -1,19 +1,23 @@
-{
-  "dataset_reader": {
-    // this is not a mistake
-    "type": "text_classification_json",
-    // DO NOT CHANGE token_indexers
-    "token_indexers": {
-      "tokens": {
+local TOKEN_INDEXER = {
+    "tokens": {
         "type": "single_id",
         "start_tokens": [
           "<START>"
         ],
         "end_tokens": [
           "<END>"
-        ]
+        ],
+        // should be set to the maximum value of `ngram_filter_sizes`
+        "token_min_padding_length": 5
       }
-    },
+};
+
+{
+  "dataset_reader": {
+    // this is not a mistake
+    "type": "text_classification_json",
+    // DO NOT CHANGE token_indexers
+    "token_indexers": TOKEN_INDEXER,
     // DO NOT CHANGE tokenizer
     "tokenizer": {
       "type": "just_spaces"

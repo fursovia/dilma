@@ -41,7 +41,7 @@ class MaskedCascada(Attacker):
         # TODO: should be fixed
         self.lm_model._tokens_masker = None
         # initial LM weights
-        self._lm_state = torch.load(masked_lm_dir / "best.th")
+        self._lm_state = torch.load(masked_lm_dir / "best.th", map_location="cpu")
         self.initialize_load_state_dict()
 
         self.classifier = BasicClassifierOneHotSupport.from_archive(classifier_dir / "model.tar.gz")

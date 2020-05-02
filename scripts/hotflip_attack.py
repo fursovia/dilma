@@ -14,7 +14,7 @@ parser.add_argument("--classifier-dir", type=str, required=True)
 parser.add_argument("--test-path", type=str, required=True)
 parser.add_argument("--out-path", type=str, required=True)
 
-parser.add_argument("--max-tokens", type=int, default=None)
+parser.add_argument("--max-tokens", type=int, default=5000)
 
 parser.add_argument("--sample-size", type=int, default=None)
 parser.add_argument("--cuda", type=int, default=-1)
