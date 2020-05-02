@@ -16,6 +16,7 @@ parser.add_argument("--max-steps", type=int, default=10)
 parser.add_argument("--early-stopping", action="store_true", default=False)
 parser.add_argument("--alpha", type=float, default=1.0)
 parser.add_argument("--lr", type=float, default=0.1)
+parser.add_argument("--parameters-to-update", action="append", default=["all"])
 
 parser.add_argument("--sample-size", type=int, default=None)
 parser.add_argument("--cuda", type=int, default=-1)
@@ -31,6 +32,7 @@ if __name__ == "__main__":
         deep_levenshtein_dir=args.deep_levenshtein_dir,
         alpha=args.alpha,
         lr=args.lr,
+        parameters_to_update=args.parameters_to_update,
         device=args.cuda
     )
 
