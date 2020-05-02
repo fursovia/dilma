@@ -41,7 +41,7 @@ if __name__ == "__main__":
         ex = {"seq_a": tr1, "seq_b": tr2, "dist": dist}
         dataset.append(ex)
 
-    adversarial_indexes = np.random.randint(0, len(sequences), size=(args.num_non_adversarial, ))
+    adversarial_indexes = np.random.randint(0, len(sequences), size=(args.num_adversarial, ))
     for idx in tqdm(adversarial_indexes):
         tr1 = sequences[idx]
         tr2 = modifier(tr1)
