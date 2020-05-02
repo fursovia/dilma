@@ -67,7 +67,9 @@ class HotFlipFixed(Hotflip):
             # start, end and pad tokens
             min_length = 5  # [token_min_padding_length]
             seq_length = len(text_field.tokens)
-            flipped: List[int] = [0] + list(range(seq_length - min_length, 0))
+            flipped: List[int] = [0, -1]
+            if seq_length < min_length:
+                flipped += list(range(seq_length - min_length, -1))
             for index, token in enumerate(text_field.tokens):
                 if token.text in ignore_tokens:
                     flipped.append(index + 1)
