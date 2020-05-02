@@ -6,11 +6,10 @@ import json
 import numpy as np
 from allennlp.predictors import Predictor
 
-from adat.utils import load_jsonlines, calculate_wer
+from adat.utils import load_jsonlines
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--test-path", type=str, required=True)
-parser.add_argument("--adversarial-test-path", type=str, required=True)
+parser.add_argument("--adversarial-output", type=str, required=True)
 parser.add_argument("--classifier-dir", type=str, required=True)
 parser.add_argument("--out-dir", type=str, required=True)
 parser.add_argument("--sample-size", type=int, default=None)
@@ -34,41 +33,26 @@ def normalized_accuracy_drop(
     return sum(nads) / len(nads)
 
 
-def calculate_wers(
-        sequences: List[str],
-        adv_sequences: List[str],
-) -> List[int]:
-    wers = []
-    for seq, aseq in zip(sequences, adv_sequences):
-        wer = calculate_wer(seq, aseq)
-        wers.append(wer)
-    return wers
-
-
 if __name__ == "__main__":
     args = parser.parse_args()
     classifier_dir = Path(args.classifier_dir)
     out_dir = Path(args.out_dir)
     out_dir.mkdir(exist_ok=True, parents=True)
 
-    test = load_jsonlines(args.test_path)[:args.sample_size]
-    adversarial_test = load_jsonlines(args.adversarial_test_path)[:args.sample_size]
+    data = load_jsonlines(args.adversarial_output)[:args.sample_size]
 
     predictor = Predictor.from_path(
         classifier_dir / "model.tar.gz",
         predictor_name="text_classifier"
     )
-    preds = predictor.predict_batch_json(test)
-    y_true = [int(el["label"]) for el in test]
-    adv_preds = predictor.predict_batch_json(adversarial_test)
+    preds = predictor.predict_batch_json([{"sentence": el["sequence"]} for el in data])
+    y_true = [int(el["attacked_label"]) for el in data]
+
+    adv_preds = predictor.predict_batch_json([{"sentence": el["adversarial_sequence"]} for el in data])
     y_adv = [int(el["label"]) for el in adv_preds]
 
     prob_diffs = [p["probs"][l] - ap["probs"][l] for p, ap, l in zip(preds, adv_preds, y_true)]
-
-    wers = calculate_wers(
-        sequences=[el['text'] for el in test],
-        adv_sequences=[el['text'] for el in adversarial_test],
-    )
+    wers = [el["wer"] for el in data]
 
     nad = normalized_accuracy_drop(
         wers=wers,
