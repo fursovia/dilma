@@ -14,6 +14,7 @@ parser.add_argument("--output-dir", type=str, required=True)
 parser.add_argument("--field-name", type=str, default="text")
 parser.add_argument("--num-adversarial", type=int, default=200000)
 parser.add_argument("--num-non-adversarial", type=int, default=30000)
+parser.add_argument("--test-size", type=float, default=0.15)
 
 
 if __name__ == "__main__":
@@ -49,7 +50,7 @@ if __name__ == "__main__":
         ex = {"seq_a": tr1, "seq_b": tr2, "dist": dist}
         dataset.append(ex)
 
-    train, test = train_test_split(dataset, test_size=0.15)
+    train, test = train_test_split(dataset, test_size=args.test_size)
 
     with jsonlines.open(train_path, "w") as writer:
         for ex in train:
