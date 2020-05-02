@@ -63,7 +63,7 @@ def pairwise_wer(
     return np.array(distances)
 
 
-def visualize_simple_diff(seq_a: str, seq_b: str) -> None:
+def visualize_simple_diff(seq_a: str, seq_b: str, window: int = 3) -> None:
 
     def _colorize(token: str, color: str) -> str:
         return f"<font color='{color}'>{token}</font>"
@@ -72,20 +72,20 @@ def visualize_simple_diff(seq_a: str, seq_b: str) -> None:
     seq_b = seq_b.split()
 
     seq_a_mofidied = []
-    for token in seq_a:
-        if token not in seq_b:
+    for i, token in enumerate(seq_a):
+        if token not in seq_b[max(0, i - window):i + window + 1]:
             seq_a_mofidied.append(_colorize(token, "red"))
         else:
             seq_a_mofidied.append(token)
 
-    seq_a_mofidied = " ".join(seq_a_mofidied)
-
     seq_b_mofidied = []
-    for token in seq_b:
-        if token not in seq_a:
+    for i, token in enumerate(seq_b):
+        if token not in seq_a[max(0, i - window):i + window + 1]:
             seq_b_mofidied.append(_colorize(token, "green"))
         else:
             seq_b_mofidied.append(token)
+
+    seq_a_mofidied = " ".join(seq_a_mofidied)
     seq_b_mofidied = " ".join(seq_b_mofidied)
 
     output = f"{seq_a_mofidied} <br><br> {seq_b_mofidied}"
