@@ -64,7 +64,10 @@ class HotFlipFixed(Hotflip):
             text_field: TextField = instance[input_field_to_attack]  # type: ignore
             grads, outputs = self.predictor.get_gradients([instance])
 
-            flipped: List[int] = [0, len(text_field.tokens) + 1]
+            # start, end and pad tokens
+            min_length = 5  # [token_min_padding_length]
+            seq_length = len(text_field.tokens)
+            flipped: List[int] = [0] + list(range(seq_length - min_length, 0))
             for index, token in enumerate(text_field.tokens):
                 if token.text in ignore_tokens:
                     flipped.append(index + 1)
@@ -77,7 +80,6 @@ class HotFlipFixed(Hotflip):
                     grads_magnitude[index] = -1
 
                 index_of_token_to_flip = numpy.argmax(grads_magnitude)
-                index_of_token_to_flip -= 1
                 if grads_magnitude[index_of_token_to_flip] == -1:
                     # If we've already flipped all of the tokens, we give up.
                     break
@@ -95,7 +97,7 @@ class HotFlipFixed(Hotflip):
                 new_token = Token(
                     self.vocab._index_to_token[self.namespace][new_id]
                 )  # type: ignore
-                text_field.tokens[index_of_token_to_flip] = new_token
+                text_field.tokens[index_of_token_to_flip - 1] = new_token
                 instance.indexed = False
 
                 grads, outputs = self.predictor.get_gradients([instance])  # predictions
@@ -117,7 +119,7 @@ class HotFlipFixed(Hotflip):
 
             tokens_to_add = []
             for token in text_field.tokens:
-                if token.text not in ["<START>", "<END>"]:
+                if token.text not in ["<START>", "<END>", DEFAULT_PADDING_TOKEN]:
                     tokens_to_add.append(token)
 
             final_tokens.append(tokens_to_add)
