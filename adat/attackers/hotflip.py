@@ -118,6 +118,11 @@ class HotFlipFixed(Hotflip):
                 if target is not None and not has_changed:
                     break
 
-            final_tokens.append(text_field.tokens)
+            tokens_to_add = []
+            for token in text_field.tokens:
+                if token.text not in ["<START>", "<END>"]:
+                    tokens_to_add.append(token)
+
+            final_tokens.append(tokens_to_add)
 
         return sanitize({"final": final_tokens, "original": original_tokens, "outputs": outputs})
