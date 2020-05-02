@@ -54,9 +54,9 @@ class HotFlipFixed(Hotflip):
         original_text_field: TextField = original_instances[0][  # type: ignore
             input_field_to_attack
         ]
-        original_text_field.tokens = original_text_field._token_indexers._start_tokens + \
+        original_text_field.tokens = original_text_field._token_indexers["tokens"]._start_tokens + \
                                      original_text_field.tokens + \
-                                     original_text_field._token_indexers._end_tokens
+                                     original_text_field._token_indexers["tokens"]._end_tokens
         original_tokens = deepcopy(original_text_field.tokens)
 
         final_tokens = []
@@ -64,9 +64,9 @@ class HotFlipFixed(Hotflip):
             fields_to_compare = utils.get_fields_to_compare(inputs, instance, input_field_to_attack)
 
             text_field: TextField = instance[input_field_to_attack]  # type: ignore
-            text_field.tokens = text_field._token_indexers._start_tokens + \
+            text_field.tokens = text_field._token_indexers["tokens"]._start_tokens + \
                                 text_field.tokens + \
-                                text_field._token_indexers._end_tokens
+                                text_field._token_indexers["tokens"]._end_tokens
 
             grads, outputs = self.predictor.get_gradients([instance])
 
