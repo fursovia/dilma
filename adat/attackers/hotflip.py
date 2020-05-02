@@ -64,10 +64,10 @@ class HotFlipFixed(Hotflip):
             text_field: TextField = instance[input_field_to_attack]  # type: ignore
             grads, outputs = self.predictor.get_gradients([instance])
 
-            flipped: List[int] = []
+            flipped: List[int] = [0, len(text_field.tokens) + 1]
             for index, token in enumerate(text_field.tokens):
                 if token.text in ignore_tokens:
-                    flipped.append(index)
+                    flipped.append(index + 1)
 
             while True:
                 grad = grads[grad_input_field][0]
@@ -115,11 +115,6 @@ class HotFlipFixed(Hotflip):
                 if target is not None and not has_changed:
                     break
 
-            tokens_to_add = []
-            for token in text_field.tokens:
-                if token.text not in ["<START>", "<END>"]:
-                    tokens_to_add.append(token)
-
-            final_tokens.append(tokens_to_add)
+            final_tokens.append(text_field.tokens)
 
         return sanitize({"final": final_tokens, "original": original_tokens, "outputs": outputs})
