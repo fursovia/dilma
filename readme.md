@@ -83,3 +83,12 @@ PYTHONPATH=. python scripts/hotflip_attack.py \
     --max-tokens 10000 \
     --cuda 0
 ```
+
+## Evaluate attacks
+
+```bash
+PYTHONPATH=. python scripts/evaluate_attack.py \
+    --adversarial-output results/cascada_result_ag.json \
+    --classifier-dir logs/ag_news_models/classifier/ \
+    --out-dir results/ 
+```

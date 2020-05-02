@@ -13,7 +13,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--adversarial-output", type=str, required=True)
 parser.add_argument("--classifier-dir", type=str, required=True)
 parser.add_argument("--out-dir", type=str, required=True)
-parser.add_argument("--sample-size", type=int, default=None)
 parser.add_argument("--gamma", type=float, default=1.0)
 
 
@@ -40,7 +39,7 @@ if __name__ == "__main__":
     out_dir = Path(args.out_dir)
     out_dir.mkdir(exist_ok=True, parents=True)
 
-    data = load_jsonlines(args.adversarial_output)[:args.sample_size]
+    data = load_jsonlines(args.adversarial_output)
 
     predictor = Predictor.from_path(
         classifier_dir / "model.tar.gz",

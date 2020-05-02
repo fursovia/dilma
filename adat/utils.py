@@ -97,3 +97,50 @@ def clean_sequence(sequence: str) -> str:
     sequence = re.sub(r"[^\w0-9 ]+", "", sequence)
     sequence = re.sub(r"\s\s+", " ", sequence).strip()
     return sequence
+
+
+class SequenceModifier:
+
+    def __init__(self, vocab: List[str], remove_prob: float = 0.05,
+                 add_prob: float = 0.05, replace_prob: float = 0.05) -> None:
+        self.vocab = vocab
+        self.remove_prob = remove_prob
+        self.add_prob = add_prob
+        self.replace_prob = replace_prob
+
+    def remove_token(self, sequence: List[str]) -> List[str]:
+        samples = np.random.binomial(n=1, p=self.remove_prob, size=len(sequence))
+        sequence = [token for i, token in enumerate(sequence) if not samples[i]]
+        return sequence
+
+    def add_token(self, sequence: List[str]) -> List[str]:
+        samples = np.random.binomial(n=1, p=self.replace_prob, size=len(sequence))
+
+        new_sequence = []
+        for i, token in enumerate(sequence):
+            new_sequence.append(token)
+            if samples[i]:
+                random_token = np.random.choice(self.vocab)
+                new_sequence.append(random_token)
+        return new_sequence
+
+    def replace_token(self, sequence: List[str]) -> List[str]:
+        samples = np.random.binomial(n=1, p=self.replace_prob, size=len(sequence))
+
+        new_sequence = []
+        for i, token in enumerate(sequence):
+            if samples[i]:
+                random_token = np.random.choice(self.vocab)
+                new_sequence.append(random_token)
+            else:
+                new_sequence.append(token)
+        return new_sequence
+
+    def __call__(self, sequence: str) -> str:
+        splitted_sequence = sequence.split()
+        if len(splitted_sequence) > 1:
+            splitted_sequence = self.remove_token(splitted_sequence)
+
+        splitted_sequence = self.replace_token(splitted_sequence)
+        splitted_sequence = self.add_token(splitted_sequence)
+        return " ".join(splitted_sequence)
