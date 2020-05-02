@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Tuple
 
 import torch
 from torch.optim import SGD
@@ -16,6 +17,13 @@ from adat.models.classifier import BasicClassifierOneHotSupport
 from adat.utils import calculate_wer
 
 
+PARAMETERS = {
+    f"layer_{i}": f"_seq2seq_encoder._transformer.layers.{i}"
+    for i in range(30)
+}
+PARAMETERS.update({"linear": "_head.linear", "all": ""})
+
+
 class MaskedCascada(Attacker):
 
     def __init__(
@@ -25,6 +33,7 @@ class MaskedCascada(Attacker):
             deep_levenshtein_dir: str,
             alpha: float = 5.0,
             lr: float = 1.0,
+            parameters_to_update: Tuple[str, ...] = ("all", ),
             device: int = -1
     ) -> None:
         masked_lm_dir = Path(masked_lm_dir)
@@ -55,6 +64,7 @@ class MaskedCascada(Attacker):
 
         self.alpha = alpha
         self.lr = lr
+        self.parameters_to_update = parameters_to_update
         self.optimizer = None
         self.initialize_optimizer()
 
@@ -62,9 +72,12 @@ class MaskedCascada(Attacker):
         self.lm_model.load_state_dict(self._lm_state)
 
     def initialize_optimizer(self) -> None:
-        # TODO: we can choose parameters to change
-        # TODO: check how the efficiency depends on it
-        self.optimizer = SGD(self.lm_model.parameters(), self.lr)
+        parameters = []
+        for name in self.parameters_to_update:
+            for layer_name, params in self.lm_model.named_parameters():
+                if layer_name.startswith(PARAMETERS[name]):
+                    parameters.append(params)
+        self.optimizer = SGD(parameters, self.lr)
 
     def sequence_to_input(self, sequence: str) -> TextFieldTensors:
         instances = Batch([
