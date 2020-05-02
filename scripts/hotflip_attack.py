@@ -30,7 +30,7 @@ if __name__ == "__main__":
         predictor_name="text_classifier",
         cuda_device=args.cuda
     )
-    preds = predictor.predict_batch_json([{"sentence": el["text"]} for el in data])
+    preds = predictor.predict_batch_json([{"sentence": el["text"].strip()} for el in data])
 
     attacker = HotFlipFixed(predictor=predictor, max_tokens=args.max_tokens)
 
@@ -45,9 +45,12 @@ if __name__ == "__main__":
             adversarial_sequence = " ".join(out["final"][0])
             adversarial_probability = out["outputs"]["probs"]
             if len(adversarial_probability) == 1:
-                adversarial_probability = adversarial_probability[0][attacked_label]
+                adversarial_probabilities = adversarial_probability[0]
             else:
-                adversarial_probability = adversarial_probability[attacked_label]
+                adversarial_probabilities = adversarial_probability
+
+            adversarial_probability = adversarial_probabilities[attacked_label]
+            adversarial_label = int(np.argmax(adversarial_probabilities))
 
             adversarial_output = AttackerOutput(
                 sequence=el["text"],
@@ -56,7 +59,8 @@ if __name__ == "__main__":
                 adversarial_probability=adversarial_probability,
                 wer=calculate_wer(el["text"], adversarial_sequence),
                 prob_diff=(p["probs"][attacked_label] - adversarial_probability),
-                attacked_label=attacked_label
+                attacked_label=attacked_label,
+                adversarial_label=adversarial_label
             )
 
             writer.write(adversarial_output.__dict__)

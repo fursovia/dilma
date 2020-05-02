@@ -112,21 +112,21 @@ class MaskedCascada(Attacker):
             sequence_to_attack: str,
             label_to_attack: int = 1,
             max_steps: int = 10,
-            thresh_drop: float = 0.2,
             early_stopping: bool = False
     ) -> AttackerOutput:
         assert max_steps > 0
         inputs = self.sequence_to_input(sequence_to_attack)
         prob = self.classifier(inputs)["probs"][0, label_to_attack]
-        thresh_drop = min(prob.item() / 2, thresh_drop)
 
         outputs = []
         for _ in range(max_steps):
             adversarial_sequence = self.step(inputs, label_to_attack)
 
-            new_prob = self.classifier(
+            new_probs = self.classifier(
                 self.sequence_to_input(adversarial_sequence)
-            )["probs"][0, label_to_attack]
+            )["probs"][0]
+            predicted_label = new_probs.argmax().item()
+            new_prob = new_probs[label_to_attack]
             distance = calculate_wer(adversarial_sequence, sequence_to_attack)
 
             output = AttackerOutput(
@@ -136,14 +136,15 @@ class MaskedCascada(Attacker):
                 adversarial_probability=new_prob.item(),
                 wer=distance,
                 prob_diff=(prob - new_prob).item(),
-                attacked_label=label_to_attack
+                attacked_label=label_to_attack,
+                adversarial_label=predicted_label
             )
 
             outputs.append(output)
-            if early_stopping and output.prob_diff > thresh_drop:
+            if early_stopping and predicted_label != label_to_attack:
                 break
 
-        output = find_best_attack(outputs, threshold=thresh_drop)
+        output = find_best_attack(outputs)
         self.initialize_load_state_dict()
         self.initialize_optimizer()
         return output

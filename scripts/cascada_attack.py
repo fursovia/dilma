@@ -13,7 +13,6 @@ parser.add_argument("--test-path", type=str, required=True)
 parser.add_argument("--out-path", type=str, required=True)
 
 parser.add_argument("--max-steps", type=int, default=10)
-parser.add_argument("--thresh-drop", type=float, default=0.2)
 parser.add_argument("--early-stopping", action="store_true", default=False)
 parser.add_argument("--alpha", type=float, default=1.0)
 parser.add_argument("--lr", type=float, default=0.1)
@@ -41,7 +40,6 @@ if __name__ == "__main__":
                 sequence_to_attack=el["text"],
                 label_to_attack=el["label"],
                 max_steps=args.max_steps,
-                thresh_drop=args.thresh_drop,
                 early_stopping=args.early_stopping
             )
 
