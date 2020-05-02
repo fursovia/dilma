@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 from typing import List
+from pprint import pprint
 import json
 
 import numpy as np
@@ -67,5 +68,6 @@ if __name__ == "__main__":
         NAD=nad
     )
 
+    pprint(metrics)
     with open(out_dir / "metrics.json", "w") as f:
         json.dump(metrics, f, indent=4)
