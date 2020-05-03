@@ -117,7 +117,11 @@ if __name__ == "__main__":
     )
     metrics[f"NAD_{args.gamma}"] = nad
     metrics[f"NAD_with_perplexity_{args.gamma}"] = nad_with_perp
-    metrics["path_to_model"] = str(classifier_dir.absolute())
+    metrics["path_to_classifier"] = str(classifier_dir.absolute())
+    if args.lm_dir is not None:
+        metrics["path_to_lm"] = str(Path(args.lm_dir).absolute())
+    else:
+        metrics["path_to_lm"] = None
 
     pprint(metrics)
     with open(adversarial_dir / f"{classifier_dir.name}_metrics.json", "w") as f:
