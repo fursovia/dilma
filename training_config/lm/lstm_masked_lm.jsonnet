@@ -30,6 +30,9 @@ local TOKEN_INDEXER = {
   "validation_data_path": std.extVar("LM_VALID_DATA_PATH"),
   "vocabulary": {
     "tokens_to_add": {
+      "max_vocab_size": {
+        "tokens": 50000
+      },
       "tokens": [
         "@@MASK@@",
         "<START>",
