@@ -54,8 +54,8 @@ local TOKEN_INDEXER = {
     "seq2seq_encoder": {
       "type": "stacked_bidirectional_lstm",
       "input_size": 100,
-      "hidden_size": 256,
-      "num_layers": 3,
+      "hidden_size": 128,
+      "num_layers": 2,
       "recurrent_dropout_probability": 0.1,
       "layer_dropout_probability": 0.1
     },
@@ -73,7 +73,7 @@ local TOKEN_INDEXER = {
     ]
   },
   "data_loader": {
-    "batch_size": 64
+    "batch_size": 16
   },
   "trainer": {
     "num_epochs": 50,
