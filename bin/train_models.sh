@@ -26,7 +26,7 @@ allennlp train training_config/lm/transformer_masked_lm.jsonnet \
     --include-package adat
 
 allennlp train training_config/classifier/cnn_classifier.jsonnet \
-    -s ${LOG_DIR}/classifier \
+    -s ${LOG_DIR}/cnn_classifier \
     --include-package adat
 
 if [ -f "$DL_TRAIN_DATA_PATH" ]; then
@@ -39,4 +39,8 @@ fi
 
 allennlp train training_config/levenshtein/cnn_deep_levenshtein.jsonnet \
     -s ${LOG_DIR}/levenshtein \
+    --include-package adat
+
+allennlp train training_config/classifier/gru_classifier.jsonnet \
+    -s ${LOG_DIR}/gru_classifier \
     --include-package adat
