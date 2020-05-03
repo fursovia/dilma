@@ -23,7 +23,7 @@ local TOKEN_INDEXER = {
       "type": "just_spaces"
     },
     // must be lower than positional_embedding_size
-    "max_sequence_length": 500,
+    "max_sequence_length": 256,
     "lazy": false
   },
   "train_data_path": std.extVar("LM_TRAIN_DATA_PATH"),
