@@ -10,9 +10,8 @@ from allennlp.predictors import Predictor
 from adat.utils import load_jsonlines
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--adversarial-output", type=str, required=True)
+parser.add_argument("--adversarial-dir", type=str, required=True)
 parser.add_argument("--classifier-dir", type=str, required=True)
-parser.add_argument("--out-dir", type=str, required=True)
 parser.add_argument("--gamma", type=float, default=1.0)
 
 
@@ -35,14 +34,11 @@ def normalized_accuracy_drop(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    classifier_dir = Path(args.classifier_dir)
-    out_dir = Path(args.out_dir)
-    out_dir.mkdir(exist_ok=True, parents=True)
-
-    data = load_jsonlines(args.adversarial_output)
+    adversarial_dir = Path(args.adversarial_dir)
+    data = load_jsonlines(adversarial_dir / "attacked_data.json")
 
     predictor = Predictor.from_path(
-        classifier_dir / "model.tar.gz",
+        Path(args.classifier_dir) / "model.tar.gz",
         predictor_name="text_classifier"
     )
     preds = predictor.predict_batch_json([{"sentence": el["sequence"]} for el in data])
@@ -65,9 +61,9 @@ if __name__ == "__main__":
     metrics = dict(
         mean_prob_diff=float(np.mean(prob_diffs)),
         mean_wer=float(np.mean(wers)),
-        NAD=nad
     )
+    metrics[f"NAD_{args.gamma}"] = nad
 
     pprint(metrics)
-    with open(out_dir / "metrics.json", "w") as f:
+    with open(adversarial_dir / "metrics.json", "w") as f:
         json.dump(metrics, f, indent=4)
