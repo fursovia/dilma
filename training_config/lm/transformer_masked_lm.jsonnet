@@ -22,7 +22,7 @@ local TOKEN_INDEXER = {
     "tokenizer": {
       "type": "just_spaces"
     },
-    "max_sequence_length": 60,
+    "max_sequence_length": 500,
     "lazy": false
   },
   "train_data_path": std.extVar("LM_TRAIN_DATA_PATH"),
