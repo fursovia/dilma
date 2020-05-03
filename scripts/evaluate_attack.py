@@ -12,6 +12,7 @@ from adat.utils import load_jsonlines
 parser = argparse.ArgumentParser()
 parser.add_argument("--adversarial-dir", type=str, required=True)
 parser.add_argument("--classifier-dir", type=str, required=True)
+parser.add_argument("--lm-dir", type=str, default=None)
 parser.add_argument("--gamma", type=float, default=1.0)
 
 
@@ -36,6 +37,22 @@ if __name__ == "__main__":
     args = parser.parse_args()
     adversarial_dir = Path(args.adversarial_dir)
     data = load_jsonlines(adversarial_dir / "attacked_data.json")
+
+    if args.lm_dir is not None:
+        lm_dir = Path(args.lm_dir)
+        lm_predictor = Predictor.from_path(
+            lm_dir / "model.tar.gz",
+            # this is not a mistake
+            predictor_name="text_classifier"
+        )
+        lm_predictor._model._tokens_masker = None
+        get_perplexity = lambda text: np.exp(lm_predictor.predict_json({"sentence": text})["loss"])
+        orig_perplexities = [get_perplexity(el["sequence"]) for el in data]
+        adv_perplexities = [get_perplexity(el["adversarial_sequence"]) for el in data]
+        perp_diff = [max(0.0, adv_perplexities[i] - orig_perplexities[i]) for i in range(len(data))]
+        mean_perplexity_rise = float(np.mean(perp_diff))
+    else:
+        mean_perplexity_rise = None
 
     classifier_dir = Path(args.classifier_dir)
     predictor = Predictor.from_path(
@@ -62,6 +79,7 @@ if __name__ == "__main__":
     metrics = dict(
         mean_prob_diff=float(np.mean(prob_diffs)),
         mean_wer=float(np.mean(wers)),
+        mean_perplexity_rise=mean_perplexity_rise
     )
     metrics[f"NAD_{args.gamma}"] = nad
     metrics["path_to_model"] = str(classifier_dir.absolute())

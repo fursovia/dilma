@@ -17,7 +17,6 @@ from adat.models.deep_levenshtein import DeepLevenshtein
 from adat.models.classifier import BasicClassifierOneHotSupport
 from adat.utils import calculate_wer
 
-
 _MAX_NUM_LAYERS = 30
 PARAMETERS = {
     f"layer_{i}": f"_seq2seq_encoder._transformer.layers.{i}"
