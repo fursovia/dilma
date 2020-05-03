@@ -37,8 +37,9 @@ if __name__ == "__main__":
     adversarial_dir = Path(args.adversarial_dir)
     data = load_jsonlines(adversarial_dir / "attacked_data.json")
 
+    classifier_dir = Path(args.classifier_dir)
     predictor = Predictor.from_path(
-        Path(args.classifier_dir) / "model.tar.gz",
+        classifier_dir / "model.tar.gz",
         predictor_name="text_classifier"
     )
     preds = predictor.predict_batch_json([{"sentence": el["sequence"]} for el in data])
@@ -63,7 +64,8 @@ if __name__ == "__main__":
         mean_wer=float(np.mean(wers)),
     )
     metrics[f"NAD_{args.gamma}"] = nad
+    metrics["path_to_model"] = str(classifier_dir.absolute())
 
     pprint(metrics)
-    with open(adversarial_dir / "metrics.json", "w") as f:
+    with open(adversarial_dir / f"{classifier_dir.name}_metrics.json", "w") as f:
         json.dump(metrics, f, indent=4)
