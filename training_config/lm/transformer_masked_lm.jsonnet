@@ -68,7 +68,10 @@ local TOKEN_INDEXER = {
     ]
   },
   "data_loader": {
-    "batch_size": 64
+    "batch_sampler": {
+        "type": "bucket",
+        "batch_size": 64,
+    }
   },
   "trainer": {
     "num_epochs": 50,
