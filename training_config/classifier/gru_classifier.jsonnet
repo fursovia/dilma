@@ -59,10 +59,7 @@ local TOKEN_INDEXER = {
     "num_labels": std.parseInt(std.extVar("CLS_NUM_CLASSES"))
   },
   "data_loader": {
-    "batch_sampler": {
-        "type": "bucket",
-        "batch_size": 64,
-    }
+    "batch_size": 64
   },
   "distributed": {
     "cuda_devices": [
