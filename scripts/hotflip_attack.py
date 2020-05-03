@@ -19,6 +19,7 @@ parser.add_argument("--out-dir", type=str, required=True)
 parser.add_argument("--max-tokens", type=int, default=None)
 
 parser.add_argument("--sample-size", type=int, default=None)
+parser.add_argument("--not-date-dir", action="store_true")
 parser.add_argument("--cuda", type=int, default=-1)
 
 
