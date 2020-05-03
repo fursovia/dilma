@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Tuple
+from copy import deepcopy
 
 import torch
 from torch.optim import SGD
@@ -153,7 +154,7 @@ class MaskedCascada(Attacker):
                 break
 
         output = find_best_attack(outputs)
-        output.history = [o.__dict__ for o in outputs]
+        output.history = [deepcopy(o.__dict__) for o in outputs]
         self.initialize_load_state_dict()
         self.initialize_optimizer()
         return output
