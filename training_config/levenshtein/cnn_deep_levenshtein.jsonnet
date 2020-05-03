@@ -56,7 +56,6 @@ local TOKEN_INDEXER = {
   },
   "distributed": {
     "cuda_devices": [
-      0,
       2,
       3
     ]
