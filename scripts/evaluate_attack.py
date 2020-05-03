@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 from typing import List
 from pprint import pprint
+from tqdm import tqdm
 import json
 
 import numpy as np
@@ -33,6 +34,25 @@ def normalized_accuracy_drop(
     return sum(nads) / len(nads)
 
 
+def normalized_accuracy_drop_with_perplexity(
+        wers: List[int],
+        y_true: List[int],
+        y_adv: List[int],
+        perp_true: List[float],
+        perp_adv: List[float],
+        gamma: float = 1.0
+) -> float:
+    assert len(y_true) == len(y_adv)
+    nads = []
+    for wer, lab, alab, pt, pa in zip(wers, y_true, y_adv, perp_true, perp_adv):
+        if wer > 0 and lab != alab:
+            nads.append((1 / wer ** gamma) * (pt / max(pt, pa)))
+        else:
+            nads.append(0.0)
+
+    return sum(nads) / len(nads)
+
+
 if __name__ == "__main__":
     args = parser.parse_args()
     adversarial_dir = Path(args.adversarial_dir)
@@ -47,12 +67,14 @@ if __name__ == "__main__":
         )
         lm_predictor._model._tokens_masker = None
         get_perplexity = lambda text: np.exp(lm_predictor.predict_json({"sentence": text})["loss"])
-        orig_perplexities = [get_perplexity(el["sequence"]) for el in data]
-        adv_perplexities = [get_perplexity(el["adversarial_sequence"]) for el in data]
+        orig_perplexities = [get_perplexity(el["sequence"]) for el in tqdm(data)]
+        adv_perplexities = [get_perplexity(el["adversarial_sequence"]) for el in tqdm(data)]
         perp_diff = [max(0.0, adv_perplexities[i] - orig_perplexities[i]) for i in range(len(data))]
         mean_perplexity_rise = float(np.mean(perp_diff))
     else:
         mean_perplexity_rise = None
+        orig_perplexities = None
+        adv_perplexities = None
 
     classifier_dir = Path(args.classifier_dir)
     predictor = Predictor.from_path(
@@ -76,12 +98,25 @@ if __name__ == "__main__":
         gamma=args.gamma
     )
 
+    if orig_perplexities is not None and adv_perplexities is not None:
+        nad_with_perp = normalized_accuracy_drop_with_perplexity(
+            wers=wers,
+            y_true=y_true,
+            y_adv=y_adv,
+            perp_true=orig_perplexities,
+            perp_adv=adv_perplexities,
+            gamma=args.gamma
+        )
+    else:
+        nad_with_perp = None
+
     metrics = dict(
         mean_prob_diff=float(np.mean(prob_diffs)),
         mean_wer=float(np.mean(wers)),
         mean_perplexity_rise=mean_perplexity_rise
     )
     metrics[f"NAD_{args.gamma}"] = nad
+    metrics[f"NAD_with_perplexity_{args.gamma}"] = nad_with_perp
     metrics["path_to_model"] = str(classifier_dir.absolute())
 
     pprint(metrics)
