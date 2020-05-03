@@ -14,7 +14,7 @@ class AttackerOutput:
     prob_diff: float
     attacked_label: int
     adversarial_label: int
-    history: Optional[Dict[str, Any]] = None
+    history: Optional[List[Dict[str, Any]]] = None
 
 
 class Attacker(ABC):

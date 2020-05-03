@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional
 from copy import deepcopy
 
 import torch
@@ -18,9 +18,10 @@ from adat.models.classifier import BasicClassifierOneHotSupport
 from adat.utils import calculate_wer
 
 
+_MAX_NUM_LAYERS = 30
 PARAMETERS = {
     f"layer_{i}": f"_seq2seq_encoder._transformer.layers.{i}"
-    for i in range(30)
+    for i in range(_MAX_NUM_LAYERS)
 }
 PARAMETERS.update({"linear": "_head.linear", "all": ""})
 
@@ -34,7 +35,7 @@ class MaskedCascada(Attacker):
             deep_levenshtein_dir: str,
             alpha: float = 5.0,
             lr: float = 1.0,
-            parameters_to_update: Tuple[str, ...] = ("all", ),
+            parameters_to_update: Optional[Tuple[str, ...]] = None,
             device: int = -1
     ) -> None:
         masked_lm_dir = Path(masked_lm_dir)
@@ -65,7 +66,7 @@ class MaskedCascada(Attacker):
 
         self.alpha = alpha
         self.lr = lr
-        self.parameters_to_update = parameters_to_update
+        self.parameters_to_update = parameters_to_update or ("all", )
         self.optimizer = None
         self.initialize_optimizer()
 
