@@ -22,7 +22,8 @@ local TOKEN_INDEXER = {
     "tokenizer": {
       "type": "just_spaces"
     },
-    "max_sequence_length": 100,
+    // must be lower than positional_embedding_size
+    "max_sequence_length": 500,
     "lazy": false
   },
   "train_data_path": std.extVar("LM_TRAIN_DATA_PATH"),
@@ -55,8 +56,7 @@ local TOKEN_INDEXER = {
       "input_dim": 100,
       "num_layers": 4,
       "num_attention_heads": 4,
-      "positional_encoding": "embedding",
-      "positional_embedding_size": 64
+      "positional_encoding": "embedding"
     },
     "tokens_masker": {
       "type": "tokens_masker",
