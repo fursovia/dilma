@@ -21,7 +21,7 @@ export LM_VOCAB_PATH=${LOG_DIR}/lm/vocabulary
 mkdir -p ${LOG_DIR}
 mkdir -p ${DL_DATA_DIR}
 
-allennlp train training_config/lm/lstm_masked_lm.jsonnet \
+allennlp train training_config/lm/transformer_masked_lm.jsonnet \
     -s ${LOG_DIR}/lm \
     --include-package adat
 
