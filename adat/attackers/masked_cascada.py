@@ -58,6 +58,7 @@ class MaskedCascada(Attacker):
         self.classifier = BasicClassifierOneHotSupport.from_archive(classifier_dir / "model.tar.gz")
         self.deep_levenshtein = DeepLevenshtein.from_archive(deep_levenshtein_dir / "model.tar.gz")
 
+        self.lm_model.eval()
         self.classifier.eval()
         self.deep_levenshtein.eval()
 
@@ -76,6 +77,7 @@ class MaskedCascada(Attacker):
 
     def initialize_load_state_dict(self) -> None:
         self.lm_model.load_state_dict(self._lm_state)
+        self.lm_model.eval()
 
     def initialize_optimizer(self) -> None:
         parameters = []
@@ -115,8 +117,8 @@ class MaskedCascada(Attacker):
             distances.append(self.deep_levenshtein(onehot_with_gradients, inputs)["distance"][0, 0])
 
         loss = self.calculate_loss(
-            torch.mean(torch.tensor(probs)),
-            torch.mean(torch.tensor(distances))
+            torch.stack(probs).mean(),
+            torch.stack(distances).mean()
         )
         loss.backward()
         self.optimizer.step()
