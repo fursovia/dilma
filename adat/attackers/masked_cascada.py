@@ -32,8 +32,9 @@ class MaskedCascada(Attacker):
             masked_lm_dir: str,
             classifier_dir: str,
             deep_levenshtein_dir: str,
-            alpha: float = 5.0,
-            lr: float = 1.0,
+            alpha: float = 2.0,
+            lr: float = 0.1,
+            num_gumbel_samples: int = 3,
             parameters_to_update: Optional[Tuple[str, ...]] = None,
             device: int = -1
     ) -> None:
@@ -57,6 +58,10 @@ class MaskedCascada(Attacker):
         self.classifier = BasicClassifierOneHotSupport.from_archive(classifier_dir / "model.tar.gz")
         self.deep_levenshtein = DeepLevenshtein.from_archive(deep_levenshtein_dir / "model.tar.gz")
 
+        self.lm_model.eval()
+        self.classifier.eval()
+        self.deep_levenshtein.eval()
+
         self.device = device
         if self.device >= 0 and torch.cuda.is_available():
             self.lm_model.cuda(self.device)
@@ -65,12 +70,14 @@ class MaskedCascada(Attacker):
 
         self.alpha = alpha
         self.lr = lr
+        self.num_samples = num_gumbel_samples
         self.parameters_to_update = parameters_to_update or ("all", )
         self.optimizer = None
         self.initialize_optimizer()
 
     def initialize_load_state_dict(self) -> None:
         self.lm_model.load_state_dict(self._lm_state)
+        self.lm_model.eval()
 
     def initialize_optimizer(self) -> None:
         parameters = []
@@ -101,13 +108,18 @@ class MaskedCascada(Attacker):
 
     def step(self, inputs: TextFieldTensors, label_to_attack: int) -> str:
         logits = self.lm_model(inputs)["logits"]
-        # decoded sequence
-        onehot_with_gradients = torch.nn.functional.gumbel_softmax(logits, hard=True)
 
-        prob = self.classifier(onehot_with_gradients)["probs"][0, label_to_attack]
-        distance = self.deep_levenshtein(onehot_with_gradients, inputs)["distance"][0, 0]
+        probs = []
+        distances = []
+        for _ in range(self.num_samples):
+            onehot_with_gradients = torch.nn.functional.gumbel_softmax(logits, hard=True)
+            probs.append(self.classifier(onehot_with_gradients)["probs"][0, label_to_attack])
+            distances.append(self.deep_levenshtein(onehot_with_gradients, inputs)["distance"][0, 0])
 
-        loss = self.calculate_loss(prob, distance)
+        loss = self.calculate_loss(
+            torch.mean(torch.tensor(probs)),
+            torch.mean(torch.tensor(distances))
+        )
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
@@ -120,7 +132,7 @@ class MaskedCascada(Attacker):
             self,
             sequence_to_attack: str,
             label_to_attack: int = 1,
-            max_steps: int = 10,
+            max_steps: int = 5,
             early_stopping: bool = False
     ) -> AttackerOutput:
         assert max_steps > 0
