@@ -15,6 +15,7 @@ parser.add_argument("--adversarial-dir", type=str, required=True)
 parser.add_argument("--classifier-dir", type=str, required=True)
 parser.add_argument("--lm-dir", type=str, default=None)
 parser.add_argument("--gamma", type=float, default=1.0)
+parser.add_argument("--cuda", type=int, default=-1)
 
 
 def normalized_accuracy_drop(
@@ -63,7 +64,8 @@ if __name__ == "__main__":
         lm_predictor = Predictor.from_path(
             lm_dir / "model.tar.gz",
             # this is not a mistake
-            predictor_name="text_classifier"
+            predictor_name="text_classifier",
+            cuda_device=args.cuda
         )
         lm_predictor._model._tokens_masker = None
         get_perplexity = lambda text: np.exp(lm_predictor.predict_json({"sentence": text})["loss"])
@@ -79,7 +81,8 @@ if __name__ == "__main__":
     classifier_dir = Path(args.classifier_dir)
     predictor = Predictor.from_path(
         classifier_dir / "model.tar.gz",
-        predictor_name="text_classifier"
+        predictor_name="text_classifier",
+        cuda_device=args.cuda
     )
     preds = predictor.predict_batch_json([{"sentence": el["sequence"]} for el in data])
     y_true = [int(el["attacked_label"]) for el in data]
