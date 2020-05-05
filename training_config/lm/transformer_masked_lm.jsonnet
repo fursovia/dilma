@@ -23,15 +23,15 @@ local TOKEN_INDEXER = {
       "type": "just_spaces"
     },
     // must be lower than positional_embedding_size
-    "max_sequence_length": 500,
+    "max_sequence_length": 150,
     "lazy": false
   },
   "train_data_path": std.extVar("LM_TRAIN_DATA_PATH"),
   "validation_data_path": std.extVar("LM_VALID_DATA_PATH"),
   "vocabulary": {
-    "max_vocab_size": {
-      "tokens": 50000
-    },
+//    "max_vocab_size": {
+//      "tokens": 50000
+//    },
     "tokens_to_add": {
       "tokens": [
         "@@MASK@@",
@@ -72,7 +72,7 @@ local TOKEN_INDEXER = {
     ]
   },
   "data_loader": {
-    "batch_size": 64
+    "batch_size": 32
   },
   "trainer": {
     "num_epochs": 50,
