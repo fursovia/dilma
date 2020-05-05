@@ -26,6 +26,7 @@ class Attacker(ABC):
 def find_best_attack(outputs: List[AttackerOutput]) -> AttackerOutput:
     changed_label_outputs = []
     for output in outputs:
+        # TODO: sometimes label changes even with WER=0
         if output.attacked_label != output.adversarial_label:
             changed_label_outputs.append(output)
 

@@ -38,6 +38,7 @@ class MaskedCascada(Attacker):
             parameters_to_update: Optional[Tuple[str, ...]] = None,
             device: int = -1
     ) -> None:
+        assert num_gumbel_samples >= 1
         masked_lm_dir = Path(masked_lm_dir)
         classifier_dir = Path(classifier_dir)
         deep_levenshtein_dir = Path(deep_levenshtein_dir)
