@@ -27,7 +27,7 @@ class DeepLevenshtein(Model):
         self.seq2seq_encoder = seq2seq_encoder
         self.seq2vec_encoder = seq2vec_encoder
         self.linear = torch.nn.Linear(self.seq2vec_encoder.get_output_dim() * 3, 1)
-        self._loss = torch.nn.L1Loss()
+        self._loss = torch.nn.MSELoss()
 
     def encode_sequence(self, sequence: Union[OneHot, TextFieldTensors]) -> torch.Tensor:
 
