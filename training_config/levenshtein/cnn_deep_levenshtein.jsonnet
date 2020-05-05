@@ -21,7 +21,7 @@ local TOKEN_INDEXER = {
     "tokenizer": {
       "type": "just_spaces"
     },
-    "lazy": true
+    "lazy": false
   },
   "train_data_path": std.extVar("DL_TRAIN_DATA_PATH"),
   "validation_data_path": std.extVar("DL_VALID_DATA_PATH"),

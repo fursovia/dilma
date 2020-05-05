@@ -1,6 +1,5 @@
 import argparse
 from pathlib import Path
-from typing import List
 from pprint import pprint
 from tqdm import tqdm
 import json
@@ -8,7 +7,7 @@ import json
 import numpy as np
 from allennlp.predictors import Predictor
 
-from adat.utils import load_jsonlines
+from adat.utils import load_jsonlines, normalized_accuracy_drop, normalized_accuracy_drop_with_perplexity
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--adversarial-dir", type=str, required=True)
@@ -16,42 +15,6 @@ parser.add_argument("--classifier-dir", type=str, required=True)
 parser.add_argument("--lm-dir", type=str, default=None)
 parser.add_argument("--gamma", type=float, default=1.0)
 parser.add_argument("--cuda", type=int, default=-1)
-
-
-def normalized_accuracy_drop(
-        wers: List[int],
-        y_true: List[int],
-        y_adv: List[int],
-        gamma: float = 1.0
-) -> float:
-    assert len(y_true) == len(y_adv)
-    nads = []
-    for wer, lab, alab in zip(wers, y_true, y_adv):
-        if wer > 0 and lab != alab:
-            nads.append(1 / wer ** gamma)
-        else:
-            nads.append(0.0)
-
-    return sum(nads) / len(nads)
-
-
-def normalized_accuracy_drop_with_perplexity(
-        wers: List[int],
-        y_true: List[int],
-        y_adv: List[int],
-        perp_true: List[float],
-        perp_adv: List[float],
-        gamma: float = 1.0
-) -> float:
-    assert len(y_true) == len(y_adv)
-    nads = []
-    for wer, lab, alab, pt, pa in zip(wers, y_true, y_adv, perp_true, perp_adv):
-        if wer > 0 and lab != alab:
-            nads.append((1 / wer ** gamma) * (pt / max(pt, pa)))
-        else:
-            nads.append(0.0)
-
-    return sum(nads) / len(nads)
 
 
 if __name__ == "__main__":

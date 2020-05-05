@@ -144,3 +144,39 @@ class SequenceModifier:
         splitted_sequence = self.replace_token(splitted_sequence)
         splitted_sequence = self.add_token(splitted_sequence)
         return " ".join(splitted_sequence)
+
+
+def normalized_accuracy_drop(
+        wers: List[int],
+        y_true: List[int],
+        y_adv: List[int],
+        gamma: float = 1.0
+) -> float:
+    assert len(y_true) == len(y_adv)
+    nads = []
+    for wer, lab, alab in zip(wers, y_true, y_adv):
+        if wer > 0 and lab != alab:
+            nads.append(1 / wer ** gamma)
+        else:
+            nads.append(0.0)
+
+    return sum(nads) / len(nads)
+
+
+def normalized_accuracy_drop_with_perplexity(
+        wers: List[int],
+        y_true: List[int],
+        y_adv: List[int],
+        perp_true: List[float],
+        perp_adv: List[float],
+        gamma: float = 1.0
+) -> float:
+    assert len(y_true) == len(y_adv)
+    nads = []
+    for wer, lab, alab, pt, pa in zip(wers, y_true, y_adv, perp_true, perp_adv):
+        if wer > 0 and lab != alab:
+            nads.append((1 / wer ** gamma) * (pt / max(pt, pa)))
+        else:
+            nads.append(0.0)
+
+    return sum(nads) / len(nads)

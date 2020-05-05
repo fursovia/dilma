@@ -16,9 +16,9 @@ parser.add_argument("--deep-levenshtein-dir", type=str, required=True)
 parser.add_argument("--test-path", type=str, required=True)
 parser.add_argument("--out-dir", type=str, required=True)
 
-parser.add_argument("--max-steps", type=int, default=5)
+parser.add_argument("--max-steps", type=int, default=10)
 parser.add_argument("--early-stopping", action="store_true", default=False)
-parser.add_argument("--alpha", type=float, default=2.0)
+parser.add_argument("--alpha", type=float, default=18.0)
 parser.add_argument("--lr", type=float, default=0.1)
 parser.add_argument("--num-gumbel-samples", type=int, default=3)
 parser.add_argument("--parameters-to-update", action="append", default=[])
@@ -54,6 +54,7 @@ if __name__ == "__main__":
         device=args.cuda
     )
 
+    print(f"Saving results to {results_path}")
     with jsonlines.open(results_path, "w") as writer:
         for el in tqdm(data):
             adversarial_output = attacker.attack(
