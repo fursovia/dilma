@@ -29,8 +29,7 @@ class Attacker(ABC):
 
         changed_label_outputs = []
         for output in outputs:
-            # TODO: sometimes label changes even with WER=0
-            if output.attacked_label != output.adversarial_label:
+            if output.attacked_label != output.adversarial_label and output.wer > 0:
                 changed_label_outputs.append(output)
 
         if changed_label_outputs:

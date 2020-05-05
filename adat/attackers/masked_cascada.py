@@ -118,7 +118,7 @@ class MaskedCascada(Attacker):
 
         return out
 
-    def estimate_sequence(
+    def get_output(
             self,
             sequence_to_attack: str,
             adversarial_sequence: str,
@@ -170,7 +170,7 @@ class MaskedCascada(Attacker):
 
         outputs = []
         for adversarial_sequence in set(adversarial_sequences):
-            output = self.estimate_sequence(
+            output = self.get_output(
                 sequence_to_attack=sequence_to_attack,
                 adversarial_sequence=adversarial_sequence,
                 label_to_attack=label_to_attack,
