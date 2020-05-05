@@ -98,7 +98,7 @@ class MaskedCascada(Attacker):
         return move_to_device(inputs, self.device)
 
     def calculate_loss(self, prob: torch.Tensor, distance: torch.Tensor) -> torch.Tensor:
-        return torch.pow(distance, 2.0) + self.alpha * prob
+        return torch.pow(torch.sub(1.0, distance), 2.0) + self.alpha * prob
 
     def decode_sequence(self, logits: torch.Tensor) -> str:
         indexes = logits[0].argmax(dim=-1)
