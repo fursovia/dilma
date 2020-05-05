@@ -6,7 +6,7 @@ import jsonlines
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from adat.utils import calculate_normalized_wer, load_jsonlines, SequenceModifier
+from adat.utils import calculate_wer, load_jsonlines, SequenceModifier
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data-path", type=str, required=True)
@@ -36,17 +36,17 @@ if __name__ == "__main__":
     dataset = []
     non_adversarial_indexes = np.random.randint(0, len(sequences), size=(args.num_non_adversarial, 2))
     for id1, id2 in tqdm(non_adversarial_indexes):
-        tr1 = sequences[id1]
-        tr2 = sequences[id2]
-        dist = calculate_normalized_wer(tr1, tr2)
+        tr1 = sequences[id1].strip()
+        tr2 = sequences[id2].strip()
+        dist = calculate_wer(tr1, tr2)
         ex = {"seq_a": tr1, "seq_b": tr2, "dist": dist}
         dataset.append(ex)
 
     adversarial_indexes = np.random.randint(0, len(sequences), size=(args.num_adversarial, ))
     for idx in tqdm(adversarial_indexes):
-        tr1 = sequences[idx]
-        tr2 = modifier(tr1)
-        dist = calculate_normalized_wer(tr1, tr2)
+        tr1 = sequences[idx].strip()
+        tr2 = modifier(tr1).strip()
+        dist = calculate_wer(tr1, tr2)
         ex = {"seq_a": tr1, "seq_b": tr2, "dist": dist}
         dataset.append(ex)
 
