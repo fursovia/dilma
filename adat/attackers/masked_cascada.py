@@ -36,6 +36,8 @@ class MaskedCascada(Attacker):
             alpha: float = 2.0,
             lr: float = 0.1,
             num_gumbel_samples: int = 3,
+            num_samples: int = 5,
+            temperature: float = 0.8,
             parameters_to_update: Optional[Tuple[str, ...]] = None,
             device: int = -1
     ) -> None:
@@ -73,6 +75,8 @@ class MaskedCascada(Attacker):
         self.alpha = alpha
         self.lr = lr
         self.num_gumbel_samples = num_gumbel_samples
+        self.num_samples = num_samples
+        self.temperature = temperature
         self.parameters_to_update = parameters_to_update or ("all", )
         self.optimizer = None
         self.initialize_optimizer()
@@ -106,18 +110,14 @@ class MaskedCascada(Attacker):
         out = [o for o in out if o not in ["<START>", "<END>"]]
         return " ".join(out)
 
-    def decode_sequence(self, logits: torch.Tensor, sample: bool = False, num_samples: int = 5) -> List[str]:
-        if sample:
-            out = []
-            for _ in range(num_samples):
-                temperature = 0.6
-                indexes = Categorical(logits=logits / temperature).sample()
-                out.append(self.indexes_to_string(indexes))
+    def decode_sequence(self, logits: torch.Tensor) -> List[str]:
+        if self.num_samples:
+            indexes = Categorical(logits=logits[0] / self.temperature).sample((self.num_samples, ))
+            out = [self.indexes_to_string(ind) for ind in indexes]
         else:
             # only one sample with argmax
             indexes = logits[0].argmax(dim=-1)
             out = [self.indexes_to_string(indexes)]
-
         return out
 
     def get_output(

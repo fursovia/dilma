@@ -21,6 +21,8 @@ parser.add_argument("--early-stopping", action="store_true", default=False)
 parser.add_argument("--alpha", type=float, default=18.0)
 parser.add_argument("--lr", type=float, default=0.1)
 parser.add_argument("--num-gumbel-samples", type=int, default=3)
+parser.add_argument("--num-samples", type=int, default=5)
+parser.add_argument("--temperature", type=float, default=0.8)
 parser.add_argument("--parameters-to-update", action="append", default=[])
 
 parser.add_argument("--sample-size", type=int, default=None)
@@ -50,6 +52,8 @@ if __name__ == "__main__":
         alpha=args.alpha,
         lr=args.lr,
         num_gumbel_samples=args.num_gumbel_samples,
+        num_samples=args.num_samples,
+        temperature=args.temperature,
         parameters_to_update=args.parameters_to_update,
         device=args.cuda
     )
