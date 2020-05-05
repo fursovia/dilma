@@ -49,6 +49,7 @@ if __name__ == "__main__":
         max_tokens=args.max_tokens or predictor._model.vocab.get_vocab_size("tokens")
     )
 
+    print(f"Saving results to {results_path}")
     with jsonlines.open(results_path, "w") as writer:
         for el, p in tqdm(zip(data, preds)):
 

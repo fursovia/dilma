@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 from copy import deepcopy
 
 import torch
@@ -12,7 +12,7 @@ from allennlp.data.batch import Batch
 from allennlp.data import TextFieldTensors
 from allennlp.nn.util import move_to_device
 
-from adat.attackers.attacker import Attacker, AttackerOutput, find_best_attack
+from adat.attackers.attacker import Attacker, AttackerOutput
 from adat.models.deep_levenshtein import DeepLevenshtein
 from adat.models.classifier import BasicClassifierOneHotSupport
 from adat.utils import calculate_wer
@@ -71,7 +71,7 @@ class MaskedCascada(Attacker):
 
         self.alpha = alpha
         self.lr = lr
-        self.num_samples = num_gumbel_samples
+        self.num_gumbel_samples = num_gumbel_samples
         self.parameters_to_update = parameters_to_update or ("all", )
         self.optimizer = None
         self.initialize_optimizer()
@@ -100,19 +100,59 @@ class MaskedCascada(Attacker):
     def calculate_loss(self, prob: torch.Tensor, distance: torch.Tensor) -> torch.Tensor:
         return torch.pow(torch.sub(1.0, distance), 2.0) + self.alpha * prob
 
-    def decode_sequence(self, logits: torch.Tensor) -> str:
-        indexes = logits[0].argmax(dim=-1)
+    def indexes_to_string(self, indexes: torch.Tensor):
         out = [self.lm_model.vocab.get_token_from_index(idx.item()) for idx in indexes]
-        out = [o for o in out if o != "<START>"]
-        out = [o for o in out if o != "<END>"]
+        out = [o for o in out if o not in ["<START>", "<END>"]]
         return " ".join(out)
 
-    def step(self, inputs: TextFieldTensors, label_to_attack: int) -> str:
+    def decode_sequence(self, logits: torch.Tensor, sample: bool = False, num_samples: int = 5) -> List[str]:
+        if sample:
+            out = []
+            for _ in range(num_samples):
+                indexes = torch.nn.functional.gumbel_softmax(logits[0]).argmax(dim=-1)
+                out.append(self.indexes_to_string(indexes))
+        else:
+            # only one sample with argmax
+            indexes = logits[0].argmax(dim=-1)
+            out = [self.indexes_to_string(indexes)]
+
+        return out
+
+    def estimate_sequence(
+            self,
+            sequence_to_attack: str,
+            adversarial_sequence: str,
+            label_to_attack: int,
+            initial_prob: float
+    ) -> AttackerOutput:
+        new_probs = self.classifier(self.sequence_to_input(adversarial_sequence))["probs"][0]
+        new_prob = new_probs[label_to_attack].item()
+        distance = calculate_wer(adversarial_sequence, sequence_to_attack)
+
+        output = AttackerOutput(
+            sequence=sequence_to_attack,
+            probability=initial_prob,
+            adversarial_sequence=adversarial_sequence,
+            adversarial_probability=new_prob,
+            wer=distance,
+            prob_diff=(initial_prob - new_prob),
+            attacked_label=label_to_attack,
+            adversarial_label=new_probs.argmax().item()
+        )
+        return output
+
+    def step(
+            self,
+            inputs: TextFieldTensors,
+            sequence_to_attack: str,
+            label_to_attack: int,
+            initial_prob: float,
+    ) -> AttackerOutput:
         logits = self.lm_model(inputs)["logits"]
 
         probs = []
         distances = []
-        for _ in range(self.num_samples):
+        for _ in range(self.num_gumbel_samples):
             onehot_with_gradients = torch.nn.functional.gumbel_softmax(logits, hard=True)
             probs.append(self.classifier(onehot_with_gradients)["probs"][0, label_to_attack])
             distances.append(self.deep_levenshtein(onehot_with_gradients, inputs)["distance"][0, 0])
@@ -126,8 +166,19 @@ class MaskedCascada(Attacker):
         self.optimizer.zero_grad()
 
         logits = self.lm_model(inputs)["logits"]
-        adversarial_sequence = self.decode_sequence(logits)
-        return adversarial_sequence
+        adversarial_sequences = self.decode_sequence(logits)
+
+        outputs = []
+        for adversarial_sequence in set(adversarial_sequences):
+            output = self.estimate_sequence(
+                sequence_to_attack=sequence_to_attack,
+                adversarial_sequence=adversarial_sequence,
+                label_to_attack=label_to_attack,
+                initial_prob=initial_prob
+            )
+            outputs.append(output)
+
+        return self.find_best_attack(outputs)
 
     def attack(
             self,
@@ -138,35 +189,21 @@ class MaskedCascada(Attacker):
     ) -> AttackerOutput:
         assert max_steps > 0
         inputs = self.sequence_to_input(sequence_to_attack)
-        prob = self.classifier(inputs)["probs"][0, label_to_attack]
+        prob = self.classifier(inputs)["probs"][0, label_to_attack].item()
 
         outputs = []
         for _ in range(max_steps):
-            adversarial_sequence = self.step(inputs, label_to_attack)
-
-            new_probs = self.classifier(
-                self.sequence_to_input(adversarial_sequence)
-            )["probs"][0]
-            predicted_label = new_probs.argmax().item()
-            new_prob = new_probs[label_to_attack]
-            distance = calculate_wer(adversarial_sequence, sequence_to_attack)
-
-            output = AttackerOutput(
-                sequence=sequence_to_attack,
-                probability=prob.item(),
-                adversarial_sequence=adversarial_sequence,
-                adversarial_probability=new_prob.item(),
-                wer=distance,
-                prob_diff=(prob - new_prob).item(),
-                attacked_label=label_to_attack,
-                adversarial_label=predicted_label
+            output = self.step(
+                inputs,
+                sequence_to_attack=sequence_to_attack,
+                label_to_attack=label_to_attack,
+                initial_prob=prob
             )
-
             outputs.append(output)
-            if early_stopping and predicted_label != label_to_attack:
+            if early_stopping and output.adversarial_label != label_to_attack:
                 break
 
-        output = find_best_attack(outputs)
+        output = self.find_best_attack(outputs)
         output.history = [deepcopy(o.__dict__) for o in outputs]
         self.initialize_load_state_dict()
         self.initialize_optimizer()

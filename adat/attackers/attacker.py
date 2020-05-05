@@ -22,18 +22,21 @@ class Attacker(ABC):
     def attack(self, sequence_to_attack: str, **kwargs) -> AttackerOutput:
         pass
 
+    @staticmethod
+    def find_best_attack(outputs: List[AttackerOutput]) -> AttackerOutput:
+        if len(outputs) == 1:
+            return outputs[0]
 
-def find_best_attack(outputs: List[AttackerOutput]) -> AttackerOutput:
-    changed_label_outputs = []
-    for output in outputs:
-        # TODO: sometimes label changes even with WER=0
-        if output.attacked_label != output.adversarial_label:
-            changed_label_outputs.append(output)
+        changed_label_outputs = []
+        for output in outputs:
+            # TODO: sometimes label changes even with WER=0
+            if output.attacked_label != output.adversarial_label:
+                changed_label_outputs.append(output)
 
-    if changed_label_outputs:
-        sorted_outputs = sorted(changed_label_outputs, key=lambda x: x.prob_diff, reverse=True)
-        best_output = min(sorted_outputs, key=lambda x: x.wer)
-    else:
-        best_output = max(outputs, key=lambda x: x.prob_diff)
+        if changed_label_outputs:
+            sorted_outputs = sorted(changed_label_outputs, key=lambda x: x.prob_diff, reverse=True)
+            best_output = min(sorted_outputs, key=lambda x: x.wer)
+        else:
+            best_output = max(outputs, key=lambda x: x.prob_diff)
 
-    return best_output
+        return best_output
