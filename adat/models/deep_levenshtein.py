@@ -57,8 +57,8 @@ class DeepLevenshtein(Model):
         diff = torch.abs(embedded_sequence_a - embedded_sequence_b)
 
         representation = torch.cat([embedded_sequence_a, embedded_sequence_b, diff], dim=-1)
-        approx_distance = torch.relu(self.linear(representation))
-        output_dict = {"distance": approx_distance}
+        approx_distance = self.linear(representation)
+        output_dict = {"distance": torch.relu(approx_distance)}
 
         if distance is not None:
             output_dict["loss"] = self._loss(approx_distance.view(-1), distance.view(-1))
