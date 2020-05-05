@@ -3,6 +3,7 @@ from typing import Tuple, Optional, List
 from copy import deepcopy
 
 import torch
+from torch.distributions import Categorical
 from torch.optim import SGD
 from allennlp.models import Model
 from allennlp.data.vocabulary import Vocabulary
@@ -109,7 +110,8 @@ class MaskedCascada(Attacker):
         if sample:
             out = []
             for _ in range(num_samples):
-                indexes = torch.nn.functional.gumbel_softmax(logits[0]).argmax(dim=-1)
+                temperature = 0.6
+                indexes = Categorical(logits=logits / temperature).sample()
                 out.append(self.indexes_to_string(indexes))
         else:
             # only one sample with argmax
