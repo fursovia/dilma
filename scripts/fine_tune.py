@@ -31,7 +31,7 @@ if __name__ == "__main__":
             ).replace(
                 "VALID_PATH", args.valid_path
             ).replace(
-                "CUDA", args.cuda
+                "CUDA", str(args.cuda)
             ),
             "--recover"
         ]
