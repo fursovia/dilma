@@ -20,7 +20,7 @@ if __name__ == "__main__":
             "train",
             str(log_dir / "config.json"),
             "--serialization-dir",
-            "{args.log_dir}"
+            "{args.log_dir}",
             "--include-package adat",
             "--overrides",
             '{"trainer.num_epochs": 1, "trainer.patience": 1, \
