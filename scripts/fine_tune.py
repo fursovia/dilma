@@ -19,6 +19,8 @@ if __name__ == "__main__":
             "allennlp",
             "train",
             str(log_dir / "config.json"),
+            "--serialization-dir",
+            "{args.log_dir}"
             "--include-package",
             "adat",
             "--overrides",
