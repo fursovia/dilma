@@ -14,6 +14,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     log_dir = Path(args.log_dir)
 
+    overrides = {
+        "trainer.num_epochs": 1,
+        "trainer.patience": 1,
+        "train_data_path": args.train_path,
+        "validation_data_path": args.valid_path,
+        "distributed": None,
+        "trainer.cuda_device": args.cuda
+
+    }
+
     subprocess.run(
         [
             "allennlp",
@@ -21,19 +31,10 @@ if __name__ == "__main__":
             str(log_dir / "config.json"),
             "--serialization-dir",
             "{args.log_dir}",
-            "--include-package adat",
+            "--include-package",
+            "adat",
             "--overrides",
-            '{"trainer.num_epochs": 1, "trainer.patience": 1, \
-            "train_data_path": TRAIN_PATH, \
-            "validation_data_path": VALID_PATH, \
-            "distributed": null, \
-            "trainer.cuda_device": CUDA}'.replace(
-                "TRAIN_PATH", args.train_path
-            ).replace(
-                "VALID_PATH", args.valid_path
-            ).replace(
-                "CUDA", str(args.cuda)
-            ),
+            str(overrides),
             "--recover"
         ]
     )
