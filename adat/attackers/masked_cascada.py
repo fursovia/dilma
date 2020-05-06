@@ -103,7 +103,7 @@ class MaskedCascada(Attacker):
         return move_to_device(inputs, self.device)
 
     def calculate_loss(self, prob: torch.Tensor, distance: torch.Tensor) -> torch.Tensor:
-        return torch.pow(torch.sub(1.0, distance), 2.0) + self.alpha * prob
+        return (torch.tensor(1.0, device=distance.device) - distance) ** 2 + self.alpha * prob
 
     def indexes_to_string(self, indexes: torch.Tensor):
         out = [self.lm_model.vocab.get_token_from_index(idx.item()) for idx in indexes]
