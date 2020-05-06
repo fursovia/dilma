@@ -22,7 +22,17 @@ if __name__ == "__main__":
             "--include-package",
             "adat",
             "--overrides",
-            f'{"trainer.num_epochs": 1, "trainer.patience": 1, "train_data_path": {args.train_path}, "validation_data_path": {args.valid_path}, "distributed": {None}, "trainer.cuda_device": {args.cuda}}',
+            '{"trainer.num_epochs": 1, "trainer.patience": 1, \
+            "train_data_path": TRAIN_PATH, \
+            "validation_data_path": VALID_PATH, \
+            "distributed": null, \
+            "trainer.cuda_device": CUDA}'.replace(
+                "TRAIN_PATH", args.train_path
+            ).replace(
+                "VALID_PATH", args.valid_path
+            ).replace(
+                "CUDA", args.cuda
+            ),
             "--recover"
         ]
     )
