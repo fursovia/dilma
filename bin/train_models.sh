@@ -33,7 +33,7 @@ if [ -f "$DL_TRAIN_DATA_PATH" ]; then
     echo "Skipping Levenshtein dataset creation"
 else
     PYTHONPATH=. python scripts/create_levenshtein_dataset.py \
-        --data-path ${LM_DATA_DIR}/train.json \
+        --data-dir ${LM_DATA_DIR} \
         --output-dir ${DL_DATA_DIR}
 fi
 

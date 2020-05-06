@@ -9,15 +9,15 @@ from sklearn.model_selection import train_test_split
 from adat.utils import calculate_wer, load_jsonlines, SequenceModifier
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data-path", type=str, required=True)
+parser.add_argument("--data-dir", type=str, required=True)
 parser.add_argument("--output-dir", type=str, required=True)
 parser.add_argument("--field-name", type=str, default="text")
 parser.add_argument("--num-adversarial", type=int, default=200000)
 parser.add_argument("--num-non-adversarial", type=int, default=30000)
-parser.add_argument("--add-prob", type=float, default=0.1)
+parser.add_argument("--add-prob", type=float, default=None)
 parser.add_argument("--replace-prob", type=float, default=None)
 parser.add_argument("--remove-prob", type=float, default=None)
-parser.add_argument("--test-size", type=float, default=None)
+parser.add_argument("--test-size", type=float, default=0.15)
 
 NUM_REMOVES_IN_AVERAGE = 1.0
 NUM_REPLACE_IN_AVERAGE = 2.0
@@ -32,7 +32,8 @@ if __name__ == "__main__":
     test_path = output_dir / "test.json"
     assert not train_path.exists() and not test_path.exists()
 
-    data = load_jsonlines(args.data_path)
+    data_dir = Path(args.data_dir)
+    data = load_jsonlines(data_dir / "train.json") + load_jsonlines(data_dir / "test.json")
     sequences = [str(el[args.field_name]) for el in data]
     mean_len = float(np.mean([len(seq.split()) for seq in sequences]))
     vocab = []
@@ -65,7 +66,6 @@ if __name__ == "__main__":
         dataset.append(ex)
 
     train, test = train_test_split(dataset, test_size=args.test_size)
-
     with jsonlines.open(train_path, "w") as writer:
         for ex in train:
             writer.write(ex)
