@@ -1,4 +1,4 @@
-import subprocess
+import os
 import argparse
 from pathlib import Path
 
@@ -19,22 +19,24 @@ if __name__ == "__main__":
         "trainer.patience": 1,
         "train_data_path": args.train_path,
         "validation_data_path": args.valid_path,
-        "distributed": None,
+        "distributed": "null",
         "trainer.cuda_device": args.cuda
 
     }
 
-    subprocess.run(
-        [
-            "allennlp",
-            "train",
-            str(log_dir / "config.json"),
-            "--serialization-dir",
-            "{args.log_dir}",
-            "--include-package",
-            "adat",
-            "--overrides",
-            str(overrides),
-            "--recover"
-        ]
+    os.system(
+        " ".join(
+            [
+                "allennlp",
+                "train",
+                str(log_dir / "config.json"),
+                "--serialization-dir",
+                "{args.log_dir}",
+                "--include-package",
+                "adat",
+                "--overrides",
+                str(overrides),
+                "--recover"
+            ]
+        )
     )
