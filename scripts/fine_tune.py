@@ -21,7 +21,7 @@ if __name__ == "__main__":
             str(log_dir / "config.json"),
             "--include-package",
             "adat",
-            "--overrides "
+            "--overrides",
             f'{"trainer.num_epochs": 1, "trainer.patience": 1, "train_data_path": {args.train_path}, "validation_data_path": {args.valid_path}, "distributed": {None}, "trainer.cuda_device": {args.cuda}}',
             "--recover"
         ]
