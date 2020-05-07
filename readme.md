@@ -86,7 +86,7 @@ PYTHONPATH=. python scripts/hotflip_attack.py \
     --classifier-dir logs/ag_news_models/cnn_classifier/ \
     --test-path data/ag_news_class/test.json \
     --out-dir results/hotflip \
-    --sample-size 1000 \
+    --sample-size 250 \
     --cuda 0
 ```
 
@@ -94,6 +94,6 @@ PYTHONPATH=. python scripts/hotflip_attack.py \
 
 ```bash
 PYTHONPATH=. python scripts/evaluate_attack.py \
-    --adversarial-dir results/cascada/20200505_140627 \
+    --adversarial-dir results/hotflip/20200506_220827 \
     --classifier-dir logs/ag_news_models/gru_classifier/
 ```
