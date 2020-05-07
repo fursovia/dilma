@@ -34,8 +34,10 @@ class MaskedCascada(Attacker):
             classifier_dir: str,
             deep_levenshtein_dir: str,
             alpha: float = 2.0,
-            lr: float = 0.1,
+            beta: float = 1.0,
+            lr: float = 0.05,
             num_gumbel_samples: int = 3,
+            tau: float = 1.0,
             num_samples: int = 5,
             temperature: float = 0.8,
             parameters_to_update: Optional[Tuple[str, ...]] = None,
@@ -73,8 +75,10 @@ class MaskedCascada(Attacker):
             self.deep_levenshtein.cuda(self.device)
 
         self.alpha = alpha
+        self.beta = beta
         self.lr = lr
         self.num_gumbel_samples = num_gumbel_samples
+        self.tau = tau
         self.num_samples = num_samples
         self.temperature = temperature
         self.parameters_to_update = parameters_to_update or ("all", )
@@ -103,7 +107,7 @@ class MaskedCascada(Attacker):
         return move_to_device(inputs, self.device)
 
     def calculate_loss(self, prob: torch.Tensor, distance: torch.Tensor) -> torch.Tensor:
-        return (torch.tensor(1.0, device=distance.device) - distance) ** 2 + self.alpha * prob
+        return self.beta * ((torch.tensor(1.0, device=distance.device) - distance) ** 2) + self.alpha * prob
 
     def indexes_to_string(self, indexes: torch.Tensor):
         out = [self.lm_model.vocab.get_token_from_index(idx.item()) for idx in indexes]
@@ -150,26 +154,33 @@ class MaskedCascada(Attacker):
             label_to_attack: int,
             initial_prob: float,
     ) -> AttackerOutput:
+        # (1, sequence_length, vocab_size)
         logits = self.lm_model(inputs)["logits"]
 
-        probs = []
-        distances = []
-        for _ in range(self.num_gumbel_samples):
-            # TODO: what if we just use softmax
-            # Straight through
-            onehot_with_gradients = torch.nn.functional.gumbel_softmax(logits, hard=True)
-            probs.append(self.classifier(onehot_with_gradients)["probs"][0, label_to_attack])
-            distances.append(self.deep_levenshtein(onehot_with_gradients, inputs)["distance"][0, 0])
+        # (self.num_gumbel_samples, sequence_length, vocab_size)
+        onehot_with_gradients = torch.cat(
+            [
+                torch.nn.functional.gumbel_softmax(logits, tau=self.tau, hard=True)
+                for _ in range(self.num_gumbel_samples)
+            ]
+        )
+
+        # (self.num_gumbel_samples, )
+        probs = self.classifier(onehot_with_gradients)["probs"][:, label_to_attack]
+        # (self.num_gumbel_samples, )
+        distances = self.deep_levenshtein(onehot_with_gradients, inputs)["distance"]
 
         loss = self.calculate_loss(
-            torch.stack(probs).mean(),
-            torch.stack(distances).mean()
+            probs.mean(),
+            distances.mean()
         )
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
 
+        # (1, sequence_length, vocab_size)
         logits = self.lm_model(inputs)["logits"]
+        # max(self.num_samples, 1) adversarial attacks
         adversarial_sequences = self.decode_sequence(logits)
 
         outputs = []
