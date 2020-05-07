@@ -23,7 +23,7 @@ PARAMETERS = {
     f"layer_{i}": f"_seq2seq_encoder._transformer.layers.{i}"
     for i in range(_MAX_NUM_LAYERS)
 }
-PARAMETERS.update({"linear": "_head.linear", "all": ""})
+PARAMETERS.update({"linear": "_head.linear", "emb": "_text_field_embedder.token_embedder_tokens", "all": ""})
 
 
 class MaskedCascada(Attacker):

@@ -90,6 +90,6 @@ PYTHONPATH=. python scripts/hotflip_attack.py \
 
 ```bash
 PYTHONPATH=. python scripts/evaluate_attack.py \
-    --adversarial-dir results/hotflip/20200506_220827 \
+    --adversarial-dir results/cascada/20200507_202840 \
     --classifier-dir logs/ag_news_models/gru_classifier/
 ```
