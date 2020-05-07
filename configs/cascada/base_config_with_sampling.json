@@ -4,8 +4,8 @@
     "lr": 0.1,
     "num_gumbel_samples": 10,
     "tau": 2.0,
-    "num_samples": 0,
-    "temperature": 1.0,
+    "num_samples": 10,
+    "temperature": 1.5,
     "parameters_to_update": [
         "linear", "layer_3"
     ],
