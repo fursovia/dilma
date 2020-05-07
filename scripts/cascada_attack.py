@@ -37,7 +37,7 @@ if __name__ == "__main__":
     assert not results_path.exists()
     assert not args_path.exists()
 
-    dump_metrics(str(args_path), args.__dict__)
+    dump_metrics(str(args_path), {**args.__dict__, **config})
 
     data = load_jsonlines(args.test_path)[:args.sample_size]
     attacker = MaskedCascada(
