@@ -168,7 +168,10 @@ class MaskedCascada(Attacker):
         # (self.num_gumbel_samples, )
         probs = self.classifier(onehot_with_gradients)["probs"][:, label_to_attack]
         # (self.num_gumbel_samples, )
-        distances = self.deep_levenshtein(onehot_with_gradients, inputs)["distance"]
+        distances = self.deep_levenshtein(
+            onehot_with_gradients,
+            {"tokens": {"tokens": inputs["tokens"]["tokens"].repeat(self.num_gumbel_samples, 1)}}
+        )["distance"]
 
         loss = self.calculate_loss(
             probs.mean(),

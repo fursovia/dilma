@@ -71,8 +71,8 @@ PYTHONPATH=. python scripts/cascada_attack.py \
     --deep-levenshtein-dir logs/ag_news_models/levenshtein_full_2/ \
     --test-path data/ag_news_class/test.json \
     --out-dir results/cascada/ \
-    --sample-size 1000 \
-    --cuda 1
+    --sample-size 250 \
+    --cuda 0
 ```
 
 HotFlip
