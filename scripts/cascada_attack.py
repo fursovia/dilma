@@ -1,8 +1,9 @@
 import argparse
-from tqdm import tqdm
-import jsonlines
-from pathlib import Path
 from datetime import datetime
+import json
+import jsonlines
+from tqdm import tqdm
+from pathlib import Path
 
 from allennlp.common.util import dump_metrics
 
@@ -10,20 +11,13 @@ from adat.utils import load_jsonlines
 from adat.attackers import MaskedCascada
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--config-path", type=str, required=True)
 parser.add_argument("--lm-dir", type=str, required=True)
 parser.add_argument("--classifier-dir", type=str, required=True)
 parser.add_argument("--deep-levenshtein-dir", type=str, required=True)
+
 parser.add_argument("--test-path", type=str, required=True)
 parser.add_argument("--out-dir", type=str, required=True)
-
-parser.add_argument("--max-steps", type=int, default=10)
-parser.add_argument("--early-stopping", action="store_true", default=False)
-parser.add_argument("--alpha", type=float, default=18.0)
-parser.add_argument("--lr", type=float, default=0.1)
-parser.add_argument("--num-gumbel-samples", type=int, default=3)
-parser.add_argument("--num-samples", type=int, default=5)
-parser.add_argument("--temperature", type=float, default=0.8)
-parser.add_argument("--parameters-to-update", action="append", default=[])
 
 parser.add_argument("--sample-size", type=int, default=None)
 parser.add_argument("--not-date-dir", action="store_true")
@@ -32,6 +26,7 @@ parser.add_argument("--cuda", type=int, default=-1)
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    config = json.load(open(args.config_path))
 
     out_dir = Path(args.out_dir)
     if not args.not_date_dir:
@@ -49,12 +44,14 @@ if __name__ == "__main__":
         masked_lm_dir=args.lm_dir,
         classifier_dir=args.classifier_dir,
         deep_levenshtein_dir=args.deep_levenshtein_dir,
-        alpha=args.alpha,
-        lr=args.lr,
-        num_gumbel_samples=args.num_gumbel_samples,
-        num_samples=args.num_samples,
-        temperature=args.temperature,
-        parameters_to_update=args.parameters_to_update,
+        alpha=config["alpha"],
+        beta=config["beta"],
+        lr=config["lr"],
+        num_gumbel_samples=config["num_gumbel_samples"],
+        tau=config["tau"],
+        num_samples=config["num_samples"],
+        temperature=config["temperature"],
+        parameters_to_update=config["parameters_to_update"],
         device=args.cuda
     )
 
@@ -64,8 +61,8 @@ if __name__ == "__main__":
             adversarial_output = attacker.attack(
                 sequence_to_attack=el["text"],
                 label_to_attack=el["label"],
-                max_steps=args.max_steps,
-                early_stopping=args.early_stopping
+                max_steps=config["max_steps"],
+                early_stopping=config["early_stopping"]
             )
 
             writer.write(adversarial_output.__dict__)

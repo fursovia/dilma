@@ -12,7 +12,7 @@ PROJECT_ROOT = (Path(__file__).parent / ".." / "..").resolve()
 
 def test_deep_levenshtein_configs():
 
-    paths = glob(str(PROJECT_ROOT / "training_config/levenshtein/*.jsonnet"))
+    paths = glob(str(PROJECT_ROOT / "configs/levenshtein/*.jsonnet"))
     assert len(paths) > 0
     for config_path in paths:
         try:
@@ -33,7 +33,7 @@ def test_deep_levenshtein_configs():
 
 def test_masked_lm_configs():
 
-    paths = glob(str(PROJECT_ROOT / "training_config/lm/*.jsonnet"))
+    paths = glob(str(PROJECT_ROOT / "configs/lm/*.jsonnet"))
     assert len(paths) > 0
     for config_path in paths:
         try:
@@ -53,7 +53,7 @@ def test_masked_lm_configs():
 
 def test_classifier_configs():
 
-    paths = glob(str(PROJECT_ROOT / "training_config/classifier/*.jsonnet"))
+    paths = glob(str(PROJECT_ROOT / "configs/classifier/*.jsonnet"))
     assert len(paths) > 0
     for config_path in paths:
         try:

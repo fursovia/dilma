@@ -28,7 +28,7 @@ Masked LM
 export LM_TRAIN_DATA_PATH="data/wine_lm/train.json"
 export LM_VALID_DATA_PATH="data/wine_lm/test.json"
 
-allennlp train training_config/lm/transformer_masked_lm.jsonnet \
+allennlp train configs/lm/transformer_masked_lm.jsonnet \
     -s logs/wine_lm \
     --include-package adat
 ```
@@ -41,7 +41,7 @@ export CLS_VALID_DATA_PATH="data/ag_news_class/test.json"
 export LM_VOCAB_PATH="logs/ag_news_models/lm/vocabulary"
 export CLS_NUM_CLASSES=4
 
-allennlp train training_config/classifier/gru_classifier.jsonnet \
+allennlp train configs/classifier/gru_classifier.jsonnet \
     -s logs/ag_news_models/gru_classifier_class \
     --include-package adat
 ```
@@ -53,7 +53,7 @@ export DL_TRAIN_DATA_PATH="data/ag_news/lev/train.json"
 export DL_VALID_DATA_PATH="data/ag_news/lev/test.json"
 export LM_VOCAB_PATH="logs/ag_news_models/lm/vocabulary"
 
-allennlp train training_config/levenshtein/cnn_deep_levenshtein.jsonnet \
+allennlp train configs/levenshtein/cnn_deep_levenshtein.jsonnet \
     -s logs/ag_news_models/levenshtein_full \
     --include-package adat
 ```
@@ -65,17 +65,13 @@ CASCADA
 
 ```bash
 PYTHONPATH=. python scripts/cascada_attack.py \
+    --config-path configs/cascada/base_config.json \
     --lm-dir logs/ag_news_models/lm/ \
     --classifier-dir logs/ag_news_models/cnn_classifier/ \
     --deep-levenshtein-dir logs/ag_news_models/levenshtein_full_2/ \
     --test-path data/ag_news_class/test.json \
     --out-dir results/cascada/ \
     --sample-size 1000 \
-    --alpha 18.0 \
-    --max-steps 10 \
-    --num-gumbel-samples 3 \
-    --lr 0.1 \
-    --parameters-to-update linear \
     --cuda 1
 ```
 
