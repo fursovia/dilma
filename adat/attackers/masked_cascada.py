@@ -155,6 +155,8 @@ class MaskedCascada(Attacker):
         probs = []
         distances = []
         for _ in range(self.num_gumbel_samples):
+            # TODO: what if we just use softmax
+            # Straight through
             onehot_with_gradients = torch.nn.functional.gumbel_softmax(logits, hard=True)
             probs.append(self.classifier(onehot_with_gradients)["probs"][0, label_to_attack])
             distances.append(self.deep_levenshtein(onehot_with_gradients, inputs)["distance"][0, 0])

@@ -59,6 +59,6 @@ class TokensMasker(Registrable):
         return masked_inputs, masked_targets
 
 
-# We can't decorate `TokensMasker` with `TokensMasker.register()`, because `Model` hasn't been defined yet.  So we
-# put this down here.
+# We can't decorate `TokensMasker` with `TokensMasker.register()`, because `TokensMasker` hasn't been defined yet.
+# So we put this down here.
 TokensMasker.register("tokens_masker")(TokensMasker)
