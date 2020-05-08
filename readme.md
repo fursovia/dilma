@@ -41,8 +41,8 @@ export CLS_VALID_DATA_PATH="data/ag_news_class/test.json"
 export LM_VOCAB_PATH="logs/ag_news_models/lm/vocabulary"
 export CLS_NUM_CLASSES=4
 
-allennlp train configs/classifier/gru_classifier.jsonnet \
-    -s logs/ag_news_models/gru_classifier_class \
+allennlp train configs/classifier/cnn_classifier.jsonnet \
+    -s logs/ag_news_models/cnn_classifier_2 \
     --include-package adat
 ```
 
@@ -65,7 +65,7 @@ CASCADA
 
 ```bash
 PYTHONPATH=. python scripts/cascada_attack.py \
-    --config-path configs/cascada/base_config.json \
+    --config-path configs/cascada/random_sampling_config.json \
     --lm-dir logs/ag_news_models/lm/ \
     --classifier-dir logs/ag_news_models/cnn_classifier/ \
     --deep-levenshtein-dir logs/ag_news_models/levenshtein_full_2/ \
@@ -90,6 +90,6 @@ PYTHONPATH=. python scripts/hotflip_attack.py \
 
 ```bash
 PYTHONPATH=. python scripts/evaluate_attack.py \
-    --adversarial-dir results/cascada/20200507_202840 \
+    --adversarial-dir results/cascada/20200508_113931 \
     --classifier-dir logs/ag_news_models/gru_classifier/
 ```
