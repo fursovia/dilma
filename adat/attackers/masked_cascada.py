@@ -133,6 +133,7 @@ class MaskedCascada(Attacker):
             initial_prob: float,
             loss_value: float,
             approx_wer: float,
+            approx_prob: float
     ) -> AttackerOutput:
         new_probs = self.classifier(self.sequence_to_input(adversarial_sequence))["probs"][0]
         new_prob = new_probs[label_to_attack].item()
@@ -148,6 +149,7 @@ class MaskedCascada(Attacker):
             attacked_label=label_to_attack,
             adversarial_label=new_probs.argmax().item(),
             approx_wer=approx_wer,
+            approx_prob=approx_prob,
             loss_value=loss_value
         )
         return output
@@ -199,7 +201,8 @@ class MaskedCascada(Attacker):
                 label_to_attack=label_to_attack,
                 initial_prob=initial_prob,
                 loss_value=loss.item(),
-                approx_wer=distance.item()
+                approx_wer=distance.item(),
+                approx_prob=prob.item()
             )
             outputs.append(output)
 
