@@ -28,7 +28,8 @@ if __name__ == "__main__":
     with open(fine_tune_dir / "config.json", "w") as f:
         json.dump(config, f, indent=2)
 
-    shutil.copy(str(log_dir / "vocabulary"), str(fine_tune_dir / "vocabulary"))
+    shutil.copytree(str(log_dir / "vocabulary"), str(fine_tune_dir / "vocabulary"))
+    shutil.copy(str(log_dir / "best.th"), str(fine_tune_dir / "best.th"))
 
     os.system(
         " ".join(
