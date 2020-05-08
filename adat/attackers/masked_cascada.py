@@ -130,7 +130,9 @@ class MaskedCascada(Attacker):
             sequence_to_attack: str,
             adversarial_sequence: str,
             label_to_attack: int,
-            initial_prob: float
+            initial_prob: float,
+            loss_value: float,
+            approx_wer: float,
     ) -> AttackerOutput:
         new_probs = self.classifier(self.sequence_to_input(adversarial_sequence))["probs"][0]
         new_prob = new_probs[label_to_attack].item()
@@ -144,7 +146,9 @@ class MaskedCascada(Attacker):
             wer=distance,
             prob_diff=(initial_prob - new_prob),
             attacked_label=label_to_attack,
-            adversarial_label=new_probs.argmax().item()
+            adversarial_label=new_probs.argmax().item(),
+            approx_wer=approx_wer,
+            loss_value=loss_value
         )
         return output
 
@@ -167,16 +171,16 @@ class MaskedCascada(Attacker):
         )
 
         # (self.num_gumbel_samples, )
-        probs = self.classifier(onehot_with_gradients)["probs"][:, label_to_attack]
+        prob = self.classifier(onehot_with_gradients)["probs"][:, label_to_attack].mean()
         # (self.num_gumbel_samples, )
-        distances = self.deep_levenshtein(
+        distance = self.deep_levenshtein(
             onehot_with_gradients,
             {"tokens": {"tokens": inputs["tokens"]["tokens"].repeat(self.num_gumbel_samples, 1)}}
-        )["distance"]
+        )["distance"].mean()
 
         loss = self.calculate_loss(
-            probs.mean(),
-            distances.mean()
+            prob,
+            distance
         )
         loss.backward()
         self.optimizer.step()
@@ -193,7 +197,9 @@ class MaskedCascada(Attacker):
                 sequence_to_attack=sequence_to_attack,
                 adversarial_sequence=adversarial_sequence,
                 label_to_attack=label_to_attack,
-                initial_prob=initial_prob
+                initial_prob=initial_prob,
+                loss_value=loss.item(),
+                approx_wer=distance.item()
             )
             outputs.append(output)
 

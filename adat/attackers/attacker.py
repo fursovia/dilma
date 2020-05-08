@@ -15,6 +15,8 @@ class AttackerOutput:
     attacked_label: int
     adversarial_label: int
     history: Optional[List[Dict[str, Any]]] = None
+    approx_wer: Optional[float] = None
+    loss_value: Optional[float] = None
 
 
 class Attacker(ABC):
