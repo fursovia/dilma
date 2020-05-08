@@ -49,12 +49,12 @@ allennlp train configs/classifier/cnn_classifier.jsonnet \
 Deep Levenshtein
 
 ```bash
-export DL_TRAIN_DATA_PATH="data/ag_news/lev/train.json"
-export DL_VALID_DATA_PATH="data/ag_news/lev/test.json"
+export DL_TRAIN_DATA_PATH="data/ag_news/levenshtein/train.json"
+export DL_VALID_DATA_PATH="data/ag_news/levenshtein/test.json"
 export LM_VOCAB_PATH="logs/ag_news_models/lm/vocabulary"
 
 allennlp train configs/levenshtein/cnn_deep_levenshtein.jsonnet \
-    -s logs/ag_news_models/levenshtein_full \
+    -s logs/ag_news_models/lev \
     --include-package adat
 ```
 
@@ -90,6 +90,6 @@ PYTHONPATH=. python scripts/hotflip_attack.py \
 
 ```bash
 PYTHONPATH=. python scripts/evaluate_attack.py \
-    --adversarial-dir results/cascada/20200508_113931 \
+    --adversarial-dir results/hotflip/20200508_184917 \
     --classifier-dir logs/ag_news_models/gru_classifier/
 ```
