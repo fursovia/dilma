@@ -29,6 +29,7 @@ if __name__ == "__main__":
     config["trainer"]["num_epochs"] = last_epoch + 2
     config["trainer"].pop("patience")
     config["trainer"]["cuda_device"] = args.cuda
+    config["trainer"]["optimizer"] = {"type": "sgd", "lr": 0.0001}
 
     with open(fine_tune_dir / "config.json", "w") as f:
         json.dump(config, f, indent=2)
