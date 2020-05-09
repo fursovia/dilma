@@ -4,6 +4,7 @@ from pathlib import Path
 import json
 import shutil
 
+from allennlp.models.archival import archive_model
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--log-dir", type=str, required=True)
@@ -16,20 +17,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
     log_dir = Path(args.log_dir)
     fine_tune_dir = Path(args.fine_tune_dir)
-    fine_tune_dir.mkdir(exist_ok=True)
-
+    shutil.copytree(str(log_dir), str(fine_tune_dir))
+    
+    states = fine_tune_dir.glob("model_state_epoch_*.th")
+    last_epoch = max([int(p.name.split("_")[-1].split(".")[0]) for p in states])
+    
     config = json.load(open(log_dir / "config.json"))
+    config.pop("validation_data_path")
     config["train_data_path"] = args.train_path
     config.pop("distributed")
-    config["trainer"]["num_epochs"] = 1
-    config["trainer"]["patience"] = 1
+    config["trainer"]["num_epochs"] = last_epoch + 2
+    config["trainer"].pop("patience")
     config["trainer"]["cuda_device"] = args.cuda
 
     with open(fine_tune_dir / "config.json", "w") as f:
         json.dump(config, f, indent=2)
-
-    shutil.copytree(str(log_dir / "vocabulary"), str(fine_tune_dir / "vocabulary"))
-    shutil.copy(str(log_dir / "best.th"), str(fine_tune_dir / "best.th"))
 
     os.system(
         " ".join(
@@ -45,3 +47,5 @@ if __name__ == "__main__":
             ]
         )
     )
+    print(f"Saving `model_state_epoch_{last_epoch + 1}.th` to archive")
+    archive_model(str(fine_tune_dir), f"model_state_epoch_{last_epoch + 1}.th")
