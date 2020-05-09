@@ -11,6 +11,7 @@ parser.add_argument("--log-dir", type=str, required=True)
 parser.add_argument("--fine-tune-dir", type=str, required=True)
 parser.add_argument("--train-path", type=str, required=True)
 parser.add_argument("--cuda", type=int, default=-1)
+parser.add_argument("--lr", type=float, default=0.000001)
 
 
 if __name__ == "__main__":
@@ -29,7 +30,7 @@ if __name__ == "__main__":
     config["trainer"]["num_epochs"] = last_epoch + 2
     config["trainer"].pop("patience")
     config["trainer"]["cuda_device"] = args.cuda
-    config["trainer"]["optimizer"] = {"type": "sgd", "lr": 0.0001}
+    config["trainer"]["optimizer"] = {"type": "adam", "lr": args.lr}
 
     with open(fine_tune_dir / "config.json", "w") as f:
         json.dump(config, f, indent=2)

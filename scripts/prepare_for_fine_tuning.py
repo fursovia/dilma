@@ -21,7 +21,7 @@ if __name__ == "__main__":
     print(f"Saving data to {data_path}")
     with jsonlines.open(data_path, "w") as writer:
         for ex in data:
-            if ex["wer"] <= args.max_wer and ex["attacked_label"] != ex["adversarial_label"]:
+            if args.max_wer >= ex["wer"] > 0 and ex["attacked_label"] != ex["adversarial_label"]:
                 num_added += 1
                 writer.write({"text": ex["adversarial_sequence"], "label": ex["attacked_label"]})
 
