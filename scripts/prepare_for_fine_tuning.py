@@ -26,7 +26,7 @@ if __name__ == "__main__":
                 writer.write({"text": ex["adversarial_sequence"], "label": ex["attacked_label"]})
 
         if args.mix_with_path is not None:
-            data_to_mix_with = load_jsonlines(args.min_with_path)
+            data_to_mix_with = load_jsonlines(args.mix_with_path)
             for ex in data_to_mix_with:
                 writer.write(ex)
 
