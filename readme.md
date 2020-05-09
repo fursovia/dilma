@@ -69,9 +69,9 @@ PYTHONPATH=. python scripts/cascada_attack.py \
     --lm-dir logs/ag_news_models/lm/ \
     --classifier-dir logs/ag_news_models/cnn_classifier/ \
     --deep-levenshtein-dir logs/ag_news_models/levenshtein_full_2/ \
-    --test-path data/ag_news_class/test.json \
+    --test-path data/ag_news_class/train.json \
     --out-dir results/cascada/ \
-    --sample-size 250 \
+    --sample-size 10000 \
     --cuda 0
 ```
 
@@ -80,9 +80,10 @@ HotFlip
 ```bash
 PYTHONPATH=. python scripts/hotflip_attack.py \
     --classifier-dir logs/ag_news_models/cnn_classifier/ \
-    --test-path data/ag_news_class/test.json \
-    --out-dir results/hotflip \
-    --sample-size 250 \
+    --test-path data/ag_news_class/train.json \
+    --out-dir results/discr/hotflip \
+    --sample-size 10000 \
+    --not-date-dir \
     --cuda 0
 ```
 
@@ -90,6 +91,33 @@ PYTHONPATH=. python scripts/hotflip_attack.py \
 
 ```bash
 PYTHONPATH=. python scripts/evaluate_attack.py \
-    --adversarial-dir results/hotflip/20200508_184917 \
-    --classifier-dir logs/ag_news_models/gru_classifier/
+    --adversarial-dir results/hotflip/20200509_183543 \
+    --classifier-dir logs/ag_news_models/gru_classifier_ft2
+```
+
+## Fine-tune
+
+Prepare dataset
+
+```bash
+PYTHONPATH=. python scripts/prepare_for_fine_tuning.py \
+    --adversarial-dir results/hotflip/20200509_182410 \
+    --mix-with-path data/ag_news_class/train.json
+```
+
+Fine-tune
+```bash
+PYTHONPATH=. python scripts/fine_tune.py \
+    --log-dir logs/ag_news_models/gru_classifier \
+    --fine-tune-dir logs/ag_news_models/gru_classifier_ft2 \
+    --train-path results/hotflip/20200509_182410/fine_tuning_data.json \
+    --cuda 0
+```
+
+
+```bash
+allennlp evaluate \
+    logs/ag_news_models/gru_classifier_ft2/model.tar.gz \
+    results/hotflip/20200509_182410/fine_tuning_data.json \
+    --include-package adat
 ```
