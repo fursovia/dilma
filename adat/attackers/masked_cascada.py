@@ -14,8 +14,6 @@ from allennlp.data import TextFieldTensors
 from allennlp.nn.util import move_to_device
 
 from adat.attackers.attacker import Attacker, AttackerOutput
-from adat.models.deep_levenshtein import DeepLevenshtein
-from adat.models.classifier import BasicClassifierOneHotSupport
 from adat.utils import calculate_wer
 
 _MAX_NUM_LAYERS = 30
@@ -61,8 +59,8 @@ class MaskedCascada(Attacker):
         self._lm_state = torch.load(masked_lm_dir / "best.th", map_location="cpu")
         self.initialize_load_state_dict()
 
-        self.classifier = BasicClassifierOneHotSupport.from_archive(classifier_dir / "model.tar.gz")
-        self.deep_levenshtein = DeepLevenshtein.from_archive(deep_levenshtein_dir / "model.tar.gz")
+        self.classifier = Model.from_archive(classifier_dir / "model.tar.gz")
+        self.deep_levenshtein = Model.from_archive(deep_levenshtein_dir / "model.tar.gz")
 
         self.lm_model.eval()
         self.classifier.eval()
@@ -125,6 +123,7 @@ class MaskedCascada(Attacker):
             out = [self.indexes_to_string(indexes)]
         return out
 
+    @torch.no_grad()
     def get_output(
             self,
             sequence_to_attack: str,
@@ -160,6 +159,7 @@ class MaskedCascada(Attacker):
             sequence_to_attack: str,
             label_to_attack: int,
             initial_prob: float,
+            **kwargs
     ) -> AttackerOutput:
         # (1, sequence_length, vocab_size)
         logits = self.lm_model(inputs)["logits"]
@@ -217,7 +217,8 @@ class MaskedCascada(Attacker):
     ) -> AttackerOutput:
         assert max_steps > 0
         inputs = self.sequence_to_input(sequence_to_attack)
-        prob = self.classifier(inputs)["probs"][0, label_to_attack].item()
+        with torch.no_grad():
+            prob = self.classifier(inputs)["probs"][0, label_to_attack].item()
 
         outputs = []
         for _ in range(max_steps):

@@ -8,7 +8,7 @@ from pathlib import Path
 from allennlp.common.util import dump_metrics
 
 from adat.utils import load_jsonlines
-from adat.attackers import MaskedCascada
+from adat.attackers import MaskedCascada, DistributionCascada
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config-path", type=str, required=True)
@@ -21,6 +21,7 @@ parser.add_argument("--out-dir", type=str, required=True)
 
 parser.add_argument("--sample-size", type=int, default=None)
 parser.add_argument("--not-date-dir", action="store_true")
+parser.add_argument("--distribution-level", action="store_true")
 parser.add_argument("--cuda", type=int, default=-1)
 
 
@@ -40,7 +41,13 @@ if __name__ == "__main__":
     dump_metrics(str(args_path), {**args.__dict__, **config})
 
     data = load_jsonlines(args.test_path)[:args.sample_size]
-    attacker = MaskedCascada(
+
+    if args.distribution_level:
+        cascada = DistributionCascada
+    else:
+        cascada = MaskedCascada
+
+    attacker = cascada(
         masked_lm_dir=args.lm_dir,
         classifier_dir=args.classifier_dir,
         deep_levenshtein_dir=args.deep_levenshtein_dir,
