@@ -49,7 +49,7 @@ class DistributionClassifier(Model):
             mask: torch.Tensor,
             label: torch.IntTensor = None
     ) -> Dict[str, torch.Tensor]:
-        embedded_text = self._seq2vec_encoder(lm_logits, mask=mask)
+        embedded_text = self._seq2vec_encoder(torch.softmax(lm_logits, dim=-1), mask=mask)
 
         if self._dropout:
             embedded_text = self._dropout(embedded_text)
@@ -120,7 +120,7 @@ class DistributionClassifier(Model):
         seq2vec_encoder = Seq2VecEncoder.from_params(seq2vec_encoder_params, vocab=vocab)
 
         num_labels = params.pop_int("num_labels")
-        dropout = params.pop_float("dropout")
+        dropout = params.pop_float("dropout", None)
 
         params.assert_empty(cls.__name__)
 

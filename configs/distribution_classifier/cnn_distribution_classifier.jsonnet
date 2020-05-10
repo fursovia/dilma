@@ -45,7 +45,6 @@ local TOKEN_INDEXER = {
         5
       ]
     },
-    "dropout": 0.3,
     "num_labels": std.parseInt(std.extVar("CLS_NUM_CLASSES"))
   },
   "data_loader": {

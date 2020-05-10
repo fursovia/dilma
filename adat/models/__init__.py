@@ -1,4 +1,4 @@
 from .classifier import BasicClassifierOneHotSupport
-from .classifier_on_distribution import DistributionClassifier
+from .distribution_classifier import DistributionClassifier
 from .deep_levenshtein import DeepLevenshtein
 from .masked_lm import MaskedLanguageModel
