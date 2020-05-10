@@ -4,10 +4,10 @@ import torch
 from allennlp.data import TextFieldTensors
 
 from adat.attackers.attacker import AttackerOutput
-from .masked_cascada import MaskedCascada
+from .cascada import Cascada
 
 
-class DistributionCascada(MaskedCascada):
+class DistributionCascada(Cascada):
 
     def step(
             self,

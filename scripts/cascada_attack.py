@@ -8,7 +8,7 @@ from pathlib import Path
 from allennlp.common.util import dump_metrics
 
 from adat.utils import load_jsonlines
-from adat.attackers import MaskedCascada, DistributionCascada
+from adat.attackers import Cascada, DistributionCascada
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config-path", type=str, required=True)
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     if args.distribution_level:
         cascada = DistributionCascada
     else:
-        cascada = MaskedCascada
+        cascada = Cascada
 
     attacker = cascada(
         masked_lm_dir=args.lm_dir,

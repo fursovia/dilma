@@ -24,7 +24,7 @@ PARAMETERS = {
 PARAMETERS.update({"linear": "_head.linear", "emb": "_text_field_embedder.token_embedder_tokens", "all": ""})
 
 
-class MaskedCascada(Attacker):
+class Cascada(Attacker):
 
     def __init__(
             self,
