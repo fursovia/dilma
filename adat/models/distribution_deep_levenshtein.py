@@ -60,7 +60,7 @@ class DistributionDeepLevenshtein(Model):
             lm_output_a = self._masked_lm(sequence_a)
             lm_output_b = self._masked_lm(sequence_b)
 
-        output_dict = self.forward_on_lm_output(lm_output_a, lm_output_b)
+        output_dict = self.forward_on_lm_output(lm_output_a, lm_output_b, distance)
         return output_dict
 
     @classmethod
