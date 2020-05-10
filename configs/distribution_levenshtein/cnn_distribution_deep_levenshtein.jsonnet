@@ -14,45 +14,36 @@ local TOKEN_INDEXER = {
 
 {
   "dataset_reader": {
-    "type": "text_classification_json",
+    "type": "deep_levenshtein",
     // DO NOT CHANGE token_indexers
     "token_indexers": TOKEN_INDEXER,
     // DO NOT CHANGE tokenizer
     "tokenizer": {
       "type": "just_spaces"
     },
-    "skip_label_indexing": true,
     "lazy": false
   },
-  "train_data_path": std.extVar("CLS_TRAIN_DATA_PATH"),
-  "validation_data_path": std.extVar("CLS_VALID_DATA_PATH"),
+  "train_data_path": std.extVar("DL_TRAIN_DATA_PATH"),
+  "validation_data_path": std.extVar("DL_VALID_DATA_PATH"),
   // Make sure you load vocab from LM
   "vocabulary": {
     "type": "from_files",
     "directory": std.extVar("LM_VOCAB_PATH")
   },
   "model": {
-    "type": "basic_classifier_one_hot_support",
-    "text_field_embedder": {
-      "token_embedders": {
-        "tokens": {
-          "type": "embedding",
-          "embedding_dim": 100,
-          "trainable": true
-        }
-      }
+    "type": "distribution_deep_levenshtein",
+    "masked_lm": {
+        "type": "from_archive",
+        "archive_file": std.extVar("LM_ARCHIVE_PATH")
     },
     "seq2vec_encoder": {
-      "type": "cnn",
-      "embedding_dim": 100,
+      "type": "distribution_cnn",
       "num_filters": 8,
       "ngram_filter_sizes": [
         3,
         5
       ]
     },
-    "dropout": 0.1,
-    "num_labels": std.parseInt(std.extVar("CLS_NUM_CLASSES"))
   },
   "data_loader": {
     "batch_size": 64

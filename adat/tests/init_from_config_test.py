@@ -29,6 +29,27 @@ def test_deep_levenshtein_configs():
             raise AssertionError(f"unable to load params from {config_path}, because {e}")
 
 
+def test_distribution_deep_levenshtein_configs():
+
+    paths = glob(str(PROJECT_ROOT / "configs/distribution_levenshtein/*.jsonnet"))
+    assert len(paths) > 0
+    for config_path in paths:
+        try:
+            params = Params.from_file(
+                str(config_path),
+                ext_vars={
+                    "DL_TRAIN_DATA_PATH": "",
+                    "DL_VALID_DATA_PATH": "",
+                    "LM_VOCAB_PATH": "",
+                    "LM_ARCHIVE_PATH": str(PROJECT_ROOT / "adat/tests/fixtures/masked_lm/model.tar.gz")
+                }
+            )
+            blank_vocab = Vocabulary()
+            Model.from_params(params=params["model"], vocab=blank_vocab)
+        except Exception as e:
+            raise AssertionError(f"unable to load params from {config_path}, because {e}")
+
+
 def test_masked_lm_configs():
 
     paths = glob(str(PROJECT_ROOT / "configs/lm/*.jsonnet"))

@@ -2,3 +2,4 @@ from .classifier import BasicClassifierOneHotSupport
 from .distribution_classifier import DistributionClassifier
 from .deep_levenshtein import DeepLevenshtein
 from .masked_lm import MaskedLanguageModel
+from .distribution_deep_levenshtein import DistributionDeepLevenshtein
