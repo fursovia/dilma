@@ -73,7 +73,7 @@ class DistributionClassifier(Model):
         with torch.no_grad():
             lm_output = self._masked_lm(tokens)
 
-        output_dict = self.distribution_to_preds(lm_output, label)
+        output_dict = self.forward_on_lm_output(lm_output, label)
         output_dict["token_ids"] = util.get_token_ids_from_text_field_tensors(tokens)
         return output_dict
 
