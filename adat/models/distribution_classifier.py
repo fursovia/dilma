@@ -28,7 +28,7 @@ class DistributionClassifier(Model):
 
         self._masked_lm = masked_lm
         self._masked_lm.eval()
-        self._masked_lm.self._tokens_masker = None
+        self._masked_lm._tokens_masker = None
 
         self._seq2vec_encoder = seq2vec_encoder
         self._classifier_input_dim = self._seq2vec_encoder.get_output_dim()
