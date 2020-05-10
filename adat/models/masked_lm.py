@@ -57,7 +57,8 @@ class MaskedLanguageModel(Model):
 
         output_dict = dict(
             contextual_embeddings=contextual_embeddings,
-            logits=logits
+            logits=logits,
+            mask=mask
         )
 
         output_dict["loss"] = self._loss(

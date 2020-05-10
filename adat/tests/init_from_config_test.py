@@ -3,8 +3,7 @@ from glob import glob
 
 from allennlp.data import Vocabulary
 from allennlp.common import Params
-
-from adat.models import DeepLevenshtein, MaskedLanguageModel, BasicClassifierOneHotSupport
+from allennlp.models import Model
 
 
 PROJECT_ROOT = (Path(__file__).parent / ".." / "..").resolve()
@@ -25,8 +24,7 @@ def test_deep_levenshtein_configs():
                 }
             )
             blank_vocab = Vocabulary()
-            params["model"].pop("type")
-            DeepLevenshtein.from_params(params=params["model"], vocab=blank_vocab)
+            Model.from_params(params=params["model"], vocab=blank_vocab)
         except Exception as e:
             raise AssertionError(f"unable to load params from {config_path}, because {e}")
 
@@ -45,8 +43,7 @@ def test_masked_lm_configs():
                 }
             )
             blank_vocab = Vocabulary(tokens_to_add={"tokens": ["@@MASK@@"]})
-            params["model"].pop("type")
-            MaskedLanguageModel.from_params(params=params["model"], vocab=blank_vocab)
+            Model.from_params(params=params["model"], vocab=blank_vocab)
         except Exception as e:
             raise AssertionError(f"unable to load params from {config_path}, because {e}")
 
@@ -63,11 +60,34 @@ def test_classifier_configs():
                     "CLS_TRAIN_DATA_PATH": "",
                     "CLS_VALID_DATA_PATH": "",
                     "CLS_NUM_CLASSES": "2",
-                    "LM_VOCAB_PATH": ""
+                    "LM_VOCAB_PATH": "",
+                    "DISCR_TRAIN_DATA_PATH": "",
+                    "DISCR_VALID_DATA_PATH": ""
                 }
             )
             blank_vocab = Vocabulary()
-            params["model"].pop("type")
-            BasicClassifierOneHotSupport.from_params(params=params["model"], vocab=blank_vocab)
+            Model.from_params(params=params["model"], vocab=blank_vocab)
+        except Exception as e:
+            raise AssertionError(f"unable to load params from {config_path}, because {e}")
+
+
+def test_distribution_classifier_configs():
+
+    paths = glob(str(PROJECT_ROOT / "configs/distribution_classifier/*.jsonnet"))
+    assert len(paths) > 0
+    for config_path in paths:
+        try:
+            params = Params.from_file(
+                str(config_path),
+                ext_vars={
+                    "CLS_TRAIN_DATA_PATH": "",
+                    "CLS_VALID_DATA_PATH": "",
+                    "CLS_NUM_CLASSES": "2",
+                    "LM_VOCAB_PATH": "",
+                    "LM_ARCHIVE_PATH": str(PROJECT_ROOT / "adat/tests/fixtures/masked_lm/model.tar.gz")
+                }
+            )
+            blank_vocab = Vocabulary()
+            Model.from_params(params=params["model"], vocab=blank_vocab)
         except Exception as e:
             raise AssertionError(f"unable to load params from {config_path}, because {e}")
