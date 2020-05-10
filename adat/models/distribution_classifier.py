@@ -28,6 +28,7 @@ class DistributionClassifier(Model):
 
         self._masked_lm = masked_lm
         self._masked_lm.eval()
+        self._masked_lm.self._tokens_masker = None
 
         self._seq2vec_encoder = seq2vec_encoder
         self._classifier_input_dim = self._seq2vec_encoder.get_output_dim()
@@ -43,13 +44,12 @@ class DistributionClassifier(Model):
         self._accuracy = CategoricalAccuracy()
         self._loss = torch.nn.CrossEntropyLoss()
 
-    def distribution_to_preds(
+    def forward_on_lm_output(
             self,
-            lm_logits: torch.Tensor,
-            mask: torch.Tensor,
+            lm_output: Dict[str, torch.Tensor],
             label: torch.IntTensor = None
     ) -> Dict[str, torch.Tensor]:
-        embedded_text = self._seq2vec_encoder(torch.softmax(lm_logits, dim=-1), mask=mask)
+        embedded_text = self._seq2vec_encoder(torch.softmax(lm_output["logits"], dim=-1), mask=lm_output["mask"])
 
         if self._dropout:
             embedded_text = self._dropout(embedded_text)
@@ -72,10 +72,8 @@ class DistributionClassifier(Model):
 
         with torch.no_grad():
             lm_output = self._masked_lm(tokens)
-            lm_logits = lm_output["logits"]
-            mask = lm_output["mask"]
 
-        output_dict = self.distribution_to_preds(lm_logits, mask, label)
+        output_dict = self.distribution_to_preds(lm_output, label)
         output_dict["token_ids"] = util.get_token_ids_from_text_field_tensors(tokens)
         return output_dict
 
