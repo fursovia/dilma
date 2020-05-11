@@ -109,6 +109,7 @@ class SequenceModifier:
             add_prob: float = 0.05,
             replace_prob: float = 0.1
     ) -> None:
+        assert sum([remove_prob, add_prob, replace_prob]) > 0.0
         self.vocab = vocab
         self.remove_prob = remove_prob
         self.add_prob = add_prob
@@ -133,10 +134,14 @@ class SequenceModifier:
 
     def __call__(self, sequence: str) -> str:
         splitted_sequence = sequence.split()
-        if len(splitted_sequence) > 1:
+        if len(splitted_sequence) > 1 and self.remove_prob:
             splitted_sequence = self.remove_token(splitted_sequence)
-        splitted_sequence = self.replace_token(splitted_sequence)
-        splitted_sequence = self.add_token(splitted_sequence)
+
+        if self.replace_prob:
+            splitted_sequence = self.replace_token(splitted_sequence)
+
+        if self.add_prob:
+            splitted_sequence = self.add_token(splitted_sequence)
         return " ".join(splitted_sequence)
 
 
