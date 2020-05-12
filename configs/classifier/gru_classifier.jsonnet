@@ -55,7 +55,7 @@ local TOKEN_INDEXER = {
       "embedding_dim": 256,
       "averaged": true
     },
-    "dropout": 0.2,
+    "dropout": 0.1,
     "num_labels": std.parseInt(std.extVar("CLS_NUM_CLASSES"))
   },
   "data_loader": {
@@ -63,7 +63,6 @@ local TOKEN_INDEXER = {
   },
   "distributed": {
     "cuda_devices": [
-      0,
       2,
       3
     ]
