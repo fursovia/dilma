@@ -24,6 +24,7 @@ REMOVE_PROB = 0.0
 ADD_PROB = 0.0
 REPLACE_PROB = 1.0
 NUM_SMALL_CHANGES = 3
+NUM_SEQUENTIAL_CHANGES = 10
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -69,7 +70,10 @@ if __name__ == "__main__":
             dataset.append(ex)
 
         tr2 = tr1
-        for _ in range(len(tr1.split())):
+        num_changes = NUM_SEQUENTIAL_CHANGES
+        if num_changes > len(tr1.split()):
+            num_changes = tr1.split()
+        for _ in range(num_changes):
             position_idx = random.randint(0, len(tr1.split()) - 1)
             replace_with = random.choice(vocab)
             tr2 = tr2.split()
