@@ -72,7 +72,7 @@ if __name__ == "__main__":
         tr2 = tr1
         num_changes = NUM_SEQUENTIAL_CHANGES
         if num_changes > len(tr1.split()):
-            num_changes = tr1.split()
+            num_changes = len(tr1.split())
         for _ in range(num_changes):
             position_idx = random.randint(0, len(tr1.split()) - 1)
             replace_with = random.choice(vocab)
