@@ -46,35 +46,36 @@ local TOKEN_INDEXER = {
       "token_embedders": {
         "tokens": {
           "type": "embedding",
-          "embedding_dim": 100,
+          "embedding_dim": 64,
           "trainable": true
         }
       }
     },
     "seq2seq_encoder": {
       "type": "pytorch_transformer",
-      "input_dim": 100,
-      "num_layers": 4,
+      "input_dim": 64,
+      "num_layers": 3,
       "num_attention_heads": 4,
       "positional_encoding": "embedding"
     },
     "tokens_masker": {
       "type": "tokens_masker",
-      "mask_probability": 0.3,
+      "mask_probability": 0.5,
       "replace_probability": 0.1
     }
   },
   "distributed": {
+    "master_port": 29501,
     "cuda_devices": [
       2,
       3
     ]
   },
   "data_loader": {
-    "batch_size": 32
+    "batch_size": 64
   },
   "trainer": {
     "num_epochs": 50,
-    "patience": 3
+    "patience": 2
   }
 }
