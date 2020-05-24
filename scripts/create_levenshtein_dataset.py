@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 from tqdm import tqdm
+import random
 import jsonlines
 
 import numpy as np
@@ -19,10 +20,10 @@ parser.add_argument("--replace-prob", type=float, default=None)
 parser.add_argument("--remove-prob", type=float, default=None)
 parser.add_argument("--test-size", type=float, default=0.15)
 
-NUM_REMOVES_IN_AVERAGE = 1.0
-NUM_REPLACE_IN_AVERAGE = 2.0
-NUM_ADD_IN_AVERAGE = 1.0
-
+REMOVE_PROB = 0.0
+ADD_PROB = 0.0
+REPLACE_PROB = 1.0
+NUM_SMALL_CHANGES = 3
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -43,9 +44,9 @@ if __name__ == "__main__":
 
     modifier = SequenceModifier(
         vocab,
-        remove_prob=args.remove_prob or NUM_REMOVES_IN_AVERAGE / mean_len,
-        add_prob=args.add_prob or NUM_ADD_IN_AVERAGE / mean_len,
-        replace_prob=args.replace_prob or NUM_REPLACE_IN_AVERAGE / mean_len
+        remove_prob=args.remove_prob or REMOVE_PROB,
+        add_prob=args.add_prob or ADD_PROB,
+        replace_prob=args.replace_prob or REPLACE_PROB
     )
 
     dataset = []
@@ -60,10 +61,24 @@ if __name__ == "__main__":
     adversarial_indexes = np.random.randint(0, len(sequences), size=(args.num_adversarial, ))
     for idx in tqdm(adversarial_indexes):
         tr1 = sequences[idx].strip()
-        tr2 = modifier(tr1).strip()
-        dist = calculate_wer(tr1, tr2)
-        ex = {"seq_a": tr1, "seq_b": tr2, "dist": dist}
-        dataset.append(ex)
+
+        for _ in range(NUM_SMALL_CHANGES):
+            tr2 = modifier(tr1).strip()
+            dist = calculate_wer(tr1, tr2)
+            ex = {"seq_a": tr1, "seq_b": tr2, "dist": dist}
+            dataset.append(ex)
+
+        tr2 = tr1
+        for _ in range(len(tr1.split())):
+            position_idx = random.randint(0, len(tr1.split()) - 1)
+            replace_with = random.choice(vocab)
+            tr2 = tr2.split()
+            tr2[position_idx] = replace_with
+            tr2 = " ".join(tr2)
+
+            dist = calculate_wer(tr1, tr2)
+            ex = {"seq_a": tr1, "seq_b": tr2, "dist": dist}
+            dataset.append(ex)
 
     train, test = train_test_split(dataset, test_size=args.test_size)
     with jsonlines.open(train_path, "w") as writer:
