@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 
-
-
 LOG_DIR=new_logs/insurance
 DATA_DIR=datasets/insurance
 export LM_VOCAB_PATH=logs/insurance/lm/vocabulary
