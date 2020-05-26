@@ -15,7 +15,7 @@ local TOKEN_INDEXER = {
 {
   "dataset_reader": {
     // this is not a mistake
-    "type": "simple_language_modeling",
+    "type": "simple_language_modeling_fixed",
     // DO NOT CHANGE token_indexers
     "token_indexers": TOKEN_INDEXER,
     // DO NOT CHANGE tokenizer
@@ -23,7 +23,7 @@ local TOKEN_INDEXER = {
       "type": "just_spaces"
     },
     // must be lower than positional_embedding_size
-    "max_sequence_length": 256,
+    "max_sequence_length": 150,
     "lazy": false
   },
   "train_data_path": std.extVar("LM_TRAIN_DATA_PATH"),
@@ -59,7 +59,7 @@ local TOKEN_INDEXER = {
     }
   },
   "distributed": {
-    "master_port": 29501,
+    "master_port": 29599,
     "cuda_devices": [
       0,
       1
