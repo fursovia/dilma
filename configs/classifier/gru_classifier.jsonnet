@@ -62,10 +62,10 @@ local TOKEN_INDEXER = {
     "batch_size": 64
   },
   "distributed": {
-    "master_port": 29501,
+    "master_port": 29555,
     "cuda_devices": [
-      2,
-      3
+      0,
+      1
     ]
   },
   "trainer": {
