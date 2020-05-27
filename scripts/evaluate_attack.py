@@ -6,7 +6,11 @@ import json
 
 import numpy as np
 from allennlp.predictors import Predictor
+from allennlp.models import Model
+from allennlp.data import DatasetReader
+from allennlp.common.params import Params
 
+from adat.dataset_readers.lm_reader import SimpleLanguageModelingDatasetReaderFixed
 from adat.utils import load_jsonlines, normalized_accuracy_drop, normalized_accuracy_drop_with_perplexity
 
 parser = argparse.ArgumentParser()
@@ -24,14 +28,21 @@ if __name__ == "__main__":
 
     if args.lm_dir is not None:
         lm_dir = Path(args.lm_dir)
-        lm_predictor = Predictor.from_path(
-            lm_dir / "model.tar.gz",
-            # this is not a mistake
-            predictor_name="text_classifier",
-            cuda_device=args.cuda
-        )
+        lm_model = Model.from_archive(lm_dir / "model.tar.gz")
+        reader = DatasetReader.from_params(Params.from_file(lm_dir /'config.json')['dataset_reader'])
+        lm_predictor = Predictor(lm_model, reader)
+        # lm_predictor = Predictor.from_path(
+        #     lm_dir / "model.tar.gz",
+        #     # this is not a mistake
+        #     predictor_name="text_classifier",
+        #     cuda_device=args.cuda
+        # )
         lm_predictor._model._tokens_masker = None
-        get_perplexity = lambda text: np.exp(lm_predictor.predict_json({"sentence": text})["loss"])
+        get_perplexity = lambda text: np.exp(
+            lm_predictor.predict_instance(
+                lm_predictor._dataset_reader.text_to_instance(text)
+            )
+        )["loss"]
         orig_perplexities = [get_perplexity(el["sequence"]) for el in tqdm(data)]
         adv_perplexities = [get_perplexity(el["adversarial_sequence"]) for el in tqdm(data)]
         perp_diff = [max(0.0, adv_perplexities[i] - orig_perplexities[i]) for i in range(len(data))]
