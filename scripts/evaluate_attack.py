@@ -41,8 +41,8 @@ if __name__ == "__main__":
         get_perplexity = lambda text: np.exp(
             lm_predictor.predict_instance(
                 lm_predictor._dataset_reader.text_to_instance(text)
-            )
-        )["loss"]
+            )["loss"]
+        )
         orig_perplexities = [get_perplexity(el["sequence"]) for el in tqdm(data)]
         adv_perplexities = [get_perplexity(el["adversarial_sequence"]) for el in tqdm(data)]
         perp_diff = [max(0.0, adv_perplexities[i] - orig_perplexities[i]) for i in range(len(data))]
