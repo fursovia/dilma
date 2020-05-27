@@ -1,14 +1,6 @@
 local TOKEN_INDEXER = {
     "tokens": {
-        "type": "single_id",
-        "start_tokens": [
-          "<START>"
-        ],
-        "end_tokens": [
-          "<END>"
-        ],
-        // should be set to the maximum value of `ngram_filter_sizes`
-        "token_min_padding_length": 5
+        "type": "single_id"
       }
 };
 
@@ -46,27 +38,28 @@ local TOKEN_INDEXER = {
       "token_embedders": {
         "tokens": {
           "type": "embedding",
-          "embedding_dim": 100,
+          "embedding_dim": 128,
           "trainable": true
         }
       }
     },
     "contextualizer": {
       "type": "lstm",
-      "input_size": 100,
-      "hidden_size": 128,
+      "input_size": 128,
+      "hidden_size": 256,
       "num_layers": 1,
     }
   },
   "distributed": {
     "master_port": 29599,
     "cuda_devices": [
-      0,
-      1
+      1,
+      2,
+      3
     ]
   },
   "data_loader": {
-    "batch_size": 64
+    "batch_size": 1024
   },
   "trainer": {
     "num_epochs": 50,

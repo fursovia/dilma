@@ -19,5 +19,7 @@ class SimpleLanguageModelingDatasetReaderFixed(SimpleLanguageModelingDatasetRead
             tokenizer=tokenizer,
             token_indexers=token_indexers,
             max_sequence_length=max_sequence_length,
+            start_tokens=["<START>"],
+            end_tokens=["<END>"],
             lazy=lazy
         )
