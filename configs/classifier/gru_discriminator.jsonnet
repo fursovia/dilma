@@ -38,20 +38,21 @@
       "embedding_dim": 256,
       "averaged": true
     },
-    "dropout": 0.2,
+    "dropout": 0.1,
     "num_labels": 2
   },
   "data_loader": {
     "batch_size": 64
   },
-  "distributed": {
-    "cuda_devices": [
-      2,
-      3
-    ]
-  },
+//  "distributed": {
+//    "cuda_devices": [
+//      2,
+//      3
+//    ]
+//  },
   "trainer": {
     "num_epochs": 50,
-    "patience": 3
+    "patience": 3,
+    "cuda_device": 3
   }
 }
