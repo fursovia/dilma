@@ -37,7 +37,7 @@ if __name__ == "__main__":
         #     predictor_name="text_classifier",
         #     cuda_device=args.cuda
         # )
-        lm_predictor._model._tokens_masker = None
+        # lm_predictor._model._tokens_masker = None
         get_perplexity = lambda text: np.exp(
             lm_predictor.predict_instance(
                 lm_predictor._dataset_reader.text_to_instance(text)
