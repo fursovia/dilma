@@ -4,7 +4,8 @@
 # bash bin/attack.sh {RESULTS_DIR} {FILENAME} {NUM_SAMPLES} {GPU_ID} {LOG_DIR} {DATA_DIR}
 
 RESULTS_DIR=${1:-"results"}
-FILENAME=${2:-"valid"}
+# test or valid
+FILENAME=${2:-"test"}
 default_sample_size=200
 SAMPLE_SIZE=${3:-$default_sample_size}
 default_gpu_id=0
