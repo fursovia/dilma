@@ -11,7 +11,7 @@ PROJECT_ROOT = (Path(__file__).parent / ".." / "..").resolve()
 
 def test_deep_levenshtein_configs():
 
-    paths = glob(str(PROJECT_ROOT / "configs/levenshtein/*.jsonnet"))
+    paths = glob(str(PROJECT_ROOT / "configs/models/levenshtein/*.jsonnet"))
     assert len(paths) > 0
     for config_path in paths:
         try:
@@ -31,7 +31,7 @@ def test_deep_levenshtein_configs():
 
 def test_distribution_deep_levenshtein_configs():
 
-    paths = glob(str(PROJECT_ROOT / "configs/distribution_levenshtein/*.jsonnet"))
+    paths = glob(str(PROJECT_ROOT / "configs/models/distribution_levenshtein/*.jsonnet"))
     assert len(paths) > 0
     for config_path in paths:
         try:
@@ -52,7 +52,7 @@ def test_distribution_deep_levenshtein_configs():
 
 def test_masked_lm_configs():
 
-    paths = glob(str(PROJECT_ROOT / "configs/lm/*.jsonnet"))
+    paths = glob(str(PROJECT_ROOT / "configs/models/lm/*.jsonnet"))
     assert len(paths) > 0
     for config_path in paths:
         try:
@@ -71,7 +71,7 @@ def test_masked_lm_configs():
 
 def test_classifier_configs():
 
-    paths = glob(str(PROJECT_ROOT / "configs/classifier/*.jsonnet"))
+    paths = glob(str(PROJECT_ROOT / "configs/models/classifier/*.jsonnet"))
     assert len(paths) > 0
     for config_path in paths:
         try:
@@ -94,7 +94,7 @@ def test_classifier_configs():
 
 def test_distribution_classifier_configs():
 
-    paths = glob(str(PROJECT_ROOT / "configs/distribution_classifier/*.jsonnet"))
+    paths = glob(str(PROJECT_ROOT / "configs/models/distribution_classifier/*.jsonnet"))
     assert len(paths) > 0
     for config_path in paths:
         try:

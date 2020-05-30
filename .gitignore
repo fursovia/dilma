@@ -10,3 +10,5 @@ experiments/
 notebooks/
 results/
 logs/
+datasets/
+old_bin/
