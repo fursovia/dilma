@@ -8,7 +8,7 @@ import pandas as pd
 parser = argparse.ArgumentParser()
 parser.add_argument("--results-dir", type=str, default="./results")
 
-METRIC_NAMES = ["mean_prob_diff", "mean_wer", "NAD_1.0"]
+METRIC_NAMES = ["NAD_1.0", "mean_prob_diff", "mean_wer"]
 
 
 if __name__ == "__main__":
