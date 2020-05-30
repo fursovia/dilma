@@ -12,7 +12,7 @@ GPU_ID=${3:-$default_gpu_id}
 for data_type in nlp non_nlp; do
     for result_dir in $(ls -d ${RESULTS_DIR}/${data_type}/*); do
         dataset=$(basename ${result_dir})
-        target_clf_dir=${LOG_DIR}/${data_type}/${dataset}/target_clf
+        target_clf_dir=${LOG_DIR}/${data_type}/dataset_${dataset}/target_clf
 
         for dir in $(ls -d ${result_dir}/*); do
             PYTHONPATH=. python scripts/evaluate_attack.py \
