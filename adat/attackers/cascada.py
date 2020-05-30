@@ -5,15 +5,11 @@ from copy import deepcopy
 import torch
 from torch.distributions import Categorical
 from torch.optim import SGD
-from allennlp.models import Model
-from allennlp.data.vocabulary import Vocabulary
-from allennlp.data.dataset_readers import DatasetReader
-from allennlp.common.params import Params
-from allennlp.data.batch import Batch
-from allennlp.data import TextFieldTensors
+from allennlp.models import Model, load_archive
+from allennlp.data import TextFieldTensors, Batch, DatasetReader
 from allennlp.nn.util import move_to_device
 
-from adat.attackers.attacker import Attacker, AttackerOutput
+from adat.attackers import Attacker, AttackerOutput
 from adat.utils import calculate_wer
 
 _MAX_NUM_LAYERS = 30
@@ -21,7 +17,9 @@ PARAMETERS = {
     f"layer_{i}": f"_seq2seq_encoder._transformer.layers.{i}"
     for i in range(_MAX_NUM_LAYERS)
 }
-PARAMETERS.update({"linear": "_head.linear", "emb": "_text_field_embedder.token_embedder_tokens", "all": ""})
+PARAMETERS.update(
+    {"linear": "_head.linear", "emb": "_text_field_embedder.token_embedder_tokens", "all": ""}
+)
 
 
 class Cascada(Attacker):
@@ -46,17 +44,16 @@ class Cascada(Attacker):
         classifier_dir = Path(classifier_dir)
         deep_levenshtein_dir = Path(deep_levenshtein_dir)
 
-        lm_params = Params.from_file(masked_lm_dir / "config.json")
+        archive = load_archive(masked_lm_dir / "model.tar.gz")
+        lm_params = archive.config
         self.reader = DatasetReader.from_params(lm_params["dataset_reader"])
 
-        self.lm_model = Model.from_params(
-            params=lm_params["model"],
-            vocab=Vocabulary.from_files(masked_lm_dir / "vocabulary")
-        )
+        self.lm_model = archive.model
         # TODO: should be fixed
         self.lm_model._tokens_masker = None
+
         # initial LM weights
-        self._lm_state = torch.load(masked_lm_dir / "best.th", map_location="cpu")
+        self._lm_state = self.lm_model.state_dict()
         self.initialize_load_state_dict()
 
         self.classifier = Model.from_archive(classifier_dir / "model.tar.gz")

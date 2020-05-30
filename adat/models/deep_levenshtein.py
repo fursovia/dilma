@@ -1,12 +1,9 @@
 from typing import Dict, Optional, Union
 
 import torch
-from allennlp.data import Vocabulary
-from allennlp.models.model import Model
-from allennlp.modules.seq2seq_encoders import Seq2SeqEncoder
-from allennlp.modules.seq2vec_encoders import Seq2VecEncoder
-from allennlp.data import TextFieldTensors
-from allennlp.modules.text_field_embedders import TextFieldEmbedder
+from allennlp.models import Model
+from allennlp.modules import TextFieldEmbedder, Seq2VecEncoder, Seq2SeqEncoder
+from allennlp.data import TextFieldTensors, Vocabulary
 from allennlp.nn import util
 
 
