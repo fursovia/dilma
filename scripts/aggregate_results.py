@@ -22,7 +22,7 @@ if __name__ == "__main__":
         with open(path / "target_clf_metrics.json") as f:
             metrics = json.load(f)
 
-        metrics = {k: v for k, v in metrics.items() if k in METRIC_NAMES}
+        metrics = {k: round(v, 2) for k, v in metrics.items() if k in METRIC_NAMES}
         metrics["dataset"] = path.parent.name
         metrics["adversary"] = path.name
         metrics_df.append(metrics)
