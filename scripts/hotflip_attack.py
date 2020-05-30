@@ -20,6 +20,7 @@ parser.add_argument("--max-tokens", type=int, default=None)
 
 parser.add_argument("--sample-size", type=int, default=None)
 parser.add_argument("--not-date-dir", action="store_true")
+parser.add_argument("--force", action="store_true")
 parser.add_argument("--cuda", type=int, default=-1)
 
 
@@ -31,8 +32,9 @@ if __name__ == "__main__":
     out_dir.mkdir(exist_ok=True, parents=True)
     results_path = out_dir / "attacked_data.json"
     args_path = out_dir / "args.json"
-    assert not results_path.exists()
-    assert not args_path.exists()
+    if not args.force:
+        assert not results_path.exists()
+        assert not args_path.exists()
 
     dump_metrics(args_path, args.__dict__)
 

@@ -8,7 +8,7 @@ FILENAME=${2:-"valid"}
 default_sample_size=200
 SAMPLE_SIZE=${3:-$default_sample_size}
 default_gpu_id=0
-GPU_ID=${4:-default_gpu_id}
+GPU_ID=${4:-$default_gpu_id}
 LOG_DIR=${5:-"logs"}
 DATA_DIR=${6:-"datasets"}
 
@@ -28,6 +28,7 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
         --out-dir ${NLP_RESULTS_DIR}/${dataset}/hotflip \
         --sample-size ${SAMPLE_SIZE} \
         --not-date-dir \
+        --force \
         --cuda ${GPU_ID}
 
     echo ">>>> Attack ${dataset} by CASCADA"
@@ -40,6 +41,7 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
         --out-dir ${NLP_RESULTS_DIR}/${dataset}/cascada \
         --sample-size ${SAMPLE_SIZE} \
         --not-date-dir \
+        --force \
         --cuda ${GPU_ID}
 
     echo ">>>> Attack ${dataset} by CASCADA w/ sampling"
@@ -52,6 +54,7 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
         --out-dir ${NLP_RESULTS_DIR}/${dataset}/cascada_sampling \
         --sample-size ${SAMPLE_SIZE} \
         --not-date-dir \
+        --force \
         --cuda ${GPU_ID}
 
     echo ">>>> Attack ${dataset} by SamplingFool"
@@ -64,6 +67,7 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
         --out-dir ${NLP_RESULTS_DIR}/${dataset}/sampling_fool \
         --sample-size ${SAMPLE_SIZE} \
         --not-date-dir \
+        --force \
         --cuda ${GPU_ID}
 done
 
@@ -84,6 +88,7 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
         --out-dir ${NON_NLP_RESULTS_DIR}/${dataset}/hotflip \
         --sample-size ${SAMPLE_SIZE} \
         --not-date-dir \
+        --force \
         --cuda ${GPU_ID}
 
     echo ">>>> Attack ${dataset} by CASCADA"
@@ -96,6 +101,7 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
         --out-dir ${NON_NLP_RESULTS_DIR}/${dataset}/cascada \
         --sample-size ${SAMPLE_SIZE} \
         --not-date-dir \
+        --force \
         --cuda ${GPU_ID}
 
     echo ">>>> Attack ${dataset} by CASCADA w/ sampling"
@@ -108,6 +114,7 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
         --out-dir ${NON_NLP_RESULTS_DIR}/${dataset}/cascada_sampling \
         --sample-size ${SAMPLE_SIZE} \
         --not-date-dir \
+        --force \
         --cuda ${GPU_ID}
 
     echo ">>>> Attack ${dataset} by SamplingFool"
@@ -120,5 +127,6 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
         --out-dir ${NON_NLP_RESULTS_DIR}/${dataset}/sampling_fool \
         --sample-size ${SAMPLE_SIZE} \
         --not-date-dir \
+        --force \
         --cuda ${GPU_ID}
 done
