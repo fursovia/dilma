@@ -95,7 +95,7 @@ def visualize_simple_diff(seq_a: str, seq_b: str, window: int = 3) -> None:
 
 def clean_sequence(sequence: str) -> str:
     sequence = sequence.lower()
-    sequence = re.sub(r"[^\w0-9 ]+", "", sequence)
+    sequence = re.sub(r"[^a-zA-Z ]", "", sequence)
     sequence = re.sub(r"\s\s+", " ", sequence).strip()
     return sequence
 
