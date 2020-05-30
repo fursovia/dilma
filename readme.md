@@ -25,15 +25,38 @@ poetry shell
 Masked LM
 
 ```bash
-export LM_TRAIN_DATA_PATH="data/wine_lm/train.json"
-export LM_VALID_DATA_PATH="data/wine_lm/test.json"
-
+export LM_TRAIN_DATA_PATH="data/nlp_lm/train.json"
+export LM_VALID_DATA_PATH="data/nlp_lm/test.json"
 allennlp train configs/lm/transformer_masked_lm.jsonnet \
-    -s logs/wine_lm \
+    -s logs/nlp_lm \
     --include-package adat
 ```
 
+AR LM
+
+```bash
+export LM_TRAIN_DATA_PATH="data/nlp_lm/train.json"
+export LM_VALID_DATA_PATH="data/nlp_lm/test.json"
+allennlp train configs/ar_lm/lstm_lm.jsonnet \
+    -s logs/ar_nlp_lm \
+    --include-package adat --include-package allennlp_models
+```
+
 Classifier
+
+```bash
+export CLS_TRAIN_DATA_PATH="data/ag_news_class/train.json"
+export CLS_VALID_DATA_PATH="data/ag_news_class/test.json"
+export LM_VOCAB_PATH="logs/ag_news_models/lm/vocabulary"
+export LM_ARCHIVE_PATH="logs/ag_news_models/lm/model.tar.gz"
+export CLS_NUM_CLASSES=4
+
+allennlp train configs/distribution_classifier/cnn_distribution_classifier.jsonnet \
+    -s logs/ag_news_models/cnn_distribution_classifier \
+    --include-package adat
+```
+
+Distribution Classifier
 
 ```bash
 export CLS_TRAIN_DATA_PATH="data/ag_news_class/train.json"
@@ -49,12 +72,25 @@ allennlp train configs/classifier/cnn_classifier.jsonnet \
 Deep Levenshtein
 
 ```bash
-export DL_TRAIN_DATA_PATH="data/ag_news/levenshtein/train.json"
-export DL_VALID_DATA_PATH="data/ag_news/levenshtein/test.json"
-export LM_VOCAB_PATH="logs/ag_news_models/lm/vocabulary"
+export DL_TRAIN_DATA_PATH="datasets/nlp_lev/train.json"
+export DL_VALID_DATA_PATH="datasets/nlp_lev/test.json"
+export LM_VOCAB_PATH="logs/nlp_lm/vocabulary"
 
 allennlp train configs/levenshtein/cnn_deep_levenshtein.jsonnet \
-    -s logs/ag_news_models/lev \
+    -s logs/nlp_lev \
+    --include-package adat
+```
+
+Distribution Deep Levenshtein
+
+```bash
+export DL_TRAIN_DATA_PATH="datasets/nlp_lev/train.json"
+export DL_VALID_DATA_PATH="datasets/nlp_lev/test.json"
+export LM_VOCAB_PATH="logs/nlp_lm/vocabulary"
+eexport LM_ARCHIVE_PATH="logs/nlp_lm/model.tar.gz"
+
+allennlp train configs/distribution_levenshtein/cnn_distribution_deep_levenshtein.jsonnet \
+    -s logs/nlp_lm \
     --include-package adat
 ```
 
@@ -65,13 +101,14 @@ CASCADA
 
 ```bash
 PYTHONPATH=. python scripts/cascada_attack.py \
-    --config-path configs/cascada/random_sampling_config.json \
+    --config-path configs/distribution_cascada/base_config.json \
     --lm-dir logs/ag_news_models/lm/ \
-    --classifier-dir logs/ag_news_models/cnn_classifier/ \
-    --deep-levenshtein-dir logs/ag_news_models/levenshtein_full_2/ \
-    --test-path data/ag_news_class/train.json \
+    --classifier-dir logs/ag_news_models/cnn_distribution_classifier/ \
+    --deep-levenshtein-dir logs/ag_news_models/distribution_lev/ \
+    --test-path data/ag_news_class/test.json \
     --out-dir results/cascada/ \
-    --sample-size 10000 \
+    --sample-size 250 \
+    --distribution-level \
     --cuda 0
 ```
 
@@ -79,11 +116,10 @@ HotFlip
 
 ```bash
 PYTHONPATH=. python scripts/hotflip_attack.py \
-    --classifier-dir logs/ag_news_models/cnn_classifier/ \
-    --test-path data/ag_news_class/train.json \
-    --out-dir results/discr/hotflip \
-    --sample-size 10000 \
-    --not-date-dir \
+    --classifier-dir logs/imdb/substitute_class_gru/ \
+    --test-path data/imdb/original_class/test.json \
+    --out-dir results/hotflip \
+    --sample-size 500 \
     --cuda 0
 ```
 
@@ -91,8 +127,8 @@ PYTHONPATH=. python scripts/hotflip_attack.py \
 
 ```bash
 PYTHONPATH=. python scripts/evaluate_attack.py \
-    --adversarial-dir results/hotflip/20200509_183543 \
-    --classifier-dir logs/ag_news_models/gru_classifier_ft2
+    --adversarial-dir results/hotflip/20200513_220551 \
+    --classifier-dir logs/imdb/original_class_gru
 ```
 
 ## Fine-tune
@@ -119,5 +155,26 @@ PYTHONPATH=. python scripts/fine_tune.py \
 allennlp evaluate \
     logs/ag_news_models/gru_classifier_ft2/model.tar.gz \
     results/hotflip/20200509_182410/fine_tuning_data.json \
+    --include-package adat
+```
+
+
+## Discriminator
+
+Prepare dataset
+```bash
+PYTHONPATH=. python scripts/prepare_for_discr.py \
+    --adversarial-dir results/discr/cascada \
+    --out-dir results/discr/cascada
+```
+
+Discriminator
+
+```bash
+export DISCR_TRAIN_DATA_PATH="results/discr/cascada/train.json"
+export DISCR_VALID_DATA_PATH="results/discr/cascada/test.json"
+
+allennlp train configs/classifier/gru_discriminator.jsonnet \
+    -s logs/ag_news_models/cascada_discriminator \
     --include-package adat
 ```
