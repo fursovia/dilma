@@ -22,3 +22,6 @@ for data_type in nlp non_nlp; do
         done
     done
 done
+
+
+PYTHONPATH=. python scripts/aggregate_results.py --results-dir ${RESULTS_DIR}
