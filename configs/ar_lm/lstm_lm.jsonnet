@@ -59,7 +59,7 @@ local TOKEN_INDEXER = {
     ]
   },
   "data_loader": {
-    "batch_size": 1024
+    "batch_size": 256
   },
   "trainer": {
     "num_epochs": 50,
