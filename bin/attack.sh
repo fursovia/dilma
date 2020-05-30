@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 # usage
-# bash bin/attack.sh {RESULTS_DIR} {FILENAME} {NUM_SAMPLES} {GPU_ID} {LOG_DIR} {DATA_DIR}
+# bash bin/attack.sh {FILENAME} {NUM_SAMPLES} {RESULTS_DIR} {GPU_ID} {LOG_DIR} {DATA_DIR}
 
-RESULTS_DIR=${1:-"results"}
 # test or valid
-FILENAME=${2:-"test"}
+FILENAME=${1:-"test"}
 default_sample_size=200
-SAMPLE_SIZE=${3:-$default_sample_size}
+SAMPLE_SIZE=${2:-$default_sample_size}
+RESULTS_DIR=${3:-"results"}
 default_gpu_id=0
 GPU_ID=${4:-$default_gpu_id}
 LOG_DIR=${5:-"logs"}
