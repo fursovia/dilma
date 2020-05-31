@@ -34,5 +34,5 @@ if __name__ == "__main__":
     metrics_df = pd.DataFrame(metrics_df)
     print("Print best hyperparams num: ", metrics_df.iloc[metrics_df["NAD_1.0"].argmax()])
     # change the order of columns
-    metrics_df = metrics_df[["dataset", "adversary"] + METRIC_NAMES]
+    metrics_df = metrics_df[["dataset"] + METRIC_NAMES]
     print(metrics_df.to_markdown())
