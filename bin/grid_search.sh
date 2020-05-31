@@ -65,7 +65,7 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
         python -m json.tool ${conf_path}
         PYTHONPATH=. python scripts/cascada_attack.py \
             --config-path ${conf_path} \
-            --test-path ${NON_NLP_RESULTS_DIR}/${dataset}/target_clf/${FILENAME}.json \
+            --test-path ${NON_NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
             --classifier-dir ${dir}/substitute_clf \
             --deep-levenshtein-dir ${dir}/lev \
             --lm-dir ${dir}/lm \
