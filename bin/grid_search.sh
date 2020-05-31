@@ -27,8 +27,10 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
     for i in $(seq 1 ${NUM_CONFIGS}); do
         echo ">>>>>>>>>>> 1/2 [${dataset}]: ${i}/${NUM_CONFIGS}"
         adv_dir=${NLP_RESULTS_DIR}/${dataset}/cascada/grid_search/${i}
+        conf_path=configs/attacks/cascada/grid_search/config_${i}.json
+        python -m json.tool ${conf_path}
         PYTHONPATH=. python scripts/cascada_attack.py \
-            --config-path configs/attacks/cascada/grid_search/config_${i}.json \
+            --config-path ${conf_path} \
             --test-path ${NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
             --classifier-dir ${dir}/substitute_clf \
             --deep-levenshtein-dir ${NLP_LOG_DIR}/lev \
@@ -59,8 +61,10 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
     for i in $(seq 1 ${NUM_CONFIGS}); do
         echo ">>>>>>>>>>> 2/2 [${dataset}]: ${i}/${NUM_CONFIGS}"
         adv_dir=${NON_NLP_RESULTS_DIR}/${dataset}/cascada/grid_search/${i}
+        conf_path=configs/attacks/cascada/grid_search/config_${i}.json
+        python -m json.tool ${conf_path}
         PYTHONPATH=. python scripts/cascada_attack.py \
-            --config-path configs/attacks/cascada/grid_search/config_${i}.json \
+            --config-path ${conf_path} \
             --test-path ${NON_NLP_RESULTS_DIR}/${dataset}/target_clf/${FILENAME}.json \
             --classifier-dir ${dir}/substitute_clf \
             --deep-levenshtein-dir ${dir}/lev \
