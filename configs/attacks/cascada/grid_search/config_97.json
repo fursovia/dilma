@@ -1,0 +1,1 @@
+{"alpha": 3.0, "beta": 1.0, "lr": 0.01, "num_gumbel_samples": 10, "tau": 2.0, "num_samples": 0, "temperature": 1.0, "parameters_to_update": ["linear", "layer_3"], "max_steps": 10, "early_stopping": false}
