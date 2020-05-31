@@ -32,7 +32,9 @@ if __name__ == "__main__":
         metrics_df.append(metrics)
 
     metrics_df = pd.DataFrame(metrics_df)
-    print("Print best hyperparams num: ", metrics_df.iloc[metrics_df["NAD_1.0"].argmax()])
-    # change the order of columns
-    metrics_df = metrics_df[["dataset"] + METRIC_NAMES]
-    print(metrics_df.to_markdown())
+    for dataset in metrics_df["dataset"].unique():
+        df = metrics_df[metrics_df["dataset"] == dataset]
+        best_NAD = df["NAD_1.0"].max()
+        best_config_num = df.iloc[df["NAD_1.0"].argmax()]["config_num"]
+
+        print(f"Dataset: {dataset}, Best NAD: {best_NAD}, Best config num: {best_config_num}")
