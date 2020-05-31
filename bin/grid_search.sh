@@ -26,16 +26,22 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
 
     for i in $(seq 1 ${NUM_CONFIGS}); do
         echo ">>>>>>>>>>> 1/2 [${dataset}]: ${i}/${NUM_CONFIGS}"
+        adv_dir=${NLP_RESULTS_DIR}/${dataset}/cascada/grid_search/${i}
         PYTHONPATH=. python scripts/cascada_attack.py \
             --config-path configs/attacks/cascada/grid_search/config_${i}.json \
             --test-path ${NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
             --classifier-dir ${dir}/substitute_clf \
             --deep-levenshtein-dir ${NLP_LOG_DIR}/lev \
             --lm-dir ${NLP_LOG_DIR}/lm \
-            --out-dir ${NLP_RESULTS_DIR}/${dataset}/cascada/grid_search/${i} \
+            --out-dir ${adv_dir} \
             --sample-size ${SAMPLE_SIZE} \
             --not-date-dir \
             --force \
+            --cuda ${GPU_ID}
+
+        PYTHONPATH=. python scripts/evaluate_attack.py \
+            --adversarial-dir ${adv_dir} \
+            --classifier-dir ${dir}/target_clf \
             --cuda ${GPU_ID}
     done
 done
@@ -52,16 +58,22 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
 
     for i in $(seq 1 ${NUM_CONFIGS}); do
         echo ">>>>>>>>>>> 2/2 [${dataset}]: ${i}/${NUM_CONFIGS}"
+        adv_dir=${NON_NLP_RESULTS_DIR}/${dataset}/cascada/grid_search/${i}
         PYTHONPATH=. python scripts/cascada_attack.py \
             --config-path configs/attacks/cascada/grid_search/config_${i}.json \
-            --test-path ${NON_NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
+            --test-path ${NON_NLP_RESULTS_DIR}/${dataset}/target_clf/${FILENAME}.json \
             --classifier-dir ${dir}/substitute_clf \
             --deep-levenshtein-dir ${dir}/lev \
             --lm-dir ${dir}/lm \
-            --out-dir ${NON_NLP_RESULTS_DIR}/${dataset}/cascada/grid_search/${i} \
+            --out-dir ${adv_dir} \
             --sample-size ${SAMPLE_SIZE} \
             --not-date-dir \
             --force \
+            --cuda ${GPU_ID}
+
+        PYTHONPATH=. python scripts/evaluate_attack.py \
+            --adversarial-dir ${adv_dir} \
+            --classifier-dir ${dir}/target_clf \
             --cuda ${GPU_ID}
     done
 done
