@@ -25,7 +25,7 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
     dataset=$(basename ${dir} | cut -d'_' -f 2)
 
     for i in $(seq 1 ${NUM_CONFIGS}); do
-        echo ">>>>>>>>>>> 1/2: ${i}/${NUM_CONFIGS}"
+        echo ">>>>>>>>>>> 1/2 [${dataset}]: ${i}/${NUM_CONFIGS}"
         PYTHONPATH=. python scripts/cascada_attack.py \
             --config-path configs/attacks/cascada/grid_search/config_${i}.json \
             --test-path ${NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
@@ -51,7 +51,7 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
     dataset=$(basename ${dir} | cut -d'_' -f 2)
 
     for i in $(seq 1 ${NUM_CONFIGS}); do
-        echo ">>>>>>>>>>> 2/2: ${i}/${NUM_CONFIGS}"
+        echo ">>>>>>>>>>> 2/2 [${dataset}]: ${i}/${NUM_CONFIGS}"
         PYTHONPATH=. python scripts/cascada_attack.py \
             --config-path configs/attacks/cascada/grid_search/config_${i}.json \
             --test-path ${NON_NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
