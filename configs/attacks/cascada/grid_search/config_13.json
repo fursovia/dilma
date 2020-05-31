@@ -1,1 +1,14 @@
-{"alpha": 1.0, "beta": 1.0, "lr": 0.1, "num_gumbel_samples": 10, "tau": 2.0, "num_samples": 0, "temperature": 1.0, "parameters_to_update": ["all"], "max_steps": 10, "early_stopping": false}
+{
+    "alpha": 3.0,
+    "beta": 1.0,
+    "lr": 0.5,
+    "num_gumbel_samples": 5,
+    "tau": 1.2,
+    "num_samples": 0,
+    "temperature": 1.0,
+    "parameters_to_update": [
+        "all"
+    ],
+    "max_steps": 10,
+    "early_stopping": false
+}
