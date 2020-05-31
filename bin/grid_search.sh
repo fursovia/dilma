@@ -81,3 +81,8 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
             --cuda ${GPU_ID}
     done
 done
+
+
+PYTHONPATH=. python scripts/select_best_hyperparams.py \
+    --results-dir ${RESULTS_DIR} \
+    --alg-name cascada

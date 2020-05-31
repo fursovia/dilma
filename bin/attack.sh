@@ -32,9 +32,15 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
         --force \
         --cuda ${GPU_ID}
 
+    conf_path=configs/attacks/cascada/config_${dataset}.json
+    if [[ ! -f "$conf_path" ]]; then
+        conf_path=configs/attacks/cascada/config.json
+    fi
+    echo "Using ${conf_path} ..."
+
     echo ">>>> Attack ${dataset} by CASCADA"
     PYTHONPATH=. python scripts/cascada_attack.py \
-        --config-path configs/attacks/cascada/config.json \
+        --config-path ${conf_path} \
         --test-path ${NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
         --classifier-dir ${dir}/substitute_clf \
         --deep-levenshtein-dir ${NLP_LOG_DIR}/lev \
@@ -45,9 +51,15 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
         --force \
         --cuda ${GPU_ID}
 
+    conf_path=configs/attacks/cascada_sampling/config_${dataset}.json
+    if [[ ! -f "$conf_path" ]]; then
+        conf_path=configs/attacks/cascada_sampling/config.json
+    fi
+    echo "Using ${conf_path} ..."
+
     echo ">>>> Attack ${dataset} by CASCADA w/ sampling"
     PYTHONPATH=. python scripts/cascada_attack.py \
-        --config-path configs/attacks/cascada_sampling/config.json \
+        --config-path ${conf_path} \
         --test-path ${NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
         --classifier-dir ${dir}/substitute_clf \
         --deep-levenshtein-dir ${NLP_LOG_DIR}/lev \
@@ -58,9 +70,15 @@ for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
         --force \
         --cuda ${GPU_ID}
 
+    conf_path=configs/attacks/samplingfool/config_${dataset}.json
+    if [[ ! -f "$conf_path" ]]; then
+        conf_path=configs/attacks/samplingfool/config.json
+    fi
+    echo "Using ${conf_path} ..."
+
     echo ">>>> Attack ${dataset} by SamplingFool"
     PYTHONPATH=. python scripts/cascada_attack.py \
-        --config-path configs/attacks/samplingfool/config.json \
+        --config-path ${conf_path} \
         --test-path ${NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
         --classifier-dir ${dir}/substitute_clf \
         --deep-levenshtein-dir ${NLP_LOG_DIR}/lev \
@@ -92,9 +110,15 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
         --force \
         --cuda ${GPU_ID}
 
+    conf_path=configs/attacks/cascada/config_${dataset}.json
+    if [[ ! -f "$conf_path" ]]; then
+        conf_path=configs/attacks/cascada/config.json
+    fi
+    echo "Using ${conf_path} ..."
+
     echo ">>>> Attack ${dataset} by CASCADA"
     PYTHONPATH=. python scripts/cascada_attack.py \
-        --config-path configs/attacks/cascada/config.json \
+        --config-path ${conf_path} \
         --test-path ${NON_NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
         --classifier-dir ${dir}/substitute_clf \
         --deep-levenshtein-dir ${dir}/lev \
@@ -105,9 +129,15 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
         --force \
         --cuda ${GPU_ID}
 
+    conf_path=configs/attacks/cascada_sampling/config_${dataset}.json
+    if [[ ! -f "$conf_path" ]]; then
+        conf_path=configs/attacks/cascada_sampling/config.json
+    fi
+    echo "Using ${conf_path} ..."
+
     echo ">>>> Attack ${dataset} by CASCADA w/ sampling"
     PYTHONPATH=. python scripts/cascada_attack.py \
-        --config-path configs/attacks/cascada_sampling/config.json \
+        --config-path ${conf_path} \
         --test-path ${NON_NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
         --classifier-dir ${dir}/substitute_clf \
         --deep-levenshtein-dir ${dir}/lev \
@@ -118,9 +148,15 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
         --force \
         --cuda ${GPU_ID}
 
+    conf_path=configs/attacks/samplingfool/config_${dataset}.json
+    if [[ ! -f "$conf_path" ]]; then
+        conf_path=configs/attacks/samplingfool/config.json
+    fi
+    echo "Using ${conf_path} ..."
+
     echo ">>>> Attack ${dataset} by SamplingFool"
     PYTHONPATH=. python scripts/cascada_attack.py \
-        --config-path configs/attacks/samplingfool/config.json \
+        --config-path ${conf_path} \
         --test-path ${NON_NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
         --classifier-dir ${dir}/substitute_clf \
         --deep-levenshtein-dir ${dir}/lev \
@@ -131,3 +167,6 @@ for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
         --force \
         --cuda ${GPU_ID}
 done
+
+
+bash bin/evaluate.sh ${RESULTS_DIR} ${LOG_DIR} ${GPU_ID}

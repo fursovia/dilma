@@ -1,0 +1,15 @@
+{
+    "alpha": 5.0,
+    "beta": 1.0,
+    "lr": 0.01,
+    "num_gumbel_samples": 1,
+    "tau": 1.5,
+    "num_samples": 20,
+    "temperature": 1.0,
+    "parameters_to_update": [
+        "linear",
+        "layer_3"
+    ],
+    "max_steps": 10,
+    "early_stopping": false
+}

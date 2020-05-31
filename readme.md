@@ -22,13 +22,7 @@ Generate attacks for HotFlip, SamplingFool, CASCADA, CASCADA w/ sampling by runn
 bash bin/attack.sh 
 ```
 
-Evaluate those attacks by running
-
-```
-bash bin/evaluate.sh 
-```
-
-`evaluate.sh` will output this table
+This script will output
 
 |    | dataset   | adversary        |   NAD_1.0 |   mean_prob_diff |   mean_wer |
 |---:|:----------|:-----------------|----------:|-----------------:|-----------:|
