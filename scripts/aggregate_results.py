@@ -30,4 +30,5 @@ if __name__ == "__main__":
     metrics_df = pd.DataFrame(metrics_df)
     # change the order of columns
     metrics_df = metrics_df[["dataset", "adversary"] + METRIC_NAMES]
+    metrics_df.to_csv(results_dir / "results.csv", index=False)
     print(metrics_df.to_markdown())
