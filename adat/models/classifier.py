@@ -15,7 +15,12 @@ class BasicClassifierOneHotSupport(BasicClassifier):
                               mask: torch.Tensor = None,
                               label: torch.IntTensor = None) -> Dict[str, torch.Tensor]:
         if mask is None:
-            mask = torch.ones_like(embedded_text, dtype=torch.bool, device=embedded_text.device)
+            mask = torch.ones(
+                embedded_text.size(0),
+                embedded_text.size(1),
+                dtype=torch.bool,
+                device=embedded_text.device
+            )
 
         output_dict = dict()
         if self._seq2seq_encoder:
