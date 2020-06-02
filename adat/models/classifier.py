@@ -41,10 +41,7 @@ class BasicClassifierOneHotSupport(BasicClassifier):
 
         return output_dict
 
-    def forward(  # type: ignore
-        self, tokens: Union[TextFieldTensors, OneHot], label: torch.IntTensor = None
-    ) -> Dict[str, torch.Tensor]:
-
+    def get_embeddings(self, tokens: Union[TextFieldTensors, OneHot]) -> Dict[str, torch.Tensor]:
         if isinstance(tokens, OneHot):
             # TODO: sparse tensors support
             embedded_text = torch.matmul(tokens, self._text_field_embedder._token_embedders["tokens"].weight)
@@ -56,6 +53,14 @@ class BasicClassifierOneHotSupport(BasicClassifier):
             embedded_text = self._text_field_embedder(tokens)
             mask = get_text_field_mask(tokens)
 
-        output_dict = self.forward_on_embeddings(embedded_text, mask, label)
-        output_dict["token_ids"] = token_ids
+        return {"embedded_text": embedded_text, "mask": mask, "token_ids": token_ids}
+
+    def forward(  # type: ignore
+        self, tokens: Union[TextFieldTensors, OneHot], label: torch.IntTensor = None
+    ) -> Dict[str, torch.Tensor]:
+
+        emb_out = self.get_embeddings(tokens)
+
+        output_dict = self.forward_on_embeddings(emb_out["embedded_text"], emb_out["mask"], label)
+        output_dict["token_ids"] = emb_out["token_ids"]
         return output_dict
