@@ -70,12 +70,13 @@ class FGSMAttacker(Attacker):
         inputs = self.sequence_to_input(sequence_to_attack)
 
         # trick to make the variable a leaf variable
-        embs = inputs['embedded_text'].detach()
+        emb_inp = self.classifier.get_embeddings(inputs)
+        embs = emb_inp['embedded_text'].detach()
         embs.requires_grad = True
 
         clf_output = self.classifier.forward_on_embeddings(
             embs,
-            inputs["mask"],
+            emb_inp["mask"],
             label=torch.tensor([label_to_attack], device=embs.device)
         )
 
