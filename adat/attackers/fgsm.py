@@ -60,7 +60,7 @@ class FGSMAttacker(Attacker):
             self.reader.text_to_instance(sequence)
         ])
 
-        instances.index_instances(self.lm_model.vocab)
+        instances.index_instances(self.classifier.vocab)
         inputs = instances.as_tensor_dict()["tokens"]
         return move_to_device(inputs, self.device)
 
