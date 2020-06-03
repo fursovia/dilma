@@ -3,6 +3,8 @@ Generating Natural Language Adversarial Examples on a Large Scale with Generativ
 
 from pathlib import Path
 from typing import Optional
+from copy import deepcopy
+import random
 
 import torch
 from allennlp.models import load_archive
@@ -16,13 +18,14 @@ from adat.utils import calculate_wer
 
 class FGSMAttacker(Attacker):
 
-    def __init__(self, classifier_dir: str, epsilon: float = 1e-2, device: int = -1):
+    def __init__(self, classifier_dir: str, num_steps: int = 10, epsilon: float = 0.01, device: int = -1):
 
         archive = load_archive(Path(classifier_dir) / "model.tar.gz")
         self.reader = DatasetReader.from_params(archive.config["dataset_reader"])
         self.classifier = archive.model
         self.classifier.eval()
 
+        self.num_steps = num_steps
         self.epsilon = epsilon
         self.device = device
 
@@ -41,20 +44,6 @@ class FGSMAttacker(Attacker):
         out = [o for o in out if o not in ["<START>", "<END>"]]
         return " ".join(out)
 
-    def decode_from_closest(self, embeddings: torch.Tensor) -> str:
-        embeddings = embeddings[0]
-        closest_idx = torch.stack(
-            [
-                torch.nn.functional.pairwise_distance(
-                    embeddings[i],
-                    self.emb_layer
-                ).argmin()
-                for i in range(embeddings.size(0))
-            ]
-        )
-
-        return self.indexes_to_string(closest_idx)
-
     def sequence_to_input(self, sequence: str) -> TextFieldTensors:
         instances = Batch([
             self.reader.text_to_instance(sequence)
@@ -64,42 +53,71 @@ class FGSMAttacker(Attacker):
         inputs = instances.as_tensor_dict()["tokens"]
         return move_to_device(inputs, self.device)
 
-    def attack(self, sequence_to_attack: str,
-               label_to_attack: int = 1, epsilon: Optional[float] = None) -> AttackerOutput:
+    def attack(
+            self,
+            sequence_to_attack: str,
+            label_to_attack: int = 1,
+            num_steps: Optional[int] = None,
+            epsilon: Optional[float] = None
+    ) -> AttackerOutput:
+        seq_length = len(sequence_to_attack.split())
+        num_steps = num_steps or self.num_steps
         epsilon = epsilon or self.epsilon
         inputs = self.sequence_to_input(sequence_to_attack)
 
         # trick to make the variable a leaf variable
         emb_inp = self.classifier.get_embeddings(inputs)
         embs = emb_inp['embedded_text'].detach()
-        embs.requires_grad = True
+        label = torch.tensor([label_to_attack], device=embs.device)
+        embs = [e for e in embs[0]]
 
-        clf_output = self.classifier.forward_on_embeddings(
-            embs,
-            emb_inp["mask"],
-            label=torch.tensor([label_to_attack], device=embs.device)
-        )
+        history = []
+        for i in range(num_steps):
+            random_idx = random.randint(1, seq_length - 2)
+            embs[random_idx].requires_grad = True
+            embeddings_tensor = torch.stack(embs, dim=0).unsqueeze(0)
 
-        loss = clf_output["loss"]
-        self.classifier.zero_grad()
-        loss.backward()
+            clf_output = self.classifier.forward_on_embeddings(
+                embeddings_tensor,
+                emb_inp["mask"],
+                label=label
+            )
 
-        perturbed_embs = embs + epsilon * embs.grad.data.sign()
-        adverarial_seq = self.decode_from_closest(perturbed_embs)
-        new_clf_output = self.classifier.forward(self.sequence_to_input(adverarial_seq))
+            loss = clf_output["loss"]
+            self.classifier.zero_grad()
+            loss.backward()
 
-        initial_prob = clf_output["probs"][0, label_to_attack].item()
-        new_probs = new_clf_output["probs"]
-        adv_prob = new_probs[0, label_to_attack].item()
-        output = AttackerOutput(
-            sequence=sequence_to_attack,
-            probability=initial_prob,
-            adversarial_sequence=adverarial_seq,
-            adversarial_probability=adv_prob,
-            wer=calculate_wer(sequence_to_attack, adverarial_seq),
-            prob_diff=(initial_prob - adv_prob),
-            attacked_label=label_to_attack,
-            adversarial_label=new_probs.argmax().item()
-        )
+            embs[random_idx] = embs[random_idx] + epsilon * embs[random_idx].grad.data.sign()
+            closest_idx = torch.nn.functional.pairwise_distance(
+                embs[random_idx],
+                self.emb_layer
+            ).argmin().item()
+            embs[random_idx] = self.emb_layer[closest_idx]
+            for e in embs:
+                e.detach()
 
+            adversarial_idexes = inputs["tokens"]["tokens"].clone()
+            adversarial_idexes[0, random_idx] = closest_idx
+
+            adverarial_seq = self.indexes_to_string(adversarial_idexes)
+            new_clf_output = self.classifier.forward(self.sequence_to_input(adverarial_seq))
+
+            initial_prob = clf_output["probs"][0, label_to_attack].item()
+            new_probs = new_clf_output["probs"]
+            adv_prob = new_probs[0, label_to_attack].item()
+            output = AttackerOutput(
+                sequence=sequence_to_attack,
+                probability=initial_prob,
+                adversarial_sequence=adverarial_seq,
+                adversarial_probability=adv_prob,
+                wer=calculate_wer(sequence_to_attack, adverarial_seq),
+                prob_diff=(initial_prob - adv_prob),
+                attacked_label=label_to_attack,
+                adversarial_label=new_probs.argmax().item()
+            )
+
+            history.append(output)
+
+        output = self.find_best_attack(history)
+        output.history = [deepcopy(o.__dict__) for o in history]
         return output
