@@ -4,6 +4,7 @@ Generating Natural Language Adversarial Examples on a Large Scale with Generativ
 from pathlib import Path
 from typing import Optional
 from copy import deepcopy
+from functools import lru_cache
 import random
 
 import torch
@@ -44,6 +45,7 @@ class FGSMAttacker(Attacker):
         out = [o for o in out if o not in ["<START>", "<END>"]]
         return " ".join(out)
 
+    @lru_cache(maxsize=1000)
     def sequence_to_input(self, sequence: str) -> TextFieldTensors:
         instances = Batch([
             self.reader.text_to_instance(sequence)
