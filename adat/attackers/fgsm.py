@@ -34,6 +34,7 @@ class FGSMAttacker(Attacker):
             self.classifier.cuda(self.device)
 
         self.emb_layer = self._construct_embedding_matrix()
+        self.vocab_size = self.classifier.vocab.get_vocab_size()
 
     def _construct_embedding_matrix(self):
         embedding_layer = util.find_embedding_layer(self.classifier)
@@ -96,10 +97,16 @@ class FGSMAttacker(Attacker):
             loss.backward()
 
             embs[random_idx] = embs[random_idx] + epsilon * embs[random_idx].grad.data.sign()
-            closest_idx = torch.nn.functional.pairwise_distance(
+
+            distances = torch.nn.functional.pairwise_distance(
                 embs[random_idx],
                 self.emb_layer
-            ).argmin().item()
+            )
+            # @UNK@, @PAD@, @MASK@, @START@, @END@
+            to_drop_indexes = [0, 1] + list(range(self.vocab_size - 3, self.vocab_size))
+            distances[to_drop_indexes] = 10e6
+
+            closest_idx = distances.argmin().item()
             embs[random_idx] = self.emb_layer[closest_idx]
             embs = [e.detach() for e in embs]
 
