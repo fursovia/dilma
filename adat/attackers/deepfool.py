@@ -105,6 +105,7 @@ class DeepFoolAttacker(Attacker):
                 for k in range(self.num_labels):
                     if k != label_to_attack:
                         self.classifier.zero_grad()
+                        embs[random_idx].grad = None
                         probs[k].backward(retain_graph=True)
 
                         # w' = \nabla f_k - \nabla f_{\hat{k}}
@@ -125,20 +126,22 @@ class DeepFoolAttacker(Attacker):
 
                 embs[random_idx] = embs[random_idx] + perturbation
                 embs = [e.detach() for e in embs]
+                embs[random_idx].requires_grad = True
 
                 adv_out = self.classifier.forward_on_embeddings(
                     torch.stack(embs, dim=0).unsqueeze(0)
                 )
                 adv_pred = adv_out["probs"][0].argmax().item()
 
-            final_perturbation = torch.stack(perturbations, dim=0).sum(dim=1)
+            final_perturbation = torch.stack(perturbations, dim=0).sum(dim=0)
             embs[random_idx] = cloned_emb + epsilon * final_perturbation
 
-            to_drop_indexes = [0, 1] + list(range(self.vocab_size - 3, self.vocab_size))
             distances = torch.nn.functional.pairwise_distance(
                 embs[random_idx],
                 self.emb_layer
             )
+            # @UNK@, @PAD@, @MASK@, @START@, @END@
+            to_drop_indexes = [0, 1] + list(range(self.vocab_size - 3, self.vocab_size))
             distances[to_drop_indexes] = 10e6
             closest_idx = distances.argmin().item()
 
