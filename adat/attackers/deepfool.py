@@ -90,7 +90,7 @@ class DeepFoolAttacker(Attacker):
         history = []
         # we replace random tokens `num_steps` times
         for i in range(num_steps):
-            random_idx = random.randint(1, seq_length - 2)
+            random_idx = random.randint(1, max(1, seq_length - 2))
             # this embedding will be changed
             cloned_emb = embs[random_idx].clone()
             embs[random_idx].requires_grad = True

@@ -82,7 +82,7 @@ class FGSMAttacker(Attacker):
 
         history = []
         for i in range(num_steps):
-            random_idx = random.randint(1, seq_length - 2)
+            random_idx = random.randint(1, max(1, seq_length - 2))
             embs[random_idx].requires_grad = True
             embeddings_tensor = torch.stack(embs, dim=0).unsqueeze(0)
 
