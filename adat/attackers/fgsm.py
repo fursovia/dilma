@@ -71,6 +71,12 @@ class FGSMAttacker(Attacker):
         emb_inp = self.classifier.get_embeddings(inputs)
         embs = emb_inp['embedded_text'].detach()
         label = torch.tensor([label_to_attack], device=embs.device)
+
+        initial_prob = self.classifier.forward_on_embeddings(
+            embs,
+            emb_inp["mask"],
+            label=label
+        )["probs"][0, label_to_attack].item()
         embs = [e for e in embs[0]]
 
         history = []
@@ -102,10 +108,9 @@ class FGSMAttacker(Attacker):
 
             adverarial_seq = self.indexes_to_string(adversarial_idexes[0])
             new_clf_output = self.classifier.forward(self.sequence_to_input(adverarial_seq))
-
-            initial_prob = clf_output["probs"][0, label_to_attack].item()
             new_probs = new_clf_output["probs"]
             adv_prob = new_probs[0, label_to_attack].item()
+
             output = AttackerOutput(
                 sequence=sequence_to_attack,
                 probability=initial_prob,
