@@ -99,7 +99,7 @@ class FGSMAttacker(Attacker):
             adversarial_idexes = inputs["tokens"]["tokens"].clone()
             adversarial_idexes[0, random_idx] = closest_idx
 
-            adverarial_seq = self.indexes_to_string(adversarial_idexes)
+            adverarial_seq = self.indexes_to_string(adversarial_idexes[0])
             new_clf_output = self.classifier.forward(self.sequence_to_input(adverarial_seq))
 
             initial_prob = clf_output["probs"][0, label_to_attack].item()
