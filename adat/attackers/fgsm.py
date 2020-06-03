@@ -93,8 +93,7 @@ class FGSMAttacker(Attacker):
                 self.emb_layer
             ).argmin().item()
             embs[random_idx] = self.emb_layer[closest_idx]
-            for e in embs:
-                e.detach()
+            embs = [e.detach() for e in embs]
 
             adversarial_idexes = inputs["tokens"]["tokens"].clone()
             adversarial_idexes[0, random_idx] = closest_idx
