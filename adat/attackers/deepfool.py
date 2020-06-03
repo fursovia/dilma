@@ -18,7 +18,14 @@ from adat.utils import calculate_wer
 
 class DeepFoolAttacker(Attacker):
 
-    def __init__(self, classifier_dir: str, num_steps: int = 10, epsilon: float = 1.02, device: int = -1):
+    def __init__(
+            self,
+            classifier_dir: str,
+            num_steps: int = 10,
+            max_steps: int = 10,
+            epsilon: float = 1.02,
+            device: int = -1
+    ) -> None:
 
         archive = load_archive(Path(classifier_dir) / "model.tar.gz")
         self.reader = DatasetReader.from_params(archive.config["dataset_reader"])
@@ -26,6 +33,7 @@ class DeepFoolAttacker(Attacker):
         self.classifier.eval()
 
         self.num_steps = num_steps
+        self.max_steps = max_steps
         self.epsilon = epsilon
         self.device = device
 
@@ -60,11 +68,12 @@ class DeepFoolAttacker(Attacker):
             self,
             sequence_to_attack: str,
             label_to_attack: int = 1,
-            max_steps: int = 10,
+            max_steps: Optional[int] = None,
             num_steps: Optional[int] = None,
             epsilon: Optional[float] = None
     ) -> AttackerOutput:
         seq_length = len(sequence_to_attack.split())
+        max_steps = max_steps or self.max_steps
         num_steps = num_steps or self.num_steps
         epsilon = epsilon or self.epsilon
         inputs = self.sequence_to_input(sequence_to_attack)

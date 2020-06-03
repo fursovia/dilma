@@ -22,6 +22,30 @@ NLP_RESULTS_DIR=${RESULTS_DIR}/nlp
 for dir in $(ls -d ${NLP_LOG_DIR}/dataset_*); do
     dataset=$(basename ${dir} | cut -d'_' -f 2)
 
+    echo ">>>> Attack ${dataset} by FGSM"
+    PYTHONPATH=. python scripts/baseline_attack.py \
+        --config-path configs/attacks/fgsm/config.json \
+        --attacker fgsm \
+        --classifier-dir ${dir}/substitute_clf \
+        --test-path ${NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
+        --out-dir ${NLP_RESULTS_DIR}/${dataset}/fgsm \
+        --sample-size ${SAMPLE_SIZE} \
+        --not-date-dir \
+        --force \
+        --cuda ${GPU_ID}
+
+    echo ">>>> Attack ${dataset} by DeepFool"
+    PYTHONPATH=. python scripts/baseline_attack.py \
+        --config-path configs/attacks/deepfool/config.json \
+        --attacker deepfool \
+        --classifier-dir ${dir}/substitute_clf \
+        --test-path ${NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
+        --out-dir ${NLP_RESULTS_DIR}/${dataset}/deepfool \
+        --sample-size ${SAMPLE_SIZE} \
+        --not-date-dir \
+        --force \
+        --cuda ${GPU_ID}
+
     echo ">>>> Attack ${dataset} by HotFlip"
     PYTHONPATH=. python scripts/hotflip_attack.py \
         --classifier-dir ${dir}/substitute_clf \
@@ -99,6 +123,30 @@ NON_NLP_RESULTS_DIR=${RESULTS_DIR}/non_nlp
 
 for dir in $(ls -d ${NON_NLP_LOG_DIR}/dataset_*); do
     dataset=$(basename ${dir} | cut -d'_' -f 2)
+
+    echo ">>>> Attack ${dataset} by FGSM"
+    PYTHONPATH=. python scripts/baseline_attack.py \
+        --config-path configs/attacks/fgsm/config.json \
+        --attacker fgsm \
+        --classifier-dir ${dir}/substitute_clf \
+        --test-path ${NON_NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
+        --out-dir ${NON_NLP_RESULTS_DIR}/${dataset}/fgsm \
+        --sample-size ${SAMPLE_SIZE} \
+        --not-date-dir \
+        --force \
+        --cuda ${GPU_ID}
+
+    echo ">>>> Attack ${dataset} by DeepFool"
+    PYTHONPATH=. python scripts/baseline_attack.py \
+        --config-path configs/attacks/deepfool/config.json \
+        --attacker deepfool \
+        --classifier-dir ${dir}/substitute_clf \
+        --test-path ${NON_NLP_DATA_DIR}/${dataset}/target_clf/${FILENAME}.json \
+        --out-dir ${NON_NLP_RESULTS_DIR}/${dataset}/deepfool \
+        --sample-size ${SAMPLE_SIZE} \
+        --not-date-dir \
+        --force \
+        --cuda ${GPU_ID}
 
     echo ">>>> Attack ${dataset} by HotFlip"
     PYTHONPATH=. python scripts/hotflip_attack.py \
