@@ -53,7 +53,7 @@ if __name__ == "__main__":
             # ROC AUC basically
             metrics = {k: round(v, 2) for k, v in metrics.items()}
             METRIC_NAMES = list(metrics.keys())
-            metrics["dataset"] = path.parent.parent.name
+            metrics["dataset"] = path.parent.parent.name.split("_")[-1]
             metrics["adversary"] = path.name.split("_")[-1]
             metrics_df.append(metrics)
 
