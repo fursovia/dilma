@@ -19,7 +19,12 @@ TODO
 Generate attacks for HotFlip, SamplingFool, CASCADA, CASCADA w/ sampling by running
 
 ```
-bash bin/attack.sh 
+export GPU_ID="3"
+
+docker run --rm --runtime=nvidia \
+    -e NVIDIA_VISIBLE_DEVICES=$GPU_ID \
+    --entrypoint /bin/bash \
+    dilma/dilma:latest bin/attack.sh
 ```
 
 This script will output 
@@ -71,9 +76,15 @@ This script will output
 
 ## Adversarial Training
 
-```bash
-bash bin/adv_training.sh
 ```
+export GPU_ID="3"
+
+docker run --rm --runtime=nvidia \
+    -e NVIDIA_VISIBLE_DEVICES=$GPU_ID \
+    --entrypoint /bin/bash \
+    dilma/dilma:latest bin/adv_training.sh
+```
+
 |    | dataset   | adversary   |   num_adv_examples |   NAD_1.0 |   mean_prob_diff |   mean_wer |   misclassification_error |
 |---:|:----------|:------------|-------------------:|----------:|-----------------:|-----------:|--------------------------:|
 |  0 | ag        | fgsm        |               5000 |      0.26 |             0.17 |       1.01 |                      0.26 |
@@ -139,8 +150,13 @@ bash bin/adv_training.sh
 
 ## Adversarial Example Detection
 
-```bash
-bash bin/adv_detection.sh
+```
+export GPU_ID="3"
+
+docker run --rm --runtime=nvidia \
+    -e NVIDIA_VISIBLE_DEVICES=$GPU_ID \
+    --entrypoint /bin/bash \
+    dilma/dilma:latest bin/adv_detection.sh
 ```
 
 |    | dataset   | adversary   |   roc_auc |
