@@ -15,9 +15,8 @@ DATASETS_DIR="datasets"
 declare -A datasets_num_labels
 datasets_num_labels=( ["ag"]=4 ["sst"]=2 ["trec"]=6 ["mr"]=2 ["ins"]=2 ["age"]=4 ["gender"]=2)
 
-echo "Preparing NLP datasets"
-for data_type in nlp non_nlp; do
-    for num in 5000 50 100 500 1000; do
+for num in 5000 50 100 500 1000; do
+    for data_type in non_nlp nlp; do
         for result_dir in $(ls -d ${ATTACKS_DIR}/${data_type}/*); do
             dataset=$(basename ${result_dir})
             for dir in $(ls -d ${result_dir}/*); do
@@ -57,3 +56,8 @@ for data_type in nlp non_nlp; do
         done
     done
 done
+
+
+PYTHONPATH=. python scripts/aggregate_results.py \
+    --results-dir ${ATTACKS_DIR} \
+    --adv-training
