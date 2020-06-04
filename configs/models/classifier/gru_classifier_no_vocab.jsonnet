@@ -65,7 +65,7 @@ local TOKEN_INDEXER = {
 //  },
   "trainer": {
     "num_epochs": 50,
-    "patience": 2,
+    "patience": 1,
     "cuda_device": 0
   }
 }
