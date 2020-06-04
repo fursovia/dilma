@@ -31,13 +31,6 @@ if __name__ == "__main__":
         lm_model = Model.from_archive(lm_dir / "model.tar.gz")
         reader = DatasetReader.from_params(Params.from_file(lm_dir /'config.json')['dataset_reader'])
         lm_predictor = Predictor(lm_model, reader)
-        # lm_predictor = Predictor.from_path(
-        #     lm_dir / "model.tar.gz",
-        #     # this is not a mistake
-        #     predictor_name="text_classifier",
-        #     cuda_device=args.cuda
-        # )
-        # lm_predictor._model._tokens_masker = None
         get_perplexity = lambda text: np.exp(
             lm_predictor.predict_instance(
                 lm_predictor._dataset_reader.text_to_instance(text)
@@ -68,6 +61,7 @@ if __name__ == "__main__":
     prob_diffs = [p["probs"][l] - ap["probs"][l] for p, ap, l in zip(preds, adv_preds, y_true)]
     wers = [el["wer"] for el in data]
 
+    misclassification_error = (np.array(y_true) != np.array(y_adv)).mean()
     nad = normalized_accuracy_drop(
         wers=wers,
         y_true=y_true,
@@ -93,6 +87,7 @@ if __name__ == "__main__":
         mean_perplexity_rise=mean_perplexity_rise
     )
     metrics[f"NAD_{args.gamma}"] = nad
+    metrics["misclassification_error"] = misclassification_error
     metrics[f"NAD_with_perplexity_{args.gamma}"] = nad_with_perp
     metrics["path_to_classifier"] = str(classifier_dir.absolute())
     if args.lm_dir is not None:

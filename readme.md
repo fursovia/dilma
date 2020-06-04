@@ -56,6 +56,27 @@ This script will output
 | 27 | ins       | sampling_fool    |      0.02 |             0.04 |       1.27 |
 
 
+FGSM, DeepFool part
+
+|    | dataset   | adversary   |   NAD_1.0 |   mean_prob_diff |   mean_wer |
+|---:|:----------|:------------|----------:|-----------------:|-----------:|
+|  0 | ag        | fgsm        |      0.66 |             0.43 |       1.01 |
+|  1 | ag        | deepfool    |      0.48 |             0.34 |       0.93 |
+|  2 | mr        | fgsm        |      0.57 |             0.23 |       1.01 |
+|  3 | mr        | deepfool    |      0.52 |             0.19 |       0.96 |
+|  4 | sst       | fgsm        |      0.63 |             0.4  |       1.02 |
+|  5 | sst       | deepfool    |      0.59 |             0.35 |       1.01 |
+|  6 | trec      | fgsm        |      0.62 |             0.42 |       0.86 |
+|  7 | trec      | deepfool    |      0.42 |             0.27 |       0.79 |
+|  8 | age       | fgsm        |      0.19 |             0.02 |       0.32 |
+|  9 | age       | deepfool    |      0.43 |             0.07 |       0.69 |
+| 10 | gender    | fgsm        |      0.92 |             0.42 |       1    |
+| 11 | gender    | deepfool    |      0.72 |             0.33 |       0.89 |
+| 12 | ins       | fgsm        |      0.18 |             0.36 |       1.42 |
+| 13 | ins       | deepfool    |      0.18 |             0.39 |       1.42 |
+
+
+
 ## Adversarial Training
 
 TODO
