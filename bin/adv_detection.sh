@@ -26,8 +26,8 @@ for data_type in non_nlp nlp; do
 
 
                 echo ">>>> Training ${dataset} dataset, ${alg_name} algorithm"
-                export CLS_TRAIN_DATA_PATH=${dir}/adv_detection/train.json
-                export CLS_VALID_DATA_PATH=${dir}/adv_detection/test.json
+                export DISCR_TRAIN_DATA_PATH=${dir}/adv_detection/train.json
+                export DISCR_VALID_DATA_PATH=${dir}/adv_detection/test.json
 
                 clf_dif=${LOGS_DIR}/${data_type}/dataset_${dataset}/target_clf/discriminator_${alg_name}
                 allennlp train configs/models/classifier/gru_discriminator.jsonnet \
