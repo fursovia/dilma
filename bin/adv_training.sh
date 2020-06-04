@@ -3,6 +3,8 @@
 # usage
 # bash bin/adv_training.sh {ATTACKS_DIR} ${GPU_ID}
 
+set -eo pipefail -v
+
 ATTACKS_DIR=$1
 default_gpu_id=0
 GPU_ID=${2:-$default_gpu_id}
@@ -25,12 +27,11 @@ for num in 5000 50 100 500 1000; do
                 --num-examples ${num}
 
             export CLS_NUM_CLASSES=2
-            export LM_VOCAB_PATH=logs/${data_type}/lm/vocabulary
             export CLS_TRAIN_DATA_PATH=${dir}/fine_tuning_data_${num}.json
             export CLS_VALID_DATA_PATH=${DATASETS_DIR}/${data_type}/${dataset}/target_clf/valid.json
 
             clf_dif=${LOGS_DIR}/${data_type}/dataset_${dataset}/target_clf/${alg_name}_${num}
-            allennlp train configs/models/classifier/gru_classifier.jsonnet \
+            allennlp train configs/models/classifier/gru_classifier_no_vocab.jsonnet \
                 -s ${clf_dif} \
                 --force \
                 --include-package adat
