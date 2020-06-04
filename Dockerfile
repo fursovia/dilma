@@ -7,13 +7,6 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /src
 
-COPY pyproject.toml poetry.lock /src/
-
-RUN pip install --user --upgrade pip \
-    && pip install poetry==0.12.17 --no-cache-dir \
-    && poetry config settings.virtualenvs.create false \
-    && poetry install
-
 COPY ./adat /src/adat
 COPY ./bin /src/bin
 COPY ./configs /src/configs
@@ -51,3 +44,10 @@ COPY ./logs/non_nlp/dataset_ins/target_clf/model.tar.gz /src/logs/non_nlp/datase
 COPY ./logs/non_nlp/dataset_ins/substitute_clf/model.tar.gz /src/logs/non_nlp/dataset_ins/substitute_clf/
 COPY ./logs/non_nlp/dataset_ins/lm/model.tar.gz /src/logs/non_nlp/dataset_ins/lm/
 COPY ./logs/non_nlp/dataset_ins/lev/model.tar.gz /src/logs/non_nlp/dataset_ins/lev/
+
+
+COPY pyproject.toml poetry.lock /src/
+RUN pip install --user --upgrade pip \
+    && pip install poetry==0.12.17 --no-cache-dir \
+    && poetry config settings.virtualenvs.create false \
+    && poetry install
