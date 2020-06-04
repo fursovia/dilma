@@ -61,15 +61,16 @@ local TOKEN_INDEXER = {
   "data_loader": {
     "batch_size": 64
   },
-  "distributed": {
-    "master_port": 29555,
-    "cuda_devices": [
-      0,
-      1
-    ]
-  },
+//  "distributed": {
+//    "master_port": 29555,
+//    "cuda_devices": [
+//      0,
+//      1
+//    ]
+//  },
   "trainer": {
     "num_epochs": 50,
-    "patience": 3
+    "patience": 2,
+    "cuda_device": 0
   }
 }

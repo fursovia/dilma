@@ -22,7 +22,7 @@ Generate attacks for HotFlip, SamplingFool, CASCADA, CASCADA w/ sampling by runn
 bash bin/attack.sh 
 ```
 
-This script will output
+This script will output [test 0.2]
 
 |    | dataset   | adversary        |   NAD_1.0 |   mean_prob_diff |   mean_wer |   misclassification_error |
 |---:|:----------|:-----------------|----------:|-----------------:|-----------:|--------------------------:|
@@ -56,7 +56,7 @@ This script will output
 | 27 | ins       | sampling_fool    |      0.02 |             0.04 |       1.27 |                      0.03 |
 
 
-FGSM, DeepFool part
+FGSM, DeepFool part [test 0.2]
 
 |    | dataset   | adversary   |   NAD_1.0 |   mean_prob_diff |   mean_wer |   misclassification_error |
 |---:|:----------|:------------|----------:|-----------------:|-----------:|--------------------------:|
@@ -75,6 +75,25 @@ FGSM, DeepFool part
 | 12 | ins       | fgsm        |      0.18 |             0.36 |       1.42 |                      0.33 |
 | 13 | ins       | deepfool    |      0.18 |             0.39 |       1.42 |                      0.34 |
 
+
+[valid 5.0]
+
+|    | dataset   | adversary   |   NAD_1.0 |   mean_prob_diff |   mean_wer |   misclassification_error |
+|---:|:----------|:------------|----------:|-----------------:|-----------:|--------------------------:|
+|  0 | ag        | fgsm        |      0.66 |             0.46 |       1.01 |                      0.67 |
+|  1 | ag        | deepfool    |      0.52 |             0.37 |       0.97 |                      0.55 |
+|  2 | mr        | fgsm        |      0.58 |             0.23 |       1    |                      0.59 |
+|  3 | mr        | deepfool    |      0.53 |             0.21 |       0.98 |                      0.54 |
+|  4 | sst       | fgsm        |      0.66 |             0.63 |       1.24 |                      0.76 |
+|  5 | sst       | deepfool    |      0.6  |             0.58 |       1.18 |                      0.7  |
+|  6 | trec      | fgsm        |      0.58 |             0.34 |       0.98 |                      0.59 |
+|  7 | trec      | deepfool    |      0.47 |             0.27 |       0.92 |                      0.51 |
+|  8 | age       | fgsm        |      0.18 |             0.02 |       0.33 |                      0.57 |
+|  9 | age       | deepfool    |      0.43 |             0.07 |       0.7  |                      0.64 |
+| 10 | gender    | fgsm        |      0.92 |             0.42 |       1    |                      0.92 |
+| 11 | gender    | deepfool    |      0.67 |             0.3  |       0.85 |                      0.74 |
+| 12 | ins       | fgsm        |      0.17 |             0.34 |       1.42 |                      0.31 |
+| 13 | ins       | deepfool    |      0.19 |             0.38 |       1.42 |                      0.35 |
 
 
 ## Adversarial Training
