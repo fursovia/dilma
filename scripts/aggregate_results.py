@@ -30,6 +30,7 @@ if __name__ == "__main__":
             metrics["adversary"] = path.name
             metrics_df.append(metrics)
     else:
+        METRIC_NAMES.insert(0, "num_adv_examples")
         for path in glob(str(results_dir / "*/*/*/*0_metrics.json")):
             path = Path(path)
             with open(path) as f:
