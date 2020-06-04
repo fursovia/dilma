@@ -74,7 +74,6 @@ This script will output
 ```bash
 bash bin/adv_training.sh
 ```
-
 |    | dataset   | adversary   |   num_adv_examples |   NAD_1.0 |   mean_prob_diff |   mean_wer |   misclassification_error |
 |---:|:----------|:------------|-------------------:|----------:|-----------------:|-----------:|--------------------------:|
 |  0 | ag        | fgsm        |               5000 |      0.26 |             0.17 |       1.01 |                      0.26 |
@@ -117,6 +116,26 @@ bash bin/adv_training.sh
 | 37 | trec      | deepfool    |                100 |      0.44 |             0.24 |       0.92 |                      0.47 |
 | 38 | trec      | deepfool    |                500 |      0.15 |             0.11 |       0.92 |                      0.16 |
 | 39 | trec      | deepfool    |               1000 |      0.01 |             0    |       0.92 |                      0.01 |
+| 40 | gender    | fgsm        |               5000 |      0.59 |             0.14 |       1    |                      0.59 |
+| 41 | gender    | fgsm        |                 50 |      0.86 |             0.31 |       1    |                      0.86 |
+| 42 | gender    | fgsm        |                100 |      0.8  |             0.27 |       1    |                      0.8  |
+| 43 | gender    | fgsm        |                500 |      0.76 |             0.22 |       1    |                      0.76 |
+| 44 | gender    | fgsm        |               1000 |      0.73 |             0.2  |       1    |                      0.73 |
+| 45 | gender    | deepfool    |               5000 |      0.26 |             0.01 |       0.85 |                      0.32 |
+| 46 | gender    | deepfool    |                 50 |      0.6  |             0.2  |       0.85 |                      0.67 |
+| 47 | gender    | deepfool    |                100 |      0.55 |             0.17 |       0.85 |                      0.62 |
+| 48 | gender    | deepfool    |                500 |      0.49 |             0.13 |       0.85 |                      0.56 |
+| 49 | gender    | deepfool    |               1000 |      0.42 |             0.1  |       0.85 |                      0.5  |
+| 50 | ins       | fgsm        |               5000 |      0.1  |             0.22 |       1.42 |                      0.21 |
+| 51 | ins       | fgsm        |                 50 |      0.12 |             0.28 |       1.42 |                      0.24 |
+| 52 | ins       | fgsm        |                100 |      0.1  |             0.25 |       1.42 |                      0.22 |
+| 53 | ins       | fgsm        |                500 |      0.04 |             0.21 |       1.42 |                      0.05 |
+| 54 | ins       | fgsm        |               1000 |      0.03 |             0.16 |       1.42 |                      0.04 |
+| 55 | ins       | deepfool    |               5000 |      0.09 |             0.2  |       1.42 |                      0.19 |
+| 56 | ins       | deepfool    |                 50 |      0.13 |             0.3  |       1.42 |                      0.26 |
+| 57 | ins       | deepfool    |                100 |      0.09 |             0.25 |       1.42 |                      0.19 |
+| 58 | ins       | deepfool    |                500 |      0.08 |             0.22 |       1.42 |                      0.18 |
+| 59 | ins       | deepfool    |               1000 |      0.04 |             0.19 |       1.42 |                      0.04 |
 
 ## Adversarial Example Detection
 
