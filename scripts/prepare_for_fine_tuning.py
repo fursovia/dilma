@@ -17,7 +17,6 @@ if __name__ == "__main__":
 
     data = load_jsonlines(adversarial_dir / "attacked_data.json")[:args.num_examples]
 
-    num_added = 0
     postfix = args.num_examples or "all"
 
     data_path = adversarial_dir / f"fine_tuning_data_{postfix}.json"
@@ -32,5 +31,3 @@ if __name__ == "__main__":
             data_to_mix_with = load_jsonlines(args.mix_with_path)
             for ex in data_to_mix_with:
                 writer.write(ex)
-
-    print(f"Saved {num_added} examples.")

@@ -15,6 +15,8 @@ for data_type in nlp non_nlp; do
         target_clf_dir=${LOG_DIR}/${data_type}/dataset_${dataset}/target_clf
 
         for dir in $(ls -d ${result_dir}/*); do
+            alg_name=$(basename ${dir})
+            echo ">>>> Evaluating ${dataset} dataset, ${alg_name} algorithm"
             PYTHONPATH=. python scripts/evaluate_attack.py \
                 --adversarial-dir ${dir} \
                 --classifier-dir ${target_clf_dir} \
