@@ -39,7 +39,7 @@ for data_type in non_nlp nlp; do
                 PYTHONPATH=. python scripts/calculate_discr_metrics.py \
                     --adversarial-dir ${dir} \
                     --classifier-dir ${clf_dif} \
-                    --test-path ${CLS_VALID_DATA_PATH} \
+                    --test-path ${DISCR_VALID_DATA_PATH} \
                     --cuda ${GPU_ID}
             done
         fi
