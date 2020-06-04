@@ -46,7 +46,7 @@ COPY ./logs/non_nlp/dataset_ins/lm/model.tar.gz /src/logs/non_nlp/dataset_ins/lm
 COPY ./logs/non_nlp/dataset_ins/lev/model.tar.gz /src/logs/non_nlp/dataset_ins/lev/
 
 
-COPY pyproject.toml poetry.lock /src/
+COPY pyproject.toml poetry.lock readme.md /src/
 RUN pip install --user --upgrade pip \
     && pip install poetry==0.12.17 --no-cache-dir \
     && poetry config settings.virtualenvs.create false \
