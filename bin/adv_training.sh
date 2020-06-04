@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # usage
-# bash bin/attack.sh {ATTACKS_DIR} ${GPU_ID}
+# bash bin/adv_training.sh {ATTACKS_DIR} ${GPU_ID}
 
 ATTACKS_DIR=$1
 default_gpu_id=0
@@ -30,8 +30,9 @@ for num in 5000 50 100 500 1000; do
             export CLS_VALID_DATA_PATH=${DATASETS_DIR}/${data_type}/${dataset}/target_clf/valid.json
 
             clf_dif=${LOGS_DIR}/${data_type}/dataset_${dataset}/target_clf/${alg_name}_${num}
-            allennlp train configs/classifier/gru_classifier.jsonnet \
+            allennlp train configs/models/classifier/gru_classifier.jsonnet \
                 -s ${clf_dif} \
+                --force \
                 --include-package adat
 
             allennlp evaluate \
