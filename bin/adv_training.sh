@@ -12,6 +12,8 @@ GPU_ID=${2:-$default_gpu_id}
 LOGS_DIR="logs"
 DATASETS_DIR="datasets"
 
+declare -A datasets_num_labels
+datasets_num_labels=( ["ag"]=4 ["sst"]=2 ["trec"]=6 ["mr"]=2 ["ins"]=2 ["age"]=4 ["gender"]=2)
 
 echo "Preparing NLP datasets"
 data_type=nlp
@@ -26,7 +28,7 @@ for num in 5000 50 100 500 1000; do
                 --mix-with-path ${DATASETS_DIR}/${data_type}/${dataset}/target_clf/train.json \
                 --num-examples ${num}
 
-            export CLS_NUM_CLASSES=2
+            export CLS_NUM_CLASSES="${datasets_num_labels[${dataset}]}"
             export CLS_TRAIN_DATA_PATH=${dir}/fine_tuning_data_${num}.json
             export CLS_VALID_DATA_PATH=${DATASETS_DIR}/${data_type}/${dataset}/target_clf/valid.json
 
