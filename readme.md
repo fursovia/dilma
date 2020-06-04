@@ -151,17 +151,19 @@ bash bin/adv_training.sh
 bash bin/adv_detection.sh
 ```
 
-|    | dataset        | adversary   |   roc_auc |
-|---:|:---------------|:------------|----------:|
-|  0 | dataset_ag     | deepfool    |      0.89 |
-|  1 | dataset_ag     | fgsm        |      0.96 |
-|  2 | dataset_sst    | deepfool    |      0.97 |
-|  3 | dataset_sst    | fgsm        |      0.98 |
-|  4 | dataset_trec   | deepfool    |      0.71 |
-|  5 | dataset_trec   | fgsm        |      0.71 |
-|  6 | dataset_mr     | deepfool    |      0.94 |
-|  7 | dataset_mr     | fgsm        |      0.94 |
-|  8 | dataset_gender | deepfool    |      0.96 |
-|  9 | dataset_gender | fgsm        |      0.98 |
-| 10 | dataset_ins    | deepfool    |      0.95 |
-| 11 | dataset_ins    | fgsm        |      0.96 |
+|    | dataset   | adversary   |   roc_auc |
+|---:|:----------|:------------|----------:|
+|  0 | ag        | deepfool    |      0.89 |
+|  1 | ag        | fgsm        |      0.96 |
+|  2 | sst       | deepfool    |      0.97 |
+|  3 | sst       | fgsm        |      0.98 |
+|  4 | trec      | deepfool    |      0.71 |
+|  5 | trec      | fgsm        |      0.71 |
+|  6 | mr        | deepfool    |      0.94 |
+|  7 | mr        | fgsm        |      0.94 |
+|  8 | gender    | deepfool    |      0.96 |
+|  9 | gender    | fgsm        |      0.98 |
+| 10 | age       | deepfool    |      0.87 |
+| 11 | age       | fgsm        |      0.61 |
+| 12 | ins       | deepfool    |      0.95 |
+| 13 | ins       | fgsm        |      0.96 |
