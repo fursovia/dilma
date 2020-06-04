@@ -98,6 +98,10 @@ FGSM, DeepFool part [test 0.2]
 
 ## Adversarial Training
 
+```bash
+bash bin/adv_training.sh
+```
+
 |    | dataset   | adversary   |   num_adv_examples |   NAD_1.0 |   mean_prob_diff |   mean_wer |   misclassification_error |
 |---:|:----------|:------------|-------------------:|----------:|-----------------:|-----------:|--------------------------:|
 |  0 | ag        | fgsm        |               5000 |      0.26 |             0.17 |       1.01 |                      0.26 |
