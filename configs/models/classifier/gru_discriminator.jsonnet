@@ -52,7 +52,7 @@
 //  },
   "trainer": {
     "num_epochs": 50,
-    "patience": 3,
-    "cuda_device": 3
+    "patience": 2,
+    "cuda_device": 2
   }
 }
