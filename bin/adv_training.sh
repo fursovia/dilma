@@ -19,7 +19,7 @@ for num in 5000 50 100 500 1000; do
     for data_type in non_nlp nlp; do
         for result_dir in $(ls -d ${ATTACKS_DIR}/${data_type}/*); do
             dataset=$(basename ${result_dir})
-            if [$dataset != "age"]; then
+            if [[ "${dataset}" != "age" ]]; then
                 for dir in $(ls -d ${result_dir}/*); do
                     alg_name=$(basename ${dir})
                     echo ">>>> Preparing data for ${dataset} dataset, ${alg_name} algorithm, ${num} examples"
