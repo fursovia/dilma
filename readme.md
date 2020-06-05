@@ -1,4 +1,4 @@
-# Adversarial Attacks (ADAT)
+# Differentiable Language Model Adversarial Attackson Categorical Sequence Classifiers
 
 ## Dependencies
 
@@ -10,16 +10,28 @@ poetry install
 poetry shell
 ```
 
-## Training
+## Datasets/Models
 
-TODO
+All datasets are available inside `dilma/dilma:latest` docker container in `/src/datasets` folder.
+ Pretrained models are stored in `/src/logs`.
+You can access these files by running
+
+```bash
+docker run --rm -itd --entrypoint /bin/bash \
+    --name dilma \
+    -v $PWD:/workspace \
+    dilma/dilma:latest
+
+docker exec -it dilma bash
+```
+
 
 ## Attacks
 
-Generate attacks for HotFlip, SamplingFool, CASCADA, CASCADA w/ sampling by running
+Generate attacks for HotFlip, SamplingFool, DILMA (aka CASCADA), DILMA (aka CASCADA) w/ sampling by running
 
-```
-export GPU_ID="3"
+```bash
+export GPU_ID="0"
 
 docker run --rm --runtime=nvidia \
     -e NVIDIA_VISIBLE_DEVICES=$GPU_ID \
@@ -76,8 +88,8 @@ This script will output
 
 ## Adversarial Training
 
-```
-export GPU_ID="3"
+```bash
+export GPU_ID="0"
 
 docker run --rm --runtime=nvidia \
     -e NVIDIA_VISIBLE_DEVICES=$GPU_ID \
@@ -160,8 +172,8 @@ docker run --rm --runtime=nvidia \
 
 ## Adversarial Example Detection
 
-```
-export GPU_ID="3"
+```bash
+export GPU_ID="0"
 
 docker run --rm --runtime=nvidia \
     -e NVIDIA_VISIBLE_DEVICES=$GPU_ID \
