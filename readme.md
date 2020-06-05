@@ -127,26 +127,36 @@ docker run --rm --runtime=nvidia \
 | 37 | trec      | deepfool    |                100 |      0.44 |             0.24 |       0.92 |                      0.47 |
 | 38 | trec      | deepfool    |                500 |      0.15 |             0.11 |       0.92 |                      0.16 |
 | 39 | trec      | deepfool    |               1000 |      0.01 |             0    |       0.92 |                      0.01 |
-| 40 | gender    | fgsm        |               5000 |      0.59 |             0.14 |       1    |                      0.59 |
-| 41 | gender    | fgsm        |                 50 |      0.86 |             0.31 |       1    |                      0.86 |
-| 42 | gender    | fgsm        |                100 |      0.8  |             0.27 |       1    |                      0.8  |
-| 43 | gender    | fgsm        |                500 |      0.76 |             0.22 |       1    |                      0.76 |
-| 44 | gender    | fgsm        |               1000 |      0.73 |             0.2  |       1    |                      0.73 |
-| 45 | gender    | deepfool    |               5000 |      0.26 |             0.01 |       0.85 |                      0.32 |
-| 46 | gender    | deepfool    |                 50 |      0.6  |             0.2  |       0.85 |                      0.67 |
-| 47 | gender    | deepfool    |                100 |      0.55 |             0.17 |       0.85 |                      0.62 |
-| 48 | gender    | deepfool    |                500 |      0.49 |             0.13 |       0.85 |                      0.56 |
-| 49 | gender    | deepfool    |               1000 |      0.42 |             0.1  |       0.85 |                      0.5  |
-| 50 | ins       | fgsm        |               5000 |      0.1  |             0.22 |       1.42 |                      0.21 |
-| 51 | ins       | fgsm        |                 50 |      0.12 |             0.28 |       1.42 |                      0.24 |
-| 52 | ins       | fgsm        |                100 |      0.1  |             0.25 |       1.42 |                      0.22 |
-| 53 | ins       | fgsm        |                500 |      0.04 |             0.21 |       1.42 |                      0.05 |
-| 54 | ins       | fgsm        |               1000 |      0.03 |             0.16 |       1.42 |                      0.04 |
-| 55 | ins       | deepfool    |               5000 |      0.09 |             0.2  |       1.42 |                      0.19 |
-| 56 | ins       | deepfool    |                 50 |      0.13 |             0.3  |       1.42 |                      0.26 |
-| 57 | ins       | deepfool    |                100 |      0.09 |             0.25 |       1.42 |                      0.19 |
-| 58 | ins       | deepfool    |                500 |      0.08 |             0.22 |       1.42 |                      0.18 |
-| 59 | ins       | deepfool    |               1000 |      0.04 |             0.19 |       1.42 |                      0.04 |
+| 40 | age       | fgsm        |               5000 |      0.17 |             0.01 |       0.33 |                      0.56 |
+| 41 | age       | fgsm        |                 50 |      0.18 |             0.02 |       0.33 |                      0.57 |
+| 42 | age       | fgsm        |                100 |      0.18 |             0.02 |       0.33 |                      0.56 |
+| 43 | age       | fgsm        |                500 |      0.18 |             0.02 |       0.33 |                      0.56 |
+| 44 | age       | fgsm        |               1000 |      0.18 |             0.02 |       0.33 |                      0.56 |
+| 45 | age       | deepfool    |               5000 |      0.4  |             0.05 |       0.7  |                      0.61 |
+| 46 | age       | deepfool    |                 50 |      0.43 |             0.07 |       0.7  |                      0.64 |
+| 47 | age       | deepfool    |                100 |      0.42 |             0.07 |       0.7  |                      0.63 |
+| 48 | age       | deepfool    |                500 |      0.43 |             0.06 |       0.7  |                      0.64 |
+| 49 | age       | deepfool    |               1000 |      0.42 |             0.06 |       0.7  |                      0.64 |
+| 50 | gender    | fgsm        |               5000 |      0.59 |             0.14 |       1    |                      0.59 |
+| 51 | gender    | fgsm        |                 50 |      0.86 |             0.31 |       1    |                      0.86 |
+| 52 | gender    | fgsm        |                100 |      0.8  |             0.27 |       1    |                      0.8  |
+| 53 | gender    | fgsm        |                500 |      0.76 |             0.22 |       1    |                      0.76 |
+| 54 | gender    | fgsm        |               1000 |      0.73 |             0.2  |       1    |                      0.73 |
+| 55 | gender    | deepfool    |               5000 |      0.26 |             0.01 |       0.85 |                      0.32 |
+| 56 | gender    | deepfool    |                 50 |      0.6  |             0.2  |       0.85 |                      0.67 |
+| 57 | gender    | deepfool    |                100 |      0.55 |             0.17 |       0.85 |                      0.62 |
+| 58 | gender    | deepfool    |                500 |      0.49 |             0.13 |       0.85 |                      0.56 |
+| 59 | gender    | deepfool    |               1000 |      0.42 |             0.1  |       0.85 |                      0.5  |
+| 60 | ins       | fgsm        |               5000 |      0.1  |             0.22 |       1.42 |                      0.21 |
+| 61 | ins       | fgsm        |                 50 |      0.12 |             0.28 |       1.42 |                      0.24 |
+| 62 | ins       | fgsm        |                100 |      0.1  |             0.25 |       1.42 |                      0.22 |
+| 63 | ins       | fgsm        |                500 |      0.04 |             0.21 |       1.42 |                      0.05 |
+| 64 | ins       | fgsm        |               1000 |      0.03 |             0.16 |       1.42 |                      0.04 |
+| 65 | ins       | deepfool    |               5000 |      0.09 |             0.2  |       1.42 |                      0.19 |
+| 66 | ins       | deepfool    |                 50 |      0.13 |             0.3  |       1.42 |                      0.26 |
+| 67 | ins       | deepfool    |                100 |      0.09 |             0.25 |       1.42 |                      0.19 |
+| 68 | ins       | deepfool    |                500 |      0.08 |             0.22 |       1.42 |                      0.18 |
+| 69 | ins       | deepfool    |               1000 |      0.04 |             0.19 |       1.42 |                      0.04 |
 
 ## Adversarial Example Detection
 
@@ -159,19 +169,47 @@ docker run --rm --runtime=nvidia \
     dilma/dilma:latest bin/adv_detection.sh
 ```
 
-|    | dataset   | adversary   |   roc_auc |
-|---:|:----------|:------------|----------:|
-|  0 | ag        | deepfool    |      0.89 |
-|  1 | ag        | fgsm        |      0.96 |
-|  2 | sst       | deepfool    |      0.97 |
-|  3 | sst       | fgsm        |      0.98 |
-|  4 | trec      | deepfool    |      0.71 |
-|  5 | trec      | fgsm        |      0.71 |
-|  6 | mr        | deepfool    |      0.94 |
-|  7 | mr        | fgsm        |      0.94 |
-|  8 | gender    | deepfool    |      0.96 |
-|  9 | gender    | fgsm        |      0.98 |
-| 10 | age       | deepfool    |      0.87 |
-| 11 | age       | fgsm        |      0.61 |
-| 12 | ins       | deepfool    |      0.95 |
-| 13 | ins       | fgsm        |      0.96 |
+|    | dataset   | adversary        |   roc_auc |
+|---:|:----------|:-----------------|----------:|
+|  0 | ag        | deepfool         |      0.89 |
+|  1 | ag        | fgsm             |      0.96 |
+|  2 | ag        | cascada          |      0.69 |
+|  3 | ag        | cascada_sampling |      0.64 |
+|  4 | ag        | hotflip          |      1    |
+|  5 | ag        | sampling_fool    |      0.6  |
+|  6 | sst       | deepfool         |      0.96 |
+|  7 | sst       | fgsm             |      0.98 |
+|  8 | sst       | cascada          |      0.67 |
+|  9 | sst       | cascada_sampling |      0.68 |
+| 10 | sst       | hotflip          |      1    |
+| 11 | sst       | sampling_fool    |      0.61 |
+| 12 | trec      | deepfool         |      0.75 |
+| 13 | trec      | fgsm             |      0.76 |
+| 14 | trec      | cascada          |      0.75 |
+| 15 | trec      | cascada_sampling |      0.72 |
+| 16 | trec      | hotflip          |      0.96 |
+| 17 | trec      | sampling_fool    |      0.63 |
+| 18 | mr        | deepfool         |      0.96 |
+| 19 | mr        | fgsm             |      0.94 |
+| 20 | mr        | cascada          |      0.66 |
+| 21 | mr        | cascada_sampling |      0.6  |
+| 22 | mr        | hotflip          |      0.98 |
+| 23 | mr        | sampling_fool    |      0.59 |
+| 24 | gender    | deepfool         |      0.95 |
+| 25 | gender    | fgsm             |      0.99 |
+| 26 | gender    | cascada          |      0.67 |
+| 27 | gender    | cascada_sampling |      0.61 |
+| 28 | gender    | hotflip          |      1    |
+| 29 | gender    | sampling_fool    |      0.7  |
+| 30 | age       | deepfool         |      0.85 |
+| 31 | age       | fgsm             |      0.6  |
+| 32 | age       | cascada          |      0.63 |
+| 33 | age       | cascada_sampling |      0.59 |
+| 34 | age       | hotflip          |      1    |
+| 35 | age       | sampling_fool    |      0.66 |
+| 36 | ins       | deepfool         |      0.86 |
+| 37 | ins       | fgsm             |      0.96 |
+| 38 | ins       | cascada          |      0.97 |
+| 39 | ins       | cascada_sampling |      0.98 |
+| 40 | ins       | hotflip          |      1    |
+| 41 | ins       | sampling_fool    |      0.6  |
