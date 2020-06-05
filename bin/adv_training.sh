@@ -15,13 +15,15 @@ DATASETS_DIR="datasets"
 declare -A datasets_num_labels
 datasets_num_labels=( ["ag"]=4 ["sst"]=2 ["trec"]=6 ["mr"]=2 ["ins"]=2 ["age"]=4 ["gender"]=2)
 
-for num in 5000 50 100 500 1000; do
-    for data_type in non_nlp nlp; do
-        for result_dir in $(ls -d ${ATTACKS_DIR}/${data_type}/*); do
-            dataset=$(basename ${result_dir})
-            if [[ "${dataset}" != "age" ]]; then
-                for dir in $(ls -d ${result_dir}/*); do
-                    alg_name=$(basename ${dir})
+#for num in 5000 50 100 500 1000; do
+num=5000
+for data_type in non_nlp nlp; do
+    for result_dir in $(ls -d ${ATTACKS_DIR}/${data_type}/*); do
+        dataset=$(basename ${result_dir})
+        if [[ "${dataset}" != "age" ]]; then
+            for dir in $(ls -d ${result_dir}/*); do
+                alg_name=$(basename ${dir})
+                if [[ "${alg_name}" == "cascada" || "${alg_name}" == "cascada_sampling" ]]; then
                     echo ">>>> Preparing data for ${dataset} dataset, ${alg_name} algorithm, ${num} examples"
                     PYTHONPATH=. python scripts/prepare_for_fine_tuning.py \
                         --adversarial-dir ${dir} \
@@ -53,11 +55,12 @@ for num in 5000 50 100 500 1000; do
                         --adversarial-dir ${dir} \
                         --classifier-dir ${clf_dif} \
                         --cuda ${GPU_ID}
-                done
-            fi
-        done
+                fi
+            done
+        fi
     done
 done
+#done
 
 
 PYTHONPATH=. python scripts/aggregate_results.py \
