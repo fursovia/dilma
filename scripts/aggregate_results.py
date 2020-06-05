@@ -54,7 +54,7 @@ if __name__ == "__main__":
             metrics = {k: round(v, 2) for k, v in metrics.items()}
             METRIC_NAMES = list(metrics.keys())
             metrics["dataset"] = "_".join(path.parent.parent.name.split("_")[1:])
-            metrics["adversary"] = path.name.split("_")[-1]
+            metrics["adversary"] = "_".join(path.name.split("_")[1:])
             metrics_df.append(metrics)
 
     metrics_df = pd.DataFrame(metrics_df)
