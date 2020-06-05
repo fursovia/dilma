@@ -3,7 +3,7 @@ name = "adat"
 version = "0.1.0"
 description = "Adversarial Attacks on Symbolic Sequence Classifiers"
 authors = ["Name Name <name@gmail.com>"]
-repository = "https://github.com/fursovia/adversarial_attacks"
+repository = "https://github.com/***/adversarial_attacks"
 readme = 'readme.md'
 
 [tool.poetry.dependencies]
