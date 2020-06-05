@@ -1,6 +1,6 @@
 {
     "alpha": 10.0,
-    "beta": 0.0,
+    "beta": 1.0,
     "lr": 1.0,
     "num_gumbel_samples": 10,
     "tau": 1.2,
