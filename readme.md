@@ -1,4 +1,9 @@
-# Differentiable Language Model Adversarial Attackson Categorical Sequence Classifiers
+# DILMA
+
+This repository contains a pytorch implementation of 
+"Differentiable Language Model Adversarial Attacks on Categorical Sequence Classifiers".
+
+![DILMA](img/dilma_architecture.png)
 
 ## Dependencies
 
