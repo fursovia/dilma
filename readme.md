@@ -1,7 +1,7 @@
 # DILMA
 
 This repository contains a pytorch implementation of 
-"Differentiable Language Model Adversarial Attacks on Categorical Sequence Classifiers".
+["Differentiable Language Model Adversarial Attacks on Categorical Sequence Classifiers"](https://arxiv.org/abs/2006.11078).
 
 <p align="center"><img src="imgs/dilma_architecture.png" width="480"\></p>
 
@@ -231,3 +231,15 @@ docker run --rm --runtime=nvidia \
 | 39 | ins       | cascada_sampling |      0.98 |
 | 40 | ins       | hotflip          |      1    |
 | 41 | ins       | sampling_fool    |      0.6  |
+
+
+# Citation
+
+```text
+@article{fursov2020differentiable,
+  title={Differentiable Language Model Adversarial Attacks on Categorical Sequence Classifiers},
+  author={I. Fursov and A. Zaytsev and N. Kluchnikov and A. Kravchenko and E. Burnaev},
+  journal={arXiv preprint arXiv:2006.11078},
+  year={2020}
+}
+```
