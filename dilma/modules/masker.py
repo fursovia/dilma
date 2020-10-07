@@ -16,7 +16,7 @@ class TokensMasker(Registrable):
         vocab: Vocabulary,
         mask_probability: float = 0.3,
         replace_probability: float = 0.1,
-        namespace: str = "sequence",
+        namespace: str = "tokens",
     ) -> None:
         self.vocab = vocab
         self.mask_probability = mask_probability
