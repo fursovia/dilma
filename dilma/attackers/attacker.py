@@ -9,6 +9,7 @@ import torch
 
 from dilma.common import SequenceData, ModelsInput
 from dilma.reader import BasicDatasetReader
+from dilma.utils.metrics import word_error_rate
 
 
 @dataclass_json
@@ -21,6 +22,23 @@ class AttackerOutput:
     prob_diff: float
     wer: int
     history: Optional[List[Dict[str, Any]]] = None  # substitute clf
+
+    @classmethod
+    def from_data(
+            cls,
+            data_to_attack: SequenceData,
+            adversarial_data: SequenceData,
+            probability: float,
+            adversarial_probability: float,
+    ) -> "AttackerOutput":
+        return cls(
+            data=data_to_attack.to_dict(),
+            adversarial_data=adversarial_data.to_dict(),
+            probability=probability,
+            adversarial_probability=adversarial_probability,
+            prob_diff=(probability - adversarial_probability),
+            wer=word_error_rate(data_to_attack.sequence, adversarial_data.sequence),
+        )
 
 
 class Attacker(ABC, Registrable):
@@ -86,3 +104,10 @@ class Attacker(ABC, Registrable):
             best_output = max(outputs, key=lambda x: x.prob_diff)
 
         return best_output
+
+    def recalculate_prob_and_label_for_target_clf(self, output: AttackerOutput) -> AttackerOutput:
+        sequence = output.adversarial_data["sequence"]
+
+        adv_probs = self.get_target_clf_probs(adv_inputs)
+        adv_data.label = self.probs_to_label(adv_probs)
+        adv_prob = adv_probs[self.label_to_index(data_to_attack.label)].item()

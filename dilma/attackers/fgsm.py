@@ -9,7 +9,6 @@ from dilma.attackers.attacker import Attacker, AttackerOutput
 from dilma.common import SequenceData, START_TOKEN, END_TOKEN, MASK_TOKEN
 from dilma.reader import BasicDatasetReader
 from dilma.utils.data import data_to_tensors, decode_indexes
-from dilma.utils.metrics import word_error_rate
 
 
 @Attacker.register("fgsm")
@@ -37,7 +36,7 @@ class FGSM(Attacker):
 
         self.emb_layer = util.find_embedding_layer(self.substitute_classifier).weight
         self.special_indexes = [
-            self.vocab.get_token_index(token, "transactions") for token in self.SPECIAL_TOKENS
+            self.vocab.get_token_index(token, "tokens") for token in self.SPECIAL_TOKENS
         ]
 
     def attack(self, data_to_attack: SequenceData) -> AttackerOutput:
@@ -68,7 +67,6 @@ class FGSM(Attacker):
             loss = self.substitute_classifier.forward_on_embeddings(
                 embeddings=torch.stack(embeddings_splitted, dim=0).unsqueeze(0),
                 mask=emb_out["mask"],
-                amounts=inputs["amounts"],
                 label=inputs["label"],
             )["loss"]
             loss.backward()
@@ -94,22 +92,20 @@ class FGSM(Attacker):
             adversarial_idexes[0, random_idx] = closest_idx
 
             adv_data = deepcopy(data_to_attack)
-            adv_data.sequence = decode_indexes(adversarial_idexes[0], vocab=self.substitute_classifier.vocab)
+            adv_data.sequence = decode_indexes(adversarial_idexes[0], vocab=self.vocab)
 
-            adv_inputs = data_to_tensors(adv_data, self.reader, self.substitute_classifier.vocab, self.device)
+            adv_inputs = data_to_tensors(adv_data, self.reader, self.vocab, self.device)
 
             # get adversarial probability and adversarial label
-            adv_probs = self.get_clf_probs(adv_inputs)
+            adv_probs = self.get_substitute_clf_probs(adv_inputs)
             adv_data.label = self.probs_to_label(adv_probs)
             adv_prob = adv_probs[self.label_to_index(data_to_attack.label)].item()
 
-            output = AttackerOutput(
-                data=data_to_attack.to_dict(),
-                adversarial_data=adv_data.to_dict(),
+            output = AttackerOutput.from_data(
+                data_to_attack=data_to_attack,
+                adversarial_data=adv_data,
                 probability=orig_prob,
-                adversarial_probability=adv_prob,
-                prob_diff=(orig_prob - adv_prob),
-                wer=word_error_rate(data_to_attack.transactions, adv_data.transactions),
+                adversarial_probability=adv_prob
             )
             outputs.append(output)
 
