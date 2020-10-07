@@ -11,8 +11,8 @@ from dilma.reader import BasicDatasetReader
 from dilma.utils.data import data_to_tensors, decode_indexes
 
 
-@Attacker.register("fgsm")
-class FGSM(Attacker):
+@Attacker.register("deepfool")
+class DeepFool(Attacker):
 
     SPECIAL_TOKENS = ("@@UNKNOWN@@", "@@PADDING@@", START_TOKEN, END_TOKEN, MASK_TOKEN)
 
@@ -110,5 +110,5 @@ class FGSM(Attacker):
             outputs.append(output)
 
         best_output = self.find_best_attack(outputs)
-        best_output = self.recalculate_prob_and_label_for_target_clf(best_output)
+
         return best_output

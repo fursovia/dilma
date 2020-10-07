@@ -10,6 +10,7 @@ import torch
 from dilma.common import SequenceData, ModelsInput
 from dilma.reader import BasicDatasetReader
 from dilma.utils.metrics import word_error_rate
+from dilma.utils.data import data_to_tensors
 
 
 @dataclass_json
@@ -106,8 +107,9 @@ class Attacker(ABC, Registrable):
         return best_output
 
     def recalculate_prob_and_label_for_target_clf(self, output: AttackerOutput) -> AttackerOutput:
-        sequence = output.adversarial_data["sequence"]
 
+        adv_inputs = data_to_tensors(output.adversarial_data, self.reader, self.vocab, self.device)
         adv_probs = self.get_target_clf_probs(adv_inputs)
-        adv_data.label = self.probs_to_label(adv_probs)
-        adv_prob = adv_probs[self.label_to_index(data_to_attack.label)].item()
+        output.adversarial_data.label = self.probs_to_label(adv_probs)
+        output.adversarial_probability = adv_probs[self.label_to_index(output.data_to_attack.label)].item()
+        return output
