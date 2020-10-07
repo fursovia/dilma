@@ -17,5 +17,8 @@ class SequenceData:
     sequence: str
     label: int
 
+    def __len__(self) -> int:
+        return len(self.sequence.split())
+
 
 ModelsInput = Dict[str, Union[TextFieldTensors, torch.Tensor]]

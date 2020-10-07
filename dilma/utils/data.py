@@ -23,13 +23,13 @@ def data_to_tensors(
 
 def decode_indexes(
     indexes: torch.Tensor, vocab: Vocabulary, namespace="transactions", drop_start_end: bool = True,
-) -> List[str]:
+) -> str:
     out = [vocab.get_token_from_index(idx.item(), namespace=namespace) for idx in indexes]
 
     if drop_start_end:
-        return out[1:-1]
+        out = out[1:-1]
 
-    return out
+    return " ".join(out)
 
 
 def load_jsonlines(path: str) -> List[Dict[str, Any]]:
