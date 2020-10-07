@@ -7,43 +7,53 @@ from allennlp.common.registrable import Registrable
 from allennlp.models import Model
 import torch
 
-from dilma.common import SequenceData
+from dilma.common import SequenceData, ModelsInput
+from dilma.reader import BasicDatasetReader
 
 
 @dataclass_json
 @dataclass
 class AttackerOutput:
     data: SequenceData
-    adversarial_data: SequenceData
+    adversarial_data: SequenceData  # target clf
     probability: float  # original probability
-    adversarial_probability: float
+    adversarial_probability: float  # target clf
     prob_diff: float
     wer: int
-    history: Optional[List[Dict[str, Any]]] = None
+    history: Optional[List[Dict[str, Any]]] = None  # substitute clf
 
 
 class Attacker(ABC, Registrable):
     def __init__(
             self,
             substitute_classifier: Model,
-            reader: TransactionsDatasetReader,
+            target_classifier: Model,
+            reader: BasicDatasetReader,
             device: int = -1,
     ) -> None:
-        self.classifier = classifier
-        self.classifier.eval()
+        self.substitute_classifier = substitute_classifier
+        self.target_classifier = target_classifier
+        subst_vocab = self.substitute_classifier.vocab
+        target_vocab = self.target_classifier.vocab
+        assert subst_vocab == target_vocab
+        self.vocab = target_vocab
         self.reader = reader
 
         self.device = device
         if self.device >= 0 and torch.cuda.is_available():
-            self.classifier.cuda(self.device)
+            self.substitute_classifier.cuda(self.device)
+            self.target_classifier.cuda(self.device)
 
     @abstractmethod
-    def attack(self, data_to_attack: TransactionsData) -> AttackerOutput:
+    def attack(self, data_to_attack: SequenceData) -> AttackerOutput:
         pass
 
-    # TODO: add typing
-    def get_clf_probs(self, inputs) -> torch.Tensor:
-        probs = self.classifier(**inputs)["probs"][0]
+    def get_target_clf_probs(self, inputs: ModelsInput) -> torch.Tensor:
+        probs = self.target_classifier(**inputs)["probs"][0]
+        return probs
+
+    def get_substitute_clf_probs(self, inputs: ModelsInput) -> torch.Tensor:
+        probs = self.substitute_classifier(**inputs)["probs"][0]
         return probs
 
     def probs_to_label(self, probs: torch.Tensor) -> int:
@@ -52,11 +62,11 @@ class Attacker(ABC, Registrable):
         return label
 
     def index_to_label(self, label_idx: int) -> int:
-        label = self.classifier.vocab.get_index_to_token_vocabulary("labels").get(label_idx, str(label_idx))
+        label = self.vocab.get_index_to_token_vocabulary("labels").get(label_idx, str(label_idx))
         return int(label)
 
     def label_to_index(self, label: int) -> int:
-        label_idx = self.classifier.vocab.get_token_to_index_vocabulary("labels").get(str(label), label)
+        label_idx = self.vocab.get_token_to_index_vocabulary("labels").get(str(label), label)
         return label_idx
 
     @staticmethod
